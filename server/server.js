@@ -2,7 +2,27 @@
 require('dotenv').config();
 const express=require('express') ;
 const app=express() ;
+const authRoutes=require('./routes/authRoutes') ;
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+
+
+app.use(cors({
+    origin: true, // Allow all origins for testing
+    credentials: true // Allow cookies
+}));
 
 app.use(express.json());
+app.use(cookieParser());
+
 const port=process.env.PORT ;
+
+app.use('/api',authRoutes) ;
+
+
+app.get('/',(req,res)=>{
+    res.json({message:"server is runing "}) ;
+})
+
 app.listen(port,()=>console.log(`server is running on port ${port}`));
+
