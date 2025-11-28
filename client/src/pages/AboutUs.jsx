@@ -15,9 +15,13 @@
  * - TeamCard (optional)
  */
 
+import NavBar from '../components/NavBar';
+
 export default function AboutUs() {
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
+    <>
+      <NavBar />
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ marginBottom: '2rem', textAlign: 'center' }}>About Procedures Hub</h1>
 
       {/* Mission Section */}
@@ -114,5 +118,6 @@ export default function AboutUs() {
         </p>
       </section>
     </div>
+    </>
   );
 }

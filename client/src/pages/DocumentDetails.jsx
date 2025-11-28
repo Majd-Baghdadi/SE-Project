@@ -26,6 +26,7 @@
  */
 
 import { useParams, Link } from 'react-router-dom';
+import NavBar from '../components/NavBar';
 
 export default function DocumentDetails() {
   const { docId } = useParams();
@@ -81,7 +82,9 @@ export default function DocumentDetails() {
   const document = mockDocuments[docId] || mockDocuments['1'];
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
+    <>
+      <NavBar />
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
       {/* Breadcrumb */}
       <div style={{ marginBottom: '1.5rem', fontSize: '0.875rem', color: '#666' }}>
         <Link to="/" style={{ color: 'inherit' }}>Home</Link> / {document.docName}
@@ -160,5 +163,6 @@ export default function DocumentDetails() {
         Report Issue
       </button>
     </div>
+    </>
   );
 }
