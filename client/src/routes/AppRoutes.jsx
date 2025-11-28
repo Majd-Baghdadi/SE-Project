@@ -6,7 +6,7 @@ import ContactUs from '../pages/ContactUs'
 import AboutUs from '../pages/AboutUs'
 
 // Future pages (to be implemented in later sprints)
-// import Profile from '../pages/Profile'
+import Profile from '../pages/Profile'
 // import ProposeDocument from '../pages/ProposeDocument'
 // import AdminDashboard from '../pages/Admin/AdminDashboard'
 // import ManageProposals from '../pages/Admin/ManageProposals'
@@ -24,7 +24,7 @@ export default function AppRoutes() {
       <Route path="/conntact" element={<ContactUs />} />
 
       {/* Future Sprint Routes - Protected (User) */}
-      {/* <Route path="/profile" element={<Profile />} /> */}
+      <Route path="/profile" element={<Profile />} />
       {/* <Route path="/propose" element={<ProposeDocument />} /> */}
 
       {/* Future Sprint Routes - Protected (Admin) */}

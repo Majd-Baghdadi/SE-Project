@@ -42,9 +42,12 @@ export default function NavBar() {
           <button className="px-5 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
             Contribute
           </button>
-          <button className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-lg">
+           <Link 
+            to="/profile" 
+            className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-lg hover:bg-gray-300 transition-colors no-underline cursor-pointer"
+          >
             👤
-          </button>
+          </Link>
         </div>
       </div>
     </nav>
