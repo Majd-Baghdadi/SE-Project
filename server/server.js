@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express=require('express') ;
 const app=express() ;
+const documentRoutes=require("./routes/documentRoutes")
 const authRoutes=require('./routes/authRoutes') ;
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -15,9 +16,10 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-const port=process.env.PORT ;
+const port=process.env.PORT || 4000 ;
 
 app.use('/api',authRoutes) ;
+app.use("/api/documents",documentRoutes);
 
 
 app.get('/',(req,res)=>{
@@ -25,4 +27,5 @@ app.get('/',(req,res)=>{
 })
 
 app.listen(port,()=>console.log(`server is running on port ${port}`));
+
 
