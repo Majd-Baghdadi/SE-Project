@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Registration Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+        }
+        input, button { 
+            display: block; 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+        }
+        button { 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+        }
+        .result { 
+            background: #f0f0f0; 
+            padding: 15px; 
+            margin-top: 20px; 
+            border-radius: 5px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Registration + Verification</h1>
+    
+    <h2>Step 1: Register</h2>
+    <input type="text" id="userName" placeholder="User Name" value="Test User">
+    <input type="email" id="email" placeholder="Email" value="test@example.com">
+    <input type="password" id="password" placeholder="Password" value="password123">
+    <select id="role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+    </select>
+    <button onclick="register()">Register</button>
+
+    <div id="registerResult" class="result" style="display:none;"></div>
+
+    <hr>
+
+    <h2>Step 2: Verify (paste token from console)</h2>
+    <input type="text" id="verifyToken" placeholder="Paste verification token here">
+    <button onclick="verify()">Verify Email</button>
+
+    <div id="verifyResult" class="result" style="display:none;"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/auth';
+
+        async function register() {
+            const data = {
+                userName: document.getElementById('userName').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                const resultDiv = document.getElementById('registerResult');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                
+                // In real app, token would be in email
+                // For testing, you'd need to console.log it in backend
+                console.log('Check backend console for token, or check email');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function verify() {
+            const token = document.getElementById('verifyToken').value;
+
+            try {
+                const response = await fetch(`${API_URL}/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ token })
+                });
+
+                const result = await response.json();
+                const resultDiv = document.getElementById('verifyResult');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
