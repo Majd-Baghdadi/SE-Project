@@ -29,8 +29,8 @@ export default function NavBar() {
           <Link to="/about" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             About Us
           </Link>
-          <Link to="/help" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
-            Help
+          <Link to="/conntact" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+            Contact Us
           </Link>
         </div>
 

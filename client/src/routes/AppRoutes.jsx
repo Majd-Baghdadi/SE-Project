@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from '../pages/Home'
 import DocumentDetails from '../pages/DocumentDetails'
+
+import ContactUs from '../pages/ContactUs'
 import AboutUs from '../pages/AboutUs'
 
 // Future pages (to be implemented in later sprints)
@@ -11,6 +13,7 @@ import AboutUs from '../pages/AboutUs'
 // import ManageFixes from '../pages/Admin/ManageFixes'
 // import ManageDocuments from '../pages/Admin/ManageDocuments'
 
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -18,6 +21,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/document/:docId" element={<DocumentDetails />} />
       <Route path="/about" element={<AboutUs />} />
+      <Route path="/conntact" element={<ContactUs />} />
 
       {/* Future Sprint Routes - Protected (User) */}
       {/* <Route path="/profile" element={<Profile />} /> */}
