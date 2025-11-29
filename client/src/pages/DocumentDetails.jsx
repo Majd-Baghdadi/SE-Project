@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getDocumentById } from '../services/documentService';
 import NavBar from '../components/NavBar';
+import SignInModal from '../components/SignInModal';
+import authService from '../services/authService';
 
 /**
  * DocumentDetail - Dynamic page component for displaying document/procedure details
@@ -119,11 +121,13 @@ const mockRelatedDocs = {
 
 export default function DocumentDetail() {
   const { docId } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [relatedDocuments, setRelatedDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [usingMockData, setUsingMockData] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
 
   useEffect(() => {
     async function fetchDocument() {
@@ -284,7 +288,19 @@ export default function DocumentDetail() {
               <p className="text-sm text-slate-500 leading-relaxed mb-4">
                 Please report any errors or unclear information found in this document, and we will ensure they are handled appropriately.
               </p>
-              <button className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors">
+              <button
+                onClick={() => {
+                  // Check if user is authenticated
+                  if (authService.isAuthenticated()) {
+                    // TODO: Open report issue form/modal
+                    console.log('User is authenticated, opening report form');
+                  } else {
+                    // Show sign in modal
+                    setShowSignInModal(true);
+                  }
+                }}
+                className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              >
                 ✏️ Report Issue
               </button>
             </div>
@@ -314,7 +330,10 @@ export default function DocumentDetail() {
               <p className="text-sm text-slate-500 leading-relaxed mb-4">
                 Contact our support team for assistance with your application.
               </p>
-              <button className="w-full py-3 px-4 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors">
+              <button
+                onClick={() => navigate('/conntact')}
+                className="w-full py-3 px-4 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+              >
                 Contact Support
               </button>
             </div>
@@ -362,6 +381,17 @@ export default function DocumentDetail() {
           © 2024 Government Services Portal. All rights reserved.
         </div>
       </footer>
+
+      {/* Sign In Modal */}
+      <SignInModal
+        isOpen={showSignInModal}
+        onClose={() => setShowSignInModal(false)}
+        onSuccess={() => {
+          // After successful login, user can now report issue
+          console.log('User logged in, can now report issue');
+          // TODO: Open report issue form/modal
+        }}
+      />
     </div>
   );
 }

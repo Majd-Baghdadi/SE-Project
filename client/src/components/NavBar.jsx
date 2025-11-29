@@ -1,6 +1,29 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import authService from '../services/authService'
 
 export default function NavBar() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    // Check authentication status
+    const checkAuth = () => {
+      setIsAuthenticated(authService.isAuthenticated())
+    }
+    
+    checkAuth()
+    
+    // Listen for custom auth state change event
+    window.addEventListener('authStateChanged', checkAuth)
+    // Listen for storage changes (when user logs in/out in another tab)
+    window.addEventListener('storage', checkAuth)
+    
+    return () => {
+      window.removeEventListener('authStateChanged', checkAuth)
+      window.removeEventListener('storage', checkAuth)
+    }
+  }, [])
+
   return (
     <nav className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -39,15 +62,21 @@ export default function NavBar() {
           <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors">
             🔔
           </button>
-          <button className="px-5 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
-            Contribute
-          </button>
-           <Link 
-            to="/profile" 
-            className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-lg hover:bg-gray-300 transition-colors no-underline cursor-pointer"
-          >
-            👤
-          </Link>
+          {isAuthenticated ? (
+            <Link 
+              to="/profile" 
+              className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-lg hover:bg-gray-300 transition-colors no-underline cursor-pointer"
+            >
+              👤
+            </Link>
+          ) : (
+            <Link 
+              to="/signin" 
+              className="px-5 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors no-underline"
+            >
+              Register
+            </Link>
+          )}
         </div>
       </div>
     </nav>

@@ -4,6 +4,9 @@ import DocumentDetails from '../pages/DocumentDetails'
 
 import ContactUs from '../pages/ContactUs'
 import AboutUs from '../pages/AboutUs'
+import SignIn from '../pages/SignIn'
+import SignUp from '../pages/SignUp'
+import RecoverPassword from '../pages/RecoverPassword'
 
 // Future pages (to be implemented in later sprints)
 import Profile from '../pages/Profile'
@@ -22,6 +25,11 @@ export default function AppRoutes() {
       <Route path="/document/:docId" element={<DocumentDetails />} />
       <Route path="/about" element={<AboutUs />} />
       <Route path="/conntact" element={<ContactUs />} />
+      
+      {/* Authentication Routes */}
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/recover-password" element={<RecoverPassword />} />
 
       {/* Future Sprint Routes - Protected (User) */}
       <Route path="/profile" element={<Profile />} />

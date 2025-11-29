@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { ChevronDown, Edit2, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Edit2, Check, LogOut } from 'lucide-react';
 import NavBar from '../components/NavBar';
+import authService from '../services/authService';
 
 export default function ProfileForm() {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
@@ -14,6 +17,21 @@ export default function ProfileForm() {
     phoneNumber: '+213 555 123 456',
     dateOfBirth: '1995-03-15'
   });
+
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      // Redirect to home if not authenticated
+      navigate('/');
+    } else {
+      // Get user info from localStorage
+      const user = authService.getCurrentUser();
+      if (user && user.email) {
+        // Update email display if available
+        // Note: You might want to fetch full user profile from API here
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -34,6 +52,18 @@ export default function ProfileForm() {
     setTimeout(() => {
       setShowSuccess(false);
     }, 3000);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      // Navigate to home after logout
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate even if logout fails
+      navigate('/');
+    }
   };
 
   return (
@@ -60,26 +90,39 @@ export default function ProfileForm() {
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Alexa Rawles</h1>
-              <p className="text-gray-500 text-sm mt-1">alexarawles@gmail.com</p>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {authService.getCurrentUser()?.userName || 'Alexa Rawles'}
+              </h1>
+              <p className="text-gray-500 text-sm mt-1">
+                {authService.getCurrentUser()?.email || 'alexarawles@gmail.com'}
+              </p>
             </div>
-            {!isEditing ? (
+            <div className="flex items-center gap-3">
+              {!isEditing ? (
+                <button 
+                  onClick={handleEdit}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSave}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  Save
+                </button>
+              )}
               <button 
-                onClick={handleEdit}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
               >
-                <Edit2 className="w-4 h-4" />
-                Edit
+                <LogOut className="w-4 h-4" />
+                Logout
               </button>
-            ) : (
-              <button 
-                onClick={handleSave}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Check className="w-4 h-4" />
-                Save
-              </button>
-            )}
+            </div>
           </div>
 
           {/* Form Fields */}

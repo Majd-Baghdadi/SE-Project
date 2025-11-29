@@ -59,8 +59,13 @@ api.interceptors.response.use(
           // Unauthorized - token expired or invalid
           console.error('Unauthorized access - redirecting to login');
           localStorage.removeItem('authToken');
-          // Uncomment when login page is ready:
-          // window.location.href = '/login';
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userName');
+          // Redirect to sign in page
+          if (window.location.pathname !== '/signin' && window.location.pathname !== '/signup') {
+            window.location.href = '/signin';
+          }
           break;
           
         case 403:
