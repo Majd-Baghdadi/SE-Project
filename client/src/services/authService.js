@@ -91,7 +91,6 @@ const authService = {
       
       if (response.success && response.user) {
         localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', response.user.email);
         localStorage.setItem('userName', response.user.userName);
         // Dispatch custom event for NavBar to update
         window.dispatchEvent(new Event('authStateChanged'));
