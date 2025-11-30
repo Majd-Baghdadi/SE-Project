@@ -28,14 +28,14 @@ import api from './api';
 const authService = {
   /**
    * Login user
-   * Backend: POST /api/auth/login
+   * Backend: POST /api/login
    * @param {string} email - User email
    * @param {string} password - User password
    * @returns {Promise<object>} Response with success and message
    */
   login: async (email, password) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/login', { email, password });
       
       if (response.success) {
         // Store auth state in localStorage
@@ -58,7 +58,7 @@ const authService = {
 
   /**
    * Register new user
-   * Backend: POST /api/auth/register
+   * Backend: POST /api/register
    * @param {string} userName - User full name
    * @param {string} email - User email
    * @param {string} password - User password
@@ -67,7 +67,7 @@ const authService = {
    */
   register: async (userName, email, password, role = 'user') => {
     try {
-      const response = await api.post('/auth/register', { userName, email, password, role });
+      const response = await api.post('/register', { userName, email, password, role });
       return response;
     } catch (error) {
       console.error('Registration error:', error);
@@ -81,13 +81,13 @@ const authService = {
 
   /**
    * Verify email with token
-   * Backend: POST /api/auth/verifyEmail
+   * Backend: POST /api/verifyEmail
    * @param {string} token - Verification token
    * @returns {Promise<object>} Response with success, message, and user data
    */
   verifyEmail: async (token) => {
     try {
-      const response = await api.post('/auth/verifyEmail', { token });
+      const response = await api.post('/verifyEmail', { token });
       
       if (response.success && response.user) {
         localStorage.setItem('isAuthenticated', 'true');
