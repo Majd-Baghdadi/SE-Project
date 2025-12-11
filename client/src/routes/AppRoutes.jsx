@@ -7,10 +7,10 @@ import AboutUs from '../pages/AboutUs'
 import SignIn from '../pages/SignIn'
 import SignUp from '../pages/SignUp'
 import RecoverPassword from '../pages/RecoverPassword'
-
+import FixFormPage from '../pages/FixForm';
 // Future pages (to be implemented in later sprints)
 import Profile from '../pages/Profile'
-// import ProposeDocument from '../pages/ProposeDocument'
+import ProposeDocument from '../pages/ProposeDocument'
 // import AdminDashboard from '../pages/Admin/AdminDashboard'
 // import ManageProposals from '../pages/Admin/ManageProposals'
 // import ManageFixes from '../pages/Admin/ManageFixes'
@@ -33,7 +33,8 @@ export default function AppRoutes() {
 
       {/* Future Sprint Routes - Protected (User) */}
       <Route path="/profile" element={<Profile />} />
-      {/* <Route path="/propose" element={<ProposeDocument />} /> */}
+      <Route path="/fixform" element={<FixFormPage />} />
+      <Route path="/propose" element={<ProposeDocument />} />
 
       {/* Future Sprint Routes - Protected (Admin) */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}

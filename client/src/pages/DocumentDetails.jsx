@@ -5,6 +5,7 @@ import NavBar from '../components/NavBar';
 import SignInModal from '../components/SignInModal';
 import authService from '../services/authService';
 
+
 /**
  * DocumentDetail - Dynamic page component for displaying document/procedure details
  *
@@ -288,21 +289,29 @@ export default function DocumentDetail() {
               <p className="text-sm text-slate-500 leading-relaxed mb-4">
                 Please report any errors or unclear information found in this document, and we will ensure they are handled appropriately.
               </p>
-              <button
-                onClick={() => {
-                  // Check if user is authenticated
-                  if (authService.isAuthenticated()) {
-                    // TODO: Open report issue form/modal
-                    console.log('User is authenticated, opening report form');
-                  } else {
-                    // Show sign in modal
-                    setShowSignInModal(true);
+               <button
+                  onClick={() => {
+                    // Check if user is authenticated
+                    if (authService.isAuthenticated()) {
+                    // Navigate to FixForm page with document info
+                    navigate('/fixform', {
+                    state: {
+                    documentInfo: {
+                    docId: doc.docid,
+                    docName: doc.docname || doc.title,
+                    docType: doc.doctype || doc.category
                   }
-                }}
-                className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
-              >
-                ✏️ Report Issue
-              </button>
+                 }
+               });
+                 } else {
+                // Show sign in modal
+                 setShowSignInModal(true);
+            }
+  }}
+  className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+>
+  ✏️ Report Issue
+</button>
             </div>
 
             {/* Related Documents */}
@@ -382,16 +391,24 @@ export default function DocumentDetail() {
         </div>
       </footer>
 
-      {/* Sign In Modal */}
-      <SignInModal
-        isOpen={showSignInModal}
-        onClose={() => setShowSignInModal(false)}
-        onSuccess={() => {
-          // After successful login, user can now report issue
-          console.log('User logged in, can now report issue');
-          // TODO: Open report issue form/modal
-        }}
-      />
+     {/* Sign In Modal */}
+<SignInModal
+  isOpen={showSignInModal}
+  onClose={() => setShowSignInModal(false)}
+  onSuccess={() => {
+    // After successful login, navigate to FixForm
+    setShowSignInModal(false);
+    navigate('/fixform', {
+      state: {
+        documentInfo: {
+          docId: doc.docid,
+          docName: doc.docname || doc.title,
+          docType: doc.doctype || doc.category
+        }
+      }
+    });
+  }}
+/>
     </div>
   );
 }
