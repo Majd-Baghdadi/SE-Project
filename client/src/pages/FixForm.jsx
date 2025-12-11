@@ -195,9 +195,7 @@ const ReportIssuePage = () => {
             <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
               Help us improve! Report any problems with the document information.
             </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Fill at least one field below to submit your report.
-            </p>
+          
           </div>
 
           {/* Form */}
