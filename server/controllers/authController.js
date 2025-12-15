@@ -63,7 +63,7 @@ exports.login = async (req, res) => {
                 });
             }
 
-            const token = generateAuthToken(user.id);
+            const token = generateAuthToken(user.id, user.role);
 
             res.cookie("auth_token", token, COOKIE_CONFIG);
 
@@ -219,7 +219,6 @@ exports.verifyEmail = async (req, res) => {
         }
 
         const userId = decodedToken.userId;
-
         // Update user to verified
         const updatedUser = await authService.validateUser(userId);
 
@@ -231,7 +230,7 @@ exports.verifyEmail = async (req, res) => {
         }
 
         // Generate auth token
-        const authToken = generateAuthToken(userId);
+        const authToken = generateAuthToken(userId,updatedUser.role);
 
         // Set cookie
         res.cookie("auth_token", authToken, COOKIE_CONFIG);

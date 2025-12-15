@@ -17,11 +17,12 @@ const generateVerificationToken = (userId) => {
 };
 
 
-const generateAuthToken = (userId) => {
+const generateAuthToken = (userId,role) => {
     const token = jwt.sign(
         {
             userId,
-            purpose: 'auth'
+            purpose: 'auth',
+            role:role,
         },
         process.env.JWT_SECRET,
         { expiresIn: '10d' }
