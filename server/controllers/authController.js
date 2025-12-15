@@ -15,16 +15,28 @@ const COOKIE_CONFIG = {
 };
 
 
+exports.logout = (req, res) => {
+    res.clearCookie("auth_token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict"
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully"
+    });
+};
 
 
 exports.login = async (req, res) => {
     console.log('we are in login');
     try {
         const { email, password } = req.body;
-        const  validationResult = authValidation.validateLogin(email,password)
+        const validationResult = authValidation.validateLogin(email, password)
         if (validationResult.isValid) {
 
-            const user =await authService.findUser(email);
+            const user = await authService.findUser(email);
 
             if (!user) {
                 return res.status(400).json({
@@ -32,6 +44,16 @@ exports.login = async (req, res) => {
                     error: 'Invalid Email or Password'
                 });
             }
+
+            if (!user.verified) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Email is not verified. Please check your email or request a new verification link.',
+                    needsVerification: true,
+                    email: user.email
+                });
+            }
+
             const isMatch = await bcrypt.compare(password, user.password);
 
             if (!isMatch) {
@@ -40,14 +62,14 @@ exports.login = async (req, res) => {
                     error: 'Wrong Password'
                 });
             }
-            
-            const token = generateAuthToken(user.id) ;
+
+            const token = generateAuthToken(user.id);
 
             res.cookie("auth_token", token, COOKIE_CONFIG);
 
             res.status(200).json({
-                success:true ,
-                message:"Login successfully"
+                success: true,
+                message: "Login successfully"
             });
 
         }
@@ -64,9 +86,9 @@ exports.login = async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: 'Login failed. Please try again.' 
+        return res.status(500).json({
+            success: false,
+            error: 'Login failed. Please try again.'
         });
     }
 }
@@ -87,10 +109,10 @@ exports.register = async (req, res) => {
             //stor the user with verified false; 
             const user = await authService.createUser(userName, email, password, role, false);
 
-        // Send verification email
-        console.log('Sending verification email to:', email);
-        try {
-            await authService.sendVerificationEmail(user);
+            // Send verification email
+            console.log('Sending verification email to:', email);
+            try {
+                await authService.sendVerificationEmail(user);
 
                 return res.status(201).json({
                     success: true,
@@ -117,15 +139,61 @@ exports.register = async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: 'Registration failed. Please try again.' 
+        return res.status(500).json({
+            success: false,
+            error: 'Registration failed. Please try again.'
         });
     }
 
 }
 
 
+exports.resendVerificationEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Validate email
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email is required'
+            });
+        }
+
+        // Find user by email
+        const user = await authService.findUserByEmail(email);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'No account found with this email'
+            });
+        }
+
+        // Check if already verified
+        if (user.verified) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email is already verified. You can login.'
+            });
+        }
+
+        // Send verification email
+        await authService.sendVerificationEmail(user);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Verification email sent. Please check your inbox.'
+        });
+
+    } catch (error) {
+        console.error('Resend verification email error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to send verification email. Please try again.'
+        });
+    }
+}
 
 
 exports.verifyEmail = async (req, res) => {
@@ -141,6 +209,15 @@ exports.verifyEmail = async (req, res) => {
 
 
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Check if token is for email verification
+        if (decodedToken.purpose !== 'email_verification') {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid verification token'
+            });
+        }
+
         const userId = decodedToken.userId;
 
         // Update user to verified
@@ -193,3 +270,149 @@ exports.verifyEmail = async (req, res) => {
         });
     }
 }
+
+
+
+exports.isLoggedIn = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const user = await authService.findUserById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'User authenticated',
+            user: {
+                id: user.id,
+                userName: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error('isLoggedIn error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to get user info'
+        });
+    }
+}
+
+
+
+exports.sendResetEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: "Email is required"
+            });
+        }
+
+        const user = await authService.findUserByEmail(email);
+
+        if (!user) {
+            // Security: Don't reveal if email exists or not
+            return res.status(200).json({
+                success: true,
+                message: 'If an account with this email exists, a reset link has been sent.'
+            });
+        }
+
+        await authService.sendResetEmail(user);
+
+        return res.status(200).json({
+            success: true,
+            message: 'If an account with this email exists, a reset link has been sent.'
+        });
+
+    } catch (error) {
+        console.error('Send reset email error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to send reset email. Please try again.'
+        });
+    }
+}
+
+
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { newPassword, token } = req.body;
+
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                error: 'Reset token is required'
+            });
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                error: 'Password must be at least 6 characters long'
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Check if token is for password reset
+        if (decoded.purpose !== 'password_reset') {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid reset token'
+            });
+        }
+
+        const userId = decoded.userId;
+
+        const user = await authService.updatePassword(userId, newPassword);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password reset successfully. You can now login with your new password.'
+        });
+
+    } catch (error) {
+        console.error("Error resetting password:", error);
+
+        if (error.name === 'TokenExpiredError') {
+            return res.status(400).json({
+                success: false,
+                error: 'Reset link has expired. Please request a new one.'
+            });
+        }
+
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid reset link. Please request a new one.'
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to reset password. Please try again.'
+        });
+    }
+}
+
+
