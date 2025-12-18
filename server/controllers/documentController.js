@@ -30,13 +30,12 @@ async function getDocumentDetails(req,res) {
             })
         }
         const {relateddocs,...documentData}=data
-        const {data:relatedDocs,err}=await Document.getRelatedDocuments(relateddocs||[])
+        const {data:relatedDocs,error:err}=await Document.getRelatedDocuments(relateddocs||[])
         if (err) {
             res.status(400).json({
                 error:err.message,
             })
         }
-        console.log(relatedDocs)
         res.status(200).json({
             data:documentData,
             relatedDocuments:relatedDocs
