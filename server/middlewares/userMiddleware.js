@@ -1,8 +1,8 @@
 // Middleware to restrict access to user-only routes
-const jwt=require("jsonwebtoken")
 
 function VerifyUser(req,res,next){
-    if (req.user!=="user") {
+    console.log(req.user)
+    if (req.user.role!=="user") {
         return res.status(403).json({
             success:false,
             error:"You are not a user"

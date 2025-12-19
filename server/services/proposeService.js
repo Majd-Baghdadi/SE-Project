@@ -24,6 +24,7 @@ async function proposeFix(payload) {
 
 //edit a proposed document
 async function updateProposedDocument(id,payload,user) {
+    console.log(id) 
     const {data,error}=await supabase.from("proposed_documents").select("userid").eq("proposeddocid",id).single()
     if (!data || error) {
         throw new NotFoundError("Document not found")

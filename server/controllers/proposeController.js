@@ -8,7 +8,7 @@ async function proposeDocument(req,res) {
     try {
         const role=req.user.role
         let call
-        const payload={
+        var payload={
             ...req.body,
         }
         if (role==="admin") {
@@ -42,6 +42,7 @@ async function proposeDocument(req,res) {
 async function proposeFix(req,res) {
     try {
         const {docid}=req.params
+        console.log(docid)
         const payload={
             ...req.body,
             docid:docid,
@@ -68,24 +69,32 @@ async function proposeFix(req,res) {
 async function editProposedDocument(req,res) {
     try {
         const {id}=req.params
+        console.log(id)
         const {data,error}=await propose.updateProposedDocument(id,req.body,req.user)
         if (error) {
+
             return res.status(400).json({
                 error:error.message
             })
+
         }
+
         res.status(200).json({
             document:data
         })
+
     } catch (error) {
+
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 error:error.message
             })
         }
+
         res.status(500).json({
             error:error.message
         })
+
     }
 }
 
@@ -93,10 +102,9 @@ async function editProposedDocument(req,res) {
 
 async function editProposedFix(req,res) {
     try {
-        const {id,docid}=req.params
+        const {id}=req.params
         const payload={
             ...req.body,
-            docid:docid
         }
         const {data,error}=await propose.updateProposedFix(id,payload,req.user)
         if (error) {
@@ -142,6 +150,7 @@ async function getProposedDocumentsByUser(req,res) {
 //function to call to fetch all proposed fixes by a user
 
 async function getProposedFixesByUser(req,res) {
+
     try {
         const {data,error}=await propose.fetchProposedFixesByUser(req.user.userId)
         if (error) {
