@@ -2,7 +2,7 @@
 const jwt=require("jsonwebtoken")
 
 function VerifyAdmin(req,res,next){
-    if (req.user!=="admin") {
+    if (req.user.role!=="admin") {
         return res.status(403).json({
             success:false,
             error:"You are not an admin"

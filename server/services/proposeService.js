@@ -4,8 +4,10 @@ const { NotFoundError, ForbiddenError } = require("../errors/appErros");
 
 //add a document (called by admins)
 
-async function addDocument(payload) {
-    
+async function addDocument(payload,user) {
+    if (user.role!=="admin") {
+        throw new ForbiddenError("you are not an admin")
+    }
     return await supabase.from("documents").insert(payload).select()
     
 }

@@ -12,7 +12,7 @@ async function proposeDocument(req,res) {
             ...req.body,
         }
         if (role==="admin") {
-            call= await propose.addDocument(payload)
+            call= await propose.addDocument(payload,req.user)
         }
         else{
             payload={
