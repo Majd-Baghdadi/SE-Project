@@ -6,9 +6,9 @@ const {verifyAuthToken}=require("../middlewares/authMiddleware")
 const {VerifyAdmin}=require("../middlewares/adminMiddleware")
 router.use(verifyAuthToken,VerifyAdmin)
 
-router.get("/document",adminController.fetchProposedDocuments)
-router.get("/fix",adminController.fetchProposedFixes)
-router.get("/document/:id",adminController.fetchProposedDocumentDetails)
-router.get("/fix/:id",adminController.fetchProposedFixDetails)
+router.get("/proposedDocuments",adminController.fetchProposedDocuments)
+router.get("/proposedFixes",adminController.fetchProposedFixes)
+router.get("/proposedDocument/:id",adminController.fetchProposedDocumentDetails)
+router.get("/proposedFix/:id",adminController.fetchProposedFixDetails)
 
 module.exports=router

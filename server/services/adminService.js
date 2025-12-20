@@ -1,6 +1,6 @@
 // Business logic for handling admin actions
 const supabase=require("../config/supabase")
-const { ForbiddenError } = require("../errors/appErros")
+const { ForbiddenError, NotFoundError } = require("../errors/appErros")
 
 //function to fetch all the proposed documents main infos
 async function fetchProposedDocuments(user) {
@@ -23,7 +23,11 @@ async function fetchProposedDocumentDetails(id,user) {
     if (user.role!=="admin") {
         throw new ForbiddenError("you are not an admin")
     }
-    return await supabase.from("proposed_documents").select("*").eq("proposeddocid",id)
+    const{data,error}= await supabase.from("proposed_documents").select("*").eq("proposeddocid",id).single()
+    if (!data) {
+        throw new NotFoundError("no proposed document with this id")
+    }
+    return {data,error}
 }
 
 //function to fetch proposed fix details
@@ -31,8 +35,13 @@ async function fetchProposedFixDetails(id,user) {
     if (user.role!=="admin") {
         throw new ForbiddenError("you are not an admin")
     }
-    return await supabase.from("fixes").select("*").eq("fixid",id)
+    const {data,error}= await supabase.from("fixes").select("*").eq("fixid",id).single()
+    if (!data) {
+        throw new NotFoundError("no proposed document with this id")
+    }
+    return {data,error}
 }
+
 
 
 module.exports={fetchProposedDocuments,fetchProposedDocumentDetails,fetchProposedFixes,fetchProposedFixDetails}
