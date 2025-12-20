@@ -61,6 +61,31 @@ async function fetchProposedFixesByUser(id) {
     return await supabase.from("fixes").select("*").eq("userid",id)
 }
 
+//delete a proposed document
+async function deleteProposedDocuemnt(id,user) {
+    const {data,error}=await supabase.from("proposed_documents").select("userid").eq("proposeddocid",id).single()
+    if (!data || error) {
+        throw new NotFoundError("Proposed document not found")
+    }
+    if (data.userid!==user.userId && user.role!=="admin") {
+        throw new ForbiddenError("Access denied")
+    }
+    return await supabase.from("proposed_documents").delete().eq("proposeddocid",id).select()
+    
+}
+
+//delete a proposed fix
+async function deleteProposedFix(id,user) {
+    const {data,error}=await supabase.from("fix").select("userid").eq("fixid",id).single()
+    if (!data || error) {
+        throw new NotFoundError("Proposed fix not found")
+    }
+    if (data.userid!==user.userId || user.role!=="admin") {
+        throw new ForbiddenError("Access denied")
+    }
+    return await supabase.from("fix").delete().eq("fixid",id).select()
+}
+
 module.exports={
     addDocument,
     proposeDocument,
@@ -68,5 +93,7 @@ module.exports={
     updateProposedDocument,
     updateProposedFix,
     fetchProposedDocumentsByUser,
-    fetchProposedFixesByUser
+    fetchProposedFixesByUser,
+    deleteProposedDocuemnt,
+    deleteProposedFix,
 }

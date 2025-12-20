@@ -168,6 +168,55 @@ async function getProposedFixesByUser(req,res) {
     }
 }
 
+//function to call when deleting a proposed document
+async function deleteProposedDocuemnt(req,res) {
+    try {
+        const {id}=req.params
+        const {data,error}=await propose.deleteProposedDocuemnt(id,req.user)
+        if (error) {
+            return res.status(400).json({
+                error:error.message
+            })
+        }
+        res.status(200).json({
+            document:data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error:error.message
+            })
+        }
+        res.status(500).json({
+            error:error.message
+        })
+    }
+}
+
+//function to call to delete a proposed fix
+async function deleteProposedFix(req,res) {
+    try {
+        const {id}=req.params
+        const {data,error}=await propose.deleteProposedFix(id,req.user)
+        if (error) {
+            return res.status(400).json({
+                error:error.message
+            })
+        }
+        res.status(200).json({
+            fix:data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error:error.message
+            })
+        }
+        res.status(500).json({
+            error:error.message
+        })
+    }
+}
 
 module.exports={
     proposeDocument,
@@ -176,4 +225,6 @@ module.exports={
     editProposedFix,
     getProposedDocumentsByUser,
     getProposedFixesByUser,
+    deleteProposedDocuemnt,
+    deleteProposedFix
 }
