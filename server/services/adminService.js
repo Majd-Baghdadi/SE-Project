@@ -10,38 +10,18 @@ async function fetchProposedDocuments(user) {
     return await supabase.from("proposed_documents").select("proposeddocid,docname,docpicture")
 }
 
-//function to fetch all proposed fixes main infos (still don't know what infos to fetch :>)
+//function to fetch all proposed fixes main infos 
 async function fetchProposedFixes(user) {
+    console.log("here")
     if (user.role!=="admin") {
         throw new ForbiddenError("you are not an admin")
     }
-    return await supabase.from("fixes").select("fixid,docname,docpicture")
-}
-
-//function to fetch proposed document details
-async function fetchProposedDocumentDetails(id,user) {
-    if (user.role!=="admin") {
-        throw new ForbiddenError("you are not an admin")
-    }
-    const{data,error}= await supabase.from("proposed_documents").select("*").eq("proposeddocid",id).single()
-    if (!data) {
-        throw new NotFoundError("no proposed document with this id")
-    }
-    return {data,error}
-}
-
-//function to fetch proposed fix details
-async function fetchProposedFixDetails(id,user) {
-    if (user.role!=="admin") {
-        throw new ForbiddenError("you are not an admin")
-    }
-    const {data,error}= await supabase.from("fixes").select("*").eq("fixid",id).single()
-    if (!data) {
-        throw new NotFoundError("no proposed document with this id")
-    }
-    return {data,error}
+    return await supabase.from("fixes").select(`fixid,documents!inner (docname),users!inner (name)`)
+    
 }
 
 
 
-module.exports={fetchProposedDocuments,fetchProposedDocumentDetails,fetchProposedFixes,fetchProposedFixDetails}
+
+
+module.exports={fetchProposedDocuments,fetchProposedFixes,}

@@ -8,7 +8,5 @@ router.use(verifyAuthToken,VerifyAdmin)
 
 router.get("/proposedDocuments",adminController.fetchProposedDocuments)
 router.get("/proposedFixes",adminController.fetchProposedFixes)
-router.get("/proposedDocument/:id",adminController.fetchProposedDocumentDetails)
-router.get("/proposedFix/:id",adminController.fetchProposedFixDetails)
 
 module.exports=router

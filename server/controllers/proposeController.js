@@ -218,6 +218,56 @@ async function deleteProposedFix(req,res) {
     }
 }
 
+//function to fetch proposed document details
+async function fetchProposedDocumentDetails(req,res) {
+    try {
+        const {id}=req.params
+        const {data,error}=await admin.fetchProposedDocumentDetails(id,req.user)
+        if (error) {
+            return res.status(400).json({
+                error:error.message
+            })
+        }
+        res.status(200).json({
+            document:data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error:error.message
+            })
+        }
+        res.status(500).json({
+            error:error.message
+        })
+    }
+}
+
+//function to fetch fix details
+async function fetchProposedFixDetails(req,res) {
+    try {
+        const {id}=req.params
+        const {data,error}=await admin.fetchProposedFixDetails(id,req.user)
+        if (error) {
+            return res.status(400).json({
+                error:error.message
+            })
+        }
+        res.status(200).json({
+            fix:data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error:error.message
+            })
+        }
+        res.status(500).json({
+            error:error.message
+        })
+    }
+}
+
 module.exports={
     proposeDocument,
     proposeFix,
@@ -226,5 +276,7 @@ module.exports={
     getProposedDocumentsByUser,
     getProposedFixesByUser,
     deleteProposedDocuemnt,
-    deleteProposedFix
+    deleteProposedFix,
+    fetchProposedDocumentDetails,
+    fetchProposedFixDetails,
 }

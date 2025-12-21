@@ -52,13 +52,13 @@ async function updateProposedFix(id,payload,user) {
 //get all documents proposed by a user
 
 async function fetchProposedDocumentsByUser(id) {
-    return await supabase.from("proposed_documents").select("*").eq("userid",id)
+    return await supabase.from("proposed_documents").select("proposeddocid,docname,docpicture").eq("userid",id)
 }
 
 //get all fixes proposed by a user
 
 async function fetchProposedFixesByUser(id) {
-    return await supabase.from("fixes").select("*").eq("userid",id)
+    return await supabase.from("fixes").select("fixid,documents!inter (docname)").eq("userid",id)
 }
 
 //delete a proposed document
@@ -86,6 +86,31 @@ async function deleteProposedFix(id,user) {
     return await supabase.from("fix").delete().eq("fixid",id).select()
 }
 
+//function to fetch proposed document details
+async function fetchProposedDocumentDetails(id,user) {
+    const{data,error}= await supabase.from("proposed_documents").select("userid").eq("proposeddocid",id).single()
+    if (!data || error) {
+        throw new NotFoundError("no proposed document with this id")
+    }
+    if (user.role!=="admin" && user.userId!==data.userid) {
+        throw new ForbiddenError("Access denied")
+    }
+    
+    return await supabase.from("proposed_documents").select("*").eq("proposeddocid",id)
+}
+
+//function to fetch proposed fix details
+async function fetchProposedFixDetails(id,user) {
+    const {data,error}= await supabase.from("fixes").select("userid").eq("fixid",id).single()
+    if (!data || error) {
+        throw new NotFoundError("no proposed document with this id")
+    }
+    if (user.role!=="admin" && user.userId!==data.userid) {
+        throw new ForbiddenError("Access denied")
+    }
+    return await supabase.from("fixes").select("*").eq("fixid",id)
+}
+
 module.exports={
     addDocument,
     proposeDocument,
@@ -96,4 +121,6 @@ module.exports={
     fetchProposedFixesByUser,
     deleteProposedDocuemnt,
     deleteProposedFix,
+    fetchProposedDocumentDetails,
+    fetchProposedFixDetails
 }

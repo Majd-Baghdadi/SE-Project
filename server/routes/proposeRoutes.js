@@ -11,9 +11,11 @@ router.post("/document",proposeController.proposeDocument) //route to propose a 
 router.post("/fix/:docid",VerifyUser,proposeController.proposeFix) //route to propose a fix (user only)
 router.patch("/document/:id",proposeController.editProposedDocument) //route to edit a proposed document
 router.patch("/fix/:id",proposeController.editProposedFix) //route to edit a proposed fix
-router.get("/document",proposeController.getProposedDocumentsByUser) //route to fetch documents proposed by a user
-router.get("/fix",proposeController.getProposedFixesByUser) //route to fetch fixes proposed by a user
+router.get("/document",VerifyUser,proposeController.getProposedDocumentsByUser) //route to fetch documents proposed by a user
+router.get("/fix",VerifyUser,proposeController.getProposedFixesByUser) //route to fetch fixes proposed by a user
 router.delete("/document/:id",proposeController.deleteProposedDocuemnt) //route to delete a proposed document
 router.delete("/fix/:id",proposeController.deleteProposedFix) //route to delete a proposed fix
+router.get("/proposedDocument/:id",proposeController.fetchProposedDocumentDetails) //fetch a proposed document's details
+router.get("/proposedFix/:id",proposeController.fetchProposedFixDetails) //fetch a proposed fix details
 
 module.exports=router
