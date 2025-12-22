@@ -1,6 +1,7 @@
 // Handles admin operations: validating proposals/fixes, editing/deleting documents
 const admin = require("../services/adminService")
 const proposeService = require("../services/proposeService")
+const storageService = require("../services/storageService")
 const { proposeDocument } = require("./proposeController")
 //function to fetch all proposed documents
 async function fetchProposedDocuments(req, res) {
@@ -62,14 +63,43 @@ const updateDocument = async (req, res) => {
                 error: 'document id is required'
             });
         }
-        const payload = {
-            ...req.body,
+
+        const { docpicture, ...bodyWithoutPicture } = req.body;
+        var payload = {
+            ...bodyWithoutPicture,
         }
+
         if (!payload.docname || !payload.doctype || !payload.steps || payload.steps.length == 0) {
             return res.status(400).json({
                 success: false,
                 error: 'document name , type , and steps are required '
             });
+        }
+
+        if (typeof payload.steps === 'string') {
+            try {
+                payload.steps = JSON.parse(payload.steps);
+            } catch (e) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'steps must be a valid JSON array'
+                });
+            }
+        }
+
+        // Parse relateddocs if it's a string
+        if (typeof payload.relateddocs === 'string') {
+            try {
+                payload.relateddocs = JSON.parse(payload.relateddocs);
+            } catch (e) {
+                payload.relateddocs = [];
+            }
+        }
+
+        if (req.file) {
+            console.log("uploading the image");
+            const url = await storageService.uploadImage(req.file);
+            payload.docpicture = url;
         }
 
         const document = await admin.updateDocument(payload, docid)
@@ -185,6 +215,8 @@ const validateFix = async (req, res) => {
                 error: 'document name, type, and steps are required'
             });
         }
+
+
 
         const fix = await admin.getFix(fixId);
         if (!fix) {
