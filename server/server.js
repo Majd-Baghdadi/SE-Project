@@ -6,6 +6,7 @@ const documentRoutes=require("./routes/documentRoutes")
 const authRoutes=require('./routes/authRoutes') ;
 const proposeRoutes=require("./routes/proposeRoutes")
 const adminRoutes=require("./routes/adminRoutes")
+const userRoutes=require("./routes/userRoutes")
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
@@ -23,6 +24,7 @@ app.use('/api/auth',authRoutes) ;
 app.use("/api/documents",documentRoutes);
 app.use("/api/propose",proposeRoutes)
 app.use("/api/admin",adminRoutes)
+app.use("/api/user",userRoutes)
 
 
 app.get('/',(req,res)=>{
