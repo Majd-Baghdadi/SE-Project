@@ -56,7 +56,7 @@ register: async (userName, email, password, role = 'user') => {
   },
 
   logout: async () => {
-    localStorage.removeItem('authToken');s
+    localStorage.removeItem('authToken');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userName');

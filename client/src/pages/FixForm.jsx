@@ -3,6 +3,35 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, List, DollarSign, Clock, Check, X } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import fixService from '../services/fixService';
+// Utility function to convert time strings to integer days
+const convertTimeToInteger = (timeString) => {
+  if (!timeString) return undefined;
+  
+  const match = timeString.match(/^(\d+)\s*(day|week|month|year|hour|minute)s?$/i);
+  if (!match) return undefined;
+  
+  const value = parseInt(match[1]);
+  const unit = match[2].toLowerCase();
+  
+  // Convert everything to days
+  switch (unit) {
+    case 'minute':
+      return Math.ceil(value / (24 * 60)); // minutes to days
+    case 'hour':
+      return Math.ceil(value / 24); // hours to days
+    case 'day':
+      return value;
+    case 'week':
+      return value * 7;
+    case 'month':
+      return value * 30;
+    case 'year':
+      return value * 365;
+    default:
+      return value;
+  }
+};
+
 
 // ---------------- Success Modal ----------------
 const SuccessModal = ({ onClose }) => (
@@ -145,19 +174,29 @@ const ReportIssuePage = () => {
     return Object.values(newErrors).every(error => error === '');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateAll()) {
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validateAll()) {
+    return;
+  }
 
-    setIsSubmitting(true);
-    console.log('📤 Submitting fix for document:', docid);
-    console.log('📤 Form data:', formData);
+  setIsSubmitting(true);
+  console.log('📤 Submitting fix for document:', docid);
+  console.log('📤 Form data:', formData);
 
-    try {
-      const response = await fixService.submitFix(docid, formData);
+  // Convert processing time to integer (days) before sending
+  const processedFormData = {
+    ...formData,
+    processingTime: formData.processingTime 
+      ? convertTimeToInteger(formData.processingTime) 
+      : formData.processingTime
+  };
+
+  console.log('📤 Processed form data (time converted to days):', processedFormData);
+
+  try {
+    const response = await fixService.submitFix(docid, processedFormData);
       
       if (response.success) {
         console.log('✅ Fix submitted successfully');
