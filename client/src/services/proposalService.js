@@ -1,34 +1,118 @@
-/**
- * Proposal Service
- * 
- * Purpose: Handle user proposal submissions
- * 
- * Endpoints:
- * - submitProposal(proposalData) -> POST /propose
- * 
- * Request Shape:
- * {
- *   docName: string,
- *   picture: URL,
- *   type: string,
- *   steps: string[],
- *   relatedDocs: docId[],
- *   price: number,
- *   duration: number
- * }
- * 
- * Response Shape:
- * { proposedDocId, success: boolean }
- * 
- * Note: userId is extracted from auth token automatically
- */
+// Service for handling document proposal API calls
+import api from './api';
+import authService from './authService'; // Import authService
 
-import apiClient from './apiClient';
+class ProposalService {
+  // Check if user is authenticated using authService
+  isAuthenticated() {
+    return authService.isAuthenticated();
+  }
 
-const proposalService = {
-  submitProposal: async (proposalData) => {
-    // Returns { proposedDocId, success }
-  },
-};
+  // Propose a new document
+  async proposeDocument(documentData) {
+    try {
+      console.log('📤 Proposing document:', documentData);
+      const response = await api.post('/propose/document', documentData);
+      console.log('📥 Propose response:', response);
+      return { 
+        success: true, 
+        data: response.document || response 
+      };
+    } catch (error) {
+      console.error('❌ Error proposing document:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to propose document' 
+      };
+    }
+  }
 
-export default proposalService;
+  // Propose a fix for a document
+  async proposeFix(docId, fixData) {
+    try {
+      console.log('📤 Proposing fix:', { docId, fixData });
+      const response = await api.post(`/propose/fix/${docId}`, fixData);
+      console.log('📥 Fix response:', response);
+      return { 
+        success: true, 
+        data: response.fix || response 
+      };
+    } catch (error) {
+      console.error('❌ Error proposing fix:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to propose fix' 
+      };
+    }
+  }
+
+  // Edit a proposed document
+  async editProposedDocument(id, documentData) {
+    try {
+      const response = await api.patch(`/propose/document/${id}`, documentData);
+      return { 
+        success: true, 
+        data: response.document || response 
+      };
+    } catch (error) {
+      console.error('Error editing proposed document:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to edit proposed document' 
+      };
+    }
+  }
+
+  // Edit a proposed fix
+  async editProposedFix(id, fixData) {
+    try {
+      const response = await api.patch(`/propose/fix/${id}`, fixData);
+      return { 
+        success: true, 
+        data: response.fix || response 
+      };
+    } catch (error) {
+      console.error('Error editing proposed fix:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to edit proposed fix' 
+      };
+    }
+  }
+
+  // Get all proposed documents by current user
+  async getProposedDocumentsByUser() {
+    try {
+      const response = await api.get('/propose/document');
+      return { 
+        success: true, 
+        data: response.documents || response 
+      };
+    } catch (error) {
+      console.error('Error fetching proposed documents:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to fetch proposed documents' 
+      };
+    }
+  }
+
+  // Get all proposed fixes by current user
+  async getProposedFixesByUser() {
+    try {
+      const response = await api.get('/propose/fix');
+      return { 
+        success: true, 
+        data: response.fixes || response 
+      };
+    } catch (error) {
+      console.error('Error fetching proposed fixes:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to fetch proposed fixes' 
+      };
+    }
+  }
+}
+
+export default new ProposalService();

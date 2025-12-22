@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, List, DollarSign, Clock, Check, X } from 'lucide-react';
 import NavBar from '../components/NavBar';
+import fixService from '../services/fixService';
 
 // ---------------- Success Modal ----------------
 const SuccessModal = ({ onClose }) => (
@@ -67,8 +68,9 @@ const CancelModal = ({ onClose, onConfirm }) => (
 // ---------------- ReportIssuePage ----------------
 const ReportIssuePage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const documentInfo = location.state?.documentInfo || {};
+  const { docid } = useParams(); // Get docid from URL parameter
+  
+  console.log('📋 Document ID from URL:', docid);
 
   const [formData, setFormData] = useState({
     steps: '',
@@ -81,17 +83,17 @@ const ReportIssuePage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showEmptyFieldError, setShowEmptyFieldError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validation functions
   const validatePrice = (price) => {
-    if (!price.trim()) return ''; // Optional field
+    if (!price.trim()) return '';
     if (!/^\d+(\.\d{1,2})?$/.test(price)) return 'Price must be a valid number (e.g., 100 or 99.99)';
     return '';
   };
 
   const validateProcessingTime = (time) => {
-    if (!time.trim()) return ''; // Optional field
-    // Accept formats like: "1 day", "2 weeks", "3 months", "4 hours"
+    if (!time.trim()) return '';
     const timeRegex = /^\d+\s*(day|week|month|year|hour|minute)s?$/i;
     if (!timeRegex.test(time)) return 'Enter valid time (e.g., "2 days", "1 week", "3 months")';
     return '';
@@ -100,30 +102,29 @@ const ReportIssuePage = () => {
   const handleStepsChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, steps: value });
-    setShowEmptyFieldError(false); // Hide error when user starts typing
+    setShowEmptyFieldError(false);
   };
 
   const handleDocumentsChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, documents: value });
-    setShowEmptyFieldError(false); // Hide error when user starts typing
+    setShowEmptyFieldError(false);
   };
 
   const handlePriceChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, price: value });
     setErrors({ ...errors, price: validatePrice(value) });
-    setShowEmptyFieldError(false); // Hide error when user starts typing
+    setShowEmptyFieldError(false);
   };
 
   const handleProcessingTimeChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, processingTime: value });
     setErrors({ ...errors, processingTime: validateProcessingTime(value) });
-    setShowEmptyFieldError(false); // Hide error when user starts typing
+    setShowEmptyFieldError(false);
   };
 
-  // Check if at least one field has content
   const hasAtLeastOneFieldFilled = () => {
     return Object.values(formData).some(value => value.trim() !== '');
   };
@@ -136,22 +137,40 @@ const ReportIssuePage = () => {
     
     setErrors(newErrors);
     
-    // Check if at least one field is filled
     if (!hasAtLeastOneFieldFilled()) {
       setShowEmptyFieldError(true);
       return false;
     }
     
-    // Check if validation errors exist
     return Object.values(newErrors).every(error => error === '');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (validateAll()) {
-      console.log('Issue report submitted:', formData);
-      setShowSuccessModal(true);
+    if (!validateAll()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    console.log('📤 Submitting fix for document:', docid);
+    console.log('📤 Form data:', formData);
+
+    try {
+      const response = await fixService.submitFix(docid, formData);
+      
+      if (response.success) {
+        console.log('✅ Fix submitted successfully');
+        setShowSuccessModal(true);
+      } else {
+        console.error('❌ Fix submission failed:', response.message);
+        alert(response.message || 'Failed to submit fix. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Error submitting fix:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -180,6 +199,7 @@ const ReportIssuePage = () => {
     });
     setErrors({});
     setShowEmptyFieldError(false);
+    navigate(-1);
   };
 
   return (
@@ -187,7 +207,6 @@ const ReportIssuePage = () => {
       <NavBar />
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-10">
             <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
               Report an Issue
@@ -198,7 +217,6 @@ const ReportIssuePage = () => {
           
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Steps Issue */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
@@ -216,7 +234,8 @@ const ReportIssuePage = () => {
                   onChange={handleStepsChange}
                   placeholder="Report issues with procedure steps (optional)"
                   rows="3"
-                  className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
+                  maxLength="1000"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none"
                   style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -241,7 +260,8 @@ const ReportIssuePage = () => {
                   onChange={handleDocumentsChange}
                   placeholder="Report missing or incorrect documents (optional)"
                   rows="3"
-                  className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
+                  maxLength="1000"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none"
                   style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -266,6 +286,7 @@ const ReportIssuePage = () => {
                   onChange={handlePriceChange}
                   placeholder="Report incorrect fees or costs (optional)"
                   rows="3"
+                  maxLength="1000"
                   className={`w-full px-4 py-3 border-2 ${errors.price ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
                   style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
                 />
@@ -292,6 +313,7 @@ const ReportIssuePage = () => {
                   onChange={handleProcessingTimeChange}
                   placeholder="Report incorrect duration estimates (optional)"
                   rows="3"
+                  maxLength="1000"
                   className={`w-full px-4 py-3 border-2 ${errors.processingTime ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
                   style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
                 />
@@ -302,7 +324,6 @@ const ReportIssuePage = () => {
               </label>
             </div>
 
-            {/* Error message if no fields are filled (ONLY shows on submit attempt) */}
             {showEmptyFieldError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-600 text-sm font-medium">
@@ -311,28 +332,28 @@ const ReportIssuePage = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-8 py-3.5 rounded-full border-2 border-green-600 text-green-600 font-semibold hover:bg-green-50 transition-all hover:border-green-700 hover:text-green-700 active:scale-95 shadow-sm"
+                disabled={isSubmitting}
+                className="px-8 py-3.5 rounded-full border-2 border-green-600 text-green-600 font-semibold hover:bg-green-50 transition-all hover:border-green-700 hover:text-green-700 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                disabled={isSubmitting}
+                className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
               >
-                Submit Report
+                {isSubmitting ? 'Submitting...' : 'Submit Report'}
               </button>
             </div>
           </form>
         </div>
 
-        {/* Modals */}
         {showSuccessModal && <SuccessModal onClose={closeSuccessModal} />}
         {showCancelModal && <CancelModal onClose={() => setShowCancelModal(false)} onConfirm={confirmCancel} />}
       </div>

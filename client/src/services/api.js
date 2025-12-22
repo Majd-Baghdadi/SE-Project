@@ -1,31 +1,35 @@
-/**
- * API Configuration with Axios
- * 
- * Purpose: Centralized API configuration with interceptors for auth and error handling
- * Future-ready: Set up for JWT authentication and automatic token management
- */
-
 import axios from 'axios';
 export const API_BASE_URL = 'http://localhost:8000/api';
 
-/**
- * Create Axios instance with base configuration
- */
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 seconds timeout
+  timeout: 10000, 
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-/**
- * Request Interceptor
- * Automatically adds JWT token to all requests (when user is logged in)
- */
+const extractErrorMessageFromHtml = (htmlString) => {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    const preElement = doc.querySelector('pre');
+    if (preElement) {
+      return preElement.textContent.trim();
+    }
+    const titleElement = doc.querySelector('title');
+    if (titleElement) {
+      return titleElement.textContent.trim();
+    }
+  } catch (parseError) {
+    console.warn('Failed to parse HTML error response:', parseError);
+  }
+  return 'An unexpected error occurred.';
+};
+
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage (will be set after login)
     const token = localStorage.getItem('authToken');
     
     if (token) {
@@ -39,61 +43,54 @@ api.interceptors.request.use(
   }
 );
 
-/**
- * Response Interceptor
- * Handles errors globally (401 unauthorized, 500 server error, etc.)
- */
 api.interceptors.response.use(
   (response) => {
-    // Return only the data portion of the response
     return response.data;
   },
   (error) => {
-    // Handle different error types
     if (error.response) {
-      // Server responded with error status
       const status = error.response.status;
+      let errorMessage = error.response.data;
+
+      if (typeof error.response.data === 'string' && error.response.data.startsWith('<!DOCTYPE html>')) {
+        errorMessage = extractErrorMessageFromHtml(error.response.data);
+      } else if (typeof error.response.data === 'object' && error.response.data !== null) {
+        errorMessage = error.response.data.message || error.response.data.error || JSON.stringify(error.response.data);
+      }
       
       switch (status) {
         case 401:
-          // Unauthorized - token expired or invalid
           console.error('Unauthorized access - redirecting to login');
           localStorage.removeItem('authToken');
           localStorage.removeItem('isAuthenticated');
           localStorage.removeItem('userEmail');
           localStorage.removeItem('userName');
-          // Redirect to sign in page
           if (window.location.pathname !== '/signin' && window.location.pathname !== '/signup') {
             window.location.href = '/signin';
           }
           break;
           
         case 403:
-          // Forbidden - user doesn't have permission
           console.error('Access forbidden');
           break;
           
         case 404:
-          // Not found
           console.error('Resource not found');
           break;
           
         case 500:
-          // Server error
           console.error('Server error - please try again later');
           break;
           
         default:
-          console.error(`Error ${status}:`, error.response.data);
+          console.error(`Error ${status}:`, errorMessage);
       }
       
-      return Promise.reject(error.response.data);
+      return Promise.reject({ message: errorMessage, status: status });
     } else if (error.request) {
-      // Request made but no response received (network error)
       console.error('Network error - please check your connection');
       return Promise.reject({ message: 'Network error - please check your connection' });
     } else {
-      // Something else happened
       console.error('Error:', error.message);
       return Promise.reject({ message: error.message });
     }

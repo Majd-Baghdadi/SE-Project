@@ -33,7 +33,7 @@ export default function AppRoutes() {
 
       {/* Future Sprint Routes - Protected (User) */}
       <Route path="/profile" element={<Profile />} />
-      <Route path="/fixform" element={<FixFormPage />} />
+      <Route path="/fixform/:docid" element={<FixFormPage />} />
       <Route path="/propose" element={<ProposeDocument />} />
 
       {/* Future Sprint Routes - Protected (Admin) */}

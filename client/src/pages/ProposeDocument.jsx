@@ -1,6 +1,74 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image, FileText, List, DollarSign, Clock, Tag, Link, Check, AlertTriangle, X, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import SignInModal from '../components/SignInModal';
+import proposalService from '../services/proposalService';
+
+// Utility function to resize image with more aggressive compression
+const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    img.src = base64Str;
+    
+    img.onerror = () => reject(new Error('Failed to load image'));
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Balance between quality and size
+      const resized = canvas.toDataURL('image/jpeg', 0.2);
+      resolve(resized);
+    };
+  });
+};
+// Helper function to convert time string to integer (days)
+const convertTimeToInteger = (timeString) => {
+  if (!timeString) return undefined;
+  
+  const match = timeString.match(/^(\d+)\s*(day|week|month|year|hour|minute)s?$/i);
+  if (!match) return undefined;
+  
+  const value = parseInt(match[1]);
+  const unit = match[2].toLowerCase();
+  
+  // Convert everything to days
+  switch (unit) {
+    case 'minute':
+      return Math.ceil(value / (24 * 60)); // minutes to days
+    case 'hour':
+      return Math.ceil(value / 24); // hours to days
+    case 'day':
+      return value;
+    case 'week':
+      return value * 7;
+    case 'month':
+      return value * 30;
+    case 'year':
+      return value * 365;
+    default:
+      return value;
+  }
+};
 
 // ---------------- Custom Dropdown Component (for Category) ----------------
 const CustomDropdown = ({ label, icon: Icon, options, value, onChange, placeholder = "Select...", error = false }) => {
@@ -28,7 +96,6 @@ const CustomDropdown = ({ label, icon: Icon, options, value, onChange, placehold
         </h3>
       </div>
 
-      {/* Dropdown Trigger */}
       <div
         className={`w-full px-4 py-3 border-2 ${error ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer bg-white hover:border-green-500 transition-colors flex justify-between items-center`}
         onClick={() => setOpen(!open)}
@@ -41,7 +108,6 @@ const CustomDropdown = ({ label, icon: Icon, options, value, onChange, placehold
       </div>
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
 
-      {/* Dropdown Options */}
       {open && (
         <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-auto z-50">
           {options.map((option) => (
@@ -70,19 +136,26 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef();
 
-  const toggleOption = (value) => {
+  const toggleOption = (docId) => {
     let updated = [...selected];
-    if (updated.includes(value)) {
-      updated = updated.filter((v) => v !== value);
-    } else {
-      updated.push(value);
+    if (updated.includes(docId)) {
+      updated = updated.filter((id) => id !== docId);
+    }
+    else {
+      updated.push(docId);
     }
     onChange(updated);
   };
 
-  const removeOption = (value, e) => {
+  const removeOption = (docId, e) => {
     e.stopPropagation();
-    onChange(selected.filter((v) => v !== value));
+    onChange(selected.filter((id) => id !== docId));
+  };
+
+  // Helper to get document name by ID
+  const getDocNameById = (docId) => {
+    const doc = options.find(opt => opt.id === docId);
+    return doc ? doc.name : docId;
   };
 
   useEffect(() => {
@@ -106,7 +179,6 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
         </h3>
       </div>
 
-      {/* Selected Items Display */}
       <div
         className={`w-full px-4 py-3 border-2 ${error ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer bg-white hover:border-green-500 transition-colors min-h-[50px] flex justify-between items-center`}
         onClick={() => setOpen(!open)}
@@ -117,15 +189,15 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
               Select related documents...
             </span>
           )}
-          {selected.map((item) => (
+          {selected.map((docId) => (
             <span
-              key={item}
+              key={docId}
               className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-medium"
             >
-              {item}
+              {getDocNameById(docId)}
               <button
                 type="button"
-                onClick={(e) => removeOption(item, e)}
+                onClick={(e) => removeOption(docId, e)}
                 className="text-green-700 hover:text-green-900 ml-1"
               >
                 <X size={14} />
@@ -137,22 +209,21 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
       </div>
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
 
-      {/* Dropdown Options */}
       {open && (
         <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-auto z-50">
-          {options.map((option) => (
+          {options.map((doc) => (
             <div
-              key={option}
+              key={doc.id}
               className={`px-4 py-3 cursor-pointer transition-colors flex justify-between items-center ${
-                selected.includes(option)
+                selected.includes(doc.id)
                   ? 'bg-green-50 text-green-700'
                   : 'hover:bg-gray-50'
               }`}
-              onClick={() => toggleOption(option)}
+              onClick={() => toggleOption(doc.id)}
               style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
             >
-              <span>{option}</span>
-              {selected.includes(option) && (
+              <span>{doc.name}</span>
+              {selected.includes(doc.id) && (
                 <Check className="w-4 h-4 text-green-600" />
               )}
             </div>
@@ -197,10 +268,10 @@ const CancelModal = ({ onClose, onConfirm }) => (
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounceIn">
           <AlertTriangle className="w-10 h-10 text-red-600" strokeWidth={2.5} />
         </div>
-        <h3 className="mb-3" style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontFamily: 'Source Serif Pro', fontWeight: 700, color: '#273248' }}>
+        <h3 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontFamily: 'Source Serif Pro', fontWeight: 700, color: '#273248' }}>
           Cancel Proposal?
         </h3>
-        <p className="mb-8" style={{ fontSize: 'clamp(15px, 1.8vw, 17px)', fontFamily: 'Lato', color: '#61646b', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 'clamp(15px, 1.8vw, 17px)', fontFamily: 'Lato', color: '#61646b', lineHeight: 1.6 }}>
           Are you sure you want to cancel? All your entered data will be lost.
         </p>
         <div className="flex gap-3">
@@ -226,6 +297,7 @@ const CancelModal = ({ onClose, onConfirm }) => (
 
 // ---------------- ProposeDocumentPage ----------------
 const ProposeDocumentPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     picture: null,
     name: '',
@@ -239,6 +311,12 @@ const ProposeDocumentPage = () => {
   const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [availableDocuments, setAvailableDocuments] = useState([]);
+const [loadingDocuments, setLoadingDocuments] = useState(true);
 
   const categories = [
     'Visa',
@@ -251,19 +329,43 @@ const ProposeDocumentPage = () => {
     'Work Permit'
   ];
 
-  const availableDocuments = [
-    'National ID Card',
-    'Passport Copy',
-    'Birth Certificate',
-    'Proof of Residence',
-    'Tax Certificate',
-    'Marriage Certificate',
-    'Medical Certificate',
-    'Police Record',
-    'Bank Statement',
-    'Employment Contract'
-  ];
 
+  // Check authentication on any form interaction
+// Check authentication on any form interaction
+const checkAuthAndProceed = (callback) => {
+  if (!proposalService.isAuthenticated()) {
+    setShowSignInModal(true);
+    return false;
+  }
+  callback();
+  return true;
+};
+
+// Fetch available documents on component mount
+useEffect(() => {
+  const fetchDocuments = async () => {
+    try {
+      setLoadingDocuments(true);
+      const response = await fetch('http://localhost:8000/api/documents');
+      const data = await response.json();
+      
+      if (data.documents && Array.isArray(data.documents)) {
+        // Transform to format needed for dropdown: {id: uuid, name: docname}
+        setAvailableDocuments(data.documents.map(doc => ({
+          id: doc.docid,
+          name: doc.docname
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setAvailableDocuments([]);
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  fetchDocuments();
+}, []);
   // Validation functions
   const validateName = (name) => {
     if (!name.trim()) return 'Document name is required';
@@ -274,23 +376,22 @@ const ProposeDocumentPage = () => {
   };
 
   const validatePrice = (price) => {
-    if (!price.trim()) return ''; // Price is optional
-    if (!/^\d+(\.\d{1,2})?$/.test(price)) return 'Price must be a valid number ';
+    if (!price.trim()) return '';
+    if (!/^\d+(\.\d{1,2})?$/.test(price)) return 'Price must be a valid number';
     if (parseFloat(price) <= 0) return 'Price must be greater than 0';
     if (parseFloat(price) > 1000000) return 'Price cannot exceed 1,000,000';
     return '';
   };
 
   const validateTime = (time) => {
-    if (!time.trim()) return ''; // Time is optional
-    // Accept formats like: "1 day", "2 weeks", "3 months", "4 hours"
+    if (!time.trim()) return '';
     const timeRegex = /^\d+\s*(day|week|month|year|hour|minute)s?$/i;
     if (!timeRegex.test(time)) return 'Enter valid time (e.g., "2 days", "1 week", "3 months")';
     return '';
   };
 
   const validateCategory = (category) => {
-    
+    if (!category.trim()) return 'Category is required';
     return '';
   };
 
@@ -304,64 +405,108 @@ const ProposeDocumentPage = () => {
     return '';
   };
 
-  const handleImageUpload = (e) => {
+const handleImageUpload = (e) => {
+  if (!hasInteracted) setHasInteracted(true);
+  
+  checkAuthAndProceed(() => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
+      console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+      
       if (!file.type.startsWith('image/')) {
         setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
         return;
       }
       
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors({ ...errors, picture: 'Image size must be less than 5MB' });
-        return;
-      }
-
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, picture: reader.result });
-        setErrors({ ...errors, picture: '' });
+      reader.onloadend = async () => {
+        const originalSize = reader.result.length;
+        console.log('📸 Original base64 size:', (originalSize / 1024).toFixed(2), 'KB');
+        
+        try {
+          const resizedImage = await resizeImage(reader.result);
+          const finalSize = resizedImage.length;
+          console.log('📸 Resized base64 size:', (finalSize / 1024).toFixed(2), 'KB');
+          console.log('📸 First 100 chars:', resizedImage.substring(0, 100));
+          
+          // Remove data:image/jpeg;base64, prefix if exists
+          const base64Only = resizedImage.includes(',') 
+            ? resizedImage.split(',')[1] 
+            : resizedImage;
+          
+          console.log('📸 After removing prefix:', (base64Only.length / 1024).toFixed(2), 'KB');
+          console.log('📸 Storing in formData');
+          
+          setFormData({ ...formData, picture: base64Only });
+          setErrors({ ...errors, picture: '' });
+        } catch (err) {
+          console.error('📸 Error resizing:', err);
+          setErrors({ ...errors, picture: 'Failed to process image' });
+        }
       };
       reader.readAsDataURL(file);
     }
-  };
+  });
+};
 
   const handleNameChange = (e) => {
-    const value = e.target.value;
-    setFormData({ ...formData, name: value });
-    setErrors({ ...errors, name: validateName(value) });
+    if (!hasInteracted) setHasInteracted(true);
+    
+    checkAuthAndProceed(() => {
+      const value = e.target.value;
+      setFormData({ ...formData, name: value });
+      setErrors({ ...errors, name: validateName(value) });
+    });
   };
 
   const handlePriceChange = (e) => {
-    const value = e.target.value;
-    setFormData({ ...formData, price: value });
-    setErrors({ ...errors, price: validatePrice(value) });
+    if (!hasInteracted) setHasInteracted(true);
+    
+    checkAuthAndProceed(() => {
+      const value = e.target.value;
+      setFormData({ ...formData, price: value });
+      setErrors({ ...errors, price: validatePrice(value) });
+    });
   };
 
   const handleTimeChange = (e) => {
-    const value = e.target.value;
-    setFormData({ ...formData, expectedTime: value });
-    setErrors({ ...errors, expectedTime: validateTime(value) });
+    if (!hasInteracted) setHasInteracted(true);
+    
+    checkAuthAndProceed(() => {
+      const value = e.target.value;
+      setFormData({ ...formData, expectedTime: value });
+      setErrors({ ...errors, expectedTime: validateTime(value) });
+    });
   };
 
   const handleStepsChange = (e) => {
-    const value = e.target.value;
-    setFormData({ ...formData, steps: value });
-    setErrors({ ...errors, steps: validateSteps(value) });
+    if (!hasInteracted) setHasInteracted(true);
+    
+    checkAuthAndProceed(() => {
+      const value = e.target.value;
+      setFormData({ ...formData, steps: value });
+      setErrors({ ...errors, steps: validateSteps(value) });
+    });
   };
 
   const handleCategoryChange = (value) => {
-    setFormData({ ...formData, category: value });
-    setErrors({ ...errors, category: validateCategory(value) });
+    if (!hasInteracted) setHasInteracted(true);
+    
+    checkAuthAndProceed(() => {
+      setFormData({ ...formData, category: value });
+      setErrors({ ...errors, category: validateCategory(value) });
+    });
   };
 
-  const handleRelatedDocumentsChange = (updated) => {
+const handleRelatedDocumentsChange = (updated) => {
+  if (!hasInteracted) setHasInteracted(true);
+  
+  checkAuthAndProceed(() => {
+    // 'updated' contains document IDs (UUIDs)
     setFormData({ ...formData, relatedDocuments: updated });
     setErrors({ ...errors, relatedDocuments: validateRelatedDocuments(updated) });
-  };
-
+  });
+};
   const validateAll = () => {
     const newErrors = {
       name: validateName(formData.name),
@@ -375,16 +520,69 @@ const ProposeDocumentPage = () => {
     setErrors(newErrors);
     return Object.values(newErrors).every(error => error === '');
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitError('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (validateAll()) {
-      console.log('Form submitted:', formData);
-      setShowSuccessModal(true);
+  if (!proposalService.isAuthenticated()) {
+    setShowSignInModal(true);
+    return;
+  }
+  
+  if (!validateAll()) {
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+  const proposalData = {
+  docname: formData.name,
+  doctype: formData.category || undefined,
+  steps: formData.steps.trim() 
+    ? formData.steps.split('\n').map(s => s.trim()).filter(s => s) 
+    : [],
+  docprice: formData.price ? parseFloat(formData.price) : undefined,
+  duration: formData.expectedTime ? convertTimeToInteger(formData.expectedTime) : undefined,
+  relateddocs: formData.relatedDocuments.length > 0 ? formData.relatedDocuments : undefined,
+};
+
+    // Add picture if exists
+    if (formData.picture) {
+      console.log('📸 Including picture in payload');
+      console.log('📸 Picture length:', formData.picture.length);
+      console.log('📸 Picture preview:', formData.picture.substring(0, 50));
+      proposalData.docpicture = formData.picture;
+    } else {
+      console.log('📸 No picture in formData');
     }
-  };
 
+    // Remove undefined
+    Object.keys(proposalData).forEach(key => 
+      (proposalData[key] === undefined || proposalData[key] === null) && delete proposalData[key]
+    );
+
+  console.log('📤 Payload:', {
+  ...proposalData,
+  docpicture: proposalData.docpicture 
+    ? `[BASE64 ${proposalData.docpicture.length} chars]` 
+    : 'NOT INCLUDED',
+  relateddocs: proposalData.relateddocs || 'NOT INCLUDED'
+});
+    const response = await proposalService.proposeDocument(proposalData);
+
+    if (response.success) {
+      setShowSuccessModal(true);
+    } else {
+      setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
+    }
+  } catch (error) {
+    console.error('Submit error:', error);
+    setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const handleCancel = () => setShowCancelModal(true);
 
   const confirmCancel = () => {
@@ -399,6 +597,7 @@ const ProposeDocumentPage = () => {
     });
     setErrors({});
     setShowCancelModal(false);
+    setHasInteracted(false);
   };
 
   const closeSuccessModal = () => {
@@ -413,6 +612,12 @@ const ProposeDocumentPage = () => {
       relatedDocuments: []
     });
     setErrors({});
+    setHasInteracted(false);
+    navigate('/');
+  };
+
+  const handleSignInSuccess = () => {
+    setShowSignInModal(false);
   };
 
   return (
@@ -420,7 +625,6 @@ const ProposeDocumentPage = () => {
       <NavBar />
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-10">
             <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
               Propose New Document
@@ -430,9 +634,13 @@ const ProposeDocumentPage = () => {
             </p>
           </div>
 
-          {/* Form */}
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              {submitError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Picture */}
             <div className={`bg-white border ${errors.picture ? 'border-red-200' : 'border-gray-200'} rounded-xl shadow-sm p-6`}>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -449,10 +657,15 @@ const ProposeDocumentPage = () => {
                 </div>
               </label>
               {errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
-              {formData.picture && <img src={formData.picture} alt="Preview" className="mt-3 max-w-xs rounded-lg border border-gray-200" />}
+             {formData.picture && (
+  <img 
+    src={`data:image/jpeg;base64,${formData.picture}`} 
+    alt="Preview" 
+    className="mt-3 max-w-xs rounded-lg border border-gray-200" 
+  />
+)}
             </div>
 
-            {/* Name */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <label className="block">
                 <div className="flex items-center gap-3 mb-3">
@@ -475,7 +688,6 @@ const ProposeDocumentPage = () => {
               </label>
             </div>
 
-            {/* Steps */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <label className="block">
                 <div className="flex items-center gap-3 mb-3">
@@ -499,7 +711,6 @@ const ProposeDocumentPage = () => {
               </label>
             </div>
 
-            {/* Price */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <label className="block">
                 <div className="flex items-center gap-3 mb-3">
@@ -523,7 +734,6 @@ const ProposeDocumentPage = () => {
               </label>
             </div>
 
-            {/* Expected Time */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <label className="block">
                 <div className="flex items-center gap-3 mb-3">
@@ -547,7 +757,6 @@ const ProposeDocumentPage = () => {
               </label>
             </div>
 
-            {/* Category */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <CustomDropdown
                 label="Category"
@@ -560,7 +769,6 @@ const ProposeDocumentPage = () => {
               />
             </div>
 
-            {/* Related Documents */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <MultiSelectDropdown
                 label="Related Documents"
@@ -571,30 +779,37 @@ const ProposeDocumentPage = () => {
               />
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-8 py-3.5 rounded-full border-2 border-green-600 text-green-600 font-semibold hover:bg-green-50 transition-all hover:border-green-700 hover:text-green-700 active:scale-95 shadow-sm"
+                disabled={isSubmitting}
+                className="px-8 py-3.5 rounded-full border-2 border-green-600 text-green-600 font-semibold hover:bg-green-50 transition-all hover:border-green-700 hover:text-green-700 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                disabled={isSubmitting}
+                className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
               >
-                Submit Proposal
+                {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
               </button>
             </div>
           </form>
         </div>
 
-        {/* Modals */}
         {showSuccessModal && <SuccessModal onClose={closeSuccessModal} />}
         {showCancelModal && <CancelModal onClose={() => setShowCancelModal(false)} onConfirm={confirmCancel} />}
+        {showSignInModal && (
+          <SignInModal 
+            isOpen={showSignInModal} 
+            onClose={() => setShowSignInModal(false)}
+            onSuccess={handleSignInSuccess}
+          />
+        )}
       </div>
 
       <style>{`
