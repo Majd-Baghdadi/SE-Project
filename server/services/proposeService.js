@@ -58,7 +58,7 @@ async function fetchProposedDocumentsByUser(id) {
 //get all fixes proposed by a user
 
 async function fetchProposedFixesByUser(id) {
-    return await supabase.from("fixes").select("fixid,documents!inter (docname)").eq("userid",id)
+    return await supabase.from("fixes").select("fixid,documents!inner(docname)").eq("userid",id)
 }
 
 //delete a proposed document

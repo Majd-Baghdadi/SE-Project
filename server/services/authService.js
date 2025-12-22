@@ -23,7 +23,8 @@ const createUser = async (userName, email, password, role, verified) => {
     }]).select().single();
 
     if (error) {
-        throw error;
+        console.error('Failed to create user:', error);
+        throw new Error("Failed to create user");
     }
 
     const { password: _, ...userWithoutPassword } = data;
@@ -43,8 +44,10 @@ const updatePassword = async (userId, newPassword) => {
         .select()
         .single();
 
-    if (error) throw error;
-
+    if (error) {
+        console.error('Failed to update password:', error);
+        throw new Error("Failed to update password");
+    }
     const { password: _, ...userWithoutPassword } = data;
     return userWithoutPassword;
 }
@@ -59,7 +62,8 @@ const validateUser = async (userId) => {
         .single();
 
     if (error) {
-        throw error;
+        console.error('Failed to verify user:', error);
+        throw new Error("Failed to verify user");
     }
 
     const { password, ...userWithoutPassword } = data;
@@ -73,7 +77,8 @@ const removeUser = async (userId) => {
         .eq('id', userId);
 
     if (error) {
-        throw error;
+        console.error('Failed to remove user:', error);
+        throw new Error("Failed to remove user");
     }
 
     console.log('User deleted:', userId);
@@ -181,7 +186,10 @@ const findUser = async (email) => {
         .eq('email', email)
         .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        console.error(error);
+        throw new Error("Database error occured !");
+    }
 
     return data;
 
@@ -194,7 +202,10 @@ const findUserByEmail = async (email) => {
         .eq('email', email)
         .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        console.error(error);
+        throw new Error("Database error occured !");
+    }
 
     return data;
 }
@@ -206,13 +217,16 @@ const findUserById = async (userId) => {
         .eq('id', userId)
         .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        console.error(error);
+        throw new Error("Database error occured !");
+    }
 
     return data;
 }
 
 
-module.exports = { updatePassword,sendResetEmail, userExists, createUser, sendVerificationEmail, validateUser, removeUser, findUser, findUserByEmail, findUserById };
+module.exports = { updatePassword, sendResetEmail, userExists, createUser, sendVerificationEmail, validateUser, removeUser, findUser, findUserByEmail, findUserById };
 
 
 

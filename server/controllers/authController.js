@@ -148,6 +148,7 @@ exports.register = async (req, res) => {
 }
 
 
+
 exports.resendVerificationEmail = async (req, res) => {
     try {
         const { email } = req.body;

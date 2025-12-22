@@ -8,5 +8,7 @@ router.use(verifyAuthToken,VerifyAdmin)
 
 router.get("/proposedDocuments",adminController.fetchProposedDocuments)
 router.get("/proposedFixes",adminController.fetchProposedFixes)
-
+router.patch("/updateDocument/:docid",adminController.updateDocument)
+router.post("/validateProposition/:propositionId",adminController.validateProposition)
+router.patch("/validateFix/:fixId",adminController.validateFix)
 module.exports=router
