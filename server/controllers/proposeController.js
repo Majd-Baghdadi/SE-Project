@@ -1,0 +1,335 @@
+// Handles fix/issue reporting for documents
+const { storage } = require("../config/supabase")
+const propose = require("../services/proposeService")
+const storageService = require("../services/storageService")
+
+//function to call when proposing a document
+
+async function proposeDocument(req, res) {
+    try {
+        const role = req.user.role
+        let call
+        const { docpicture, ...bodyWithoutPicture } = req.body;
+        var payload = {
+            ...bodyWithoutPicture,
+        }
+
+        if (!payload.docname || !payload.doctype || !payload.steps || payload.steps.length == 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'document name , type , and steps are required '
+            });
+        }
+
+        if (typeof payload.steps === 'string') {
+            try {
+                payload.steps = JSON.parse(payload.steps);
+            } catch (e) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'steps must be a valid JSON array'
+                });
+            }
+        }
+
+        // Parse relateddocs if it's a string
+        if (typeof payload.relateddocs === 'string') {
+            try {
+                payload.relateddocs = JSON.parse(payload.relateddocs);
+            } catch (e) {
+                payload.relateddocs = [];
+            }
+        }
+
+
+        if (req.file) {
+            const url = await storageService.uploadImage(req.file);
+            payload.docpicture = url;
+        }
+
+        if (role === "admin") {
+            call = await propose.addDocument(payload, req.user)
+        }
+        else {
+            payload = {
+                ...payload,
+                userid: req.user.userId
+            }
+            call = await propose.proposeDocument(payload)
+        }
+        const { data, error } = call
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(201).json({
+            document: data
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to call when proposing a fix
+
+async function proposeFix(req, res) {
+    try {
+        const { docid } = req.params
+        console.log(docid)
+        const payload = {
+            ...req.body,
+            docid: docid,
+            userid: req.user.userId
+        }
+        const { data, error } = await propose.proposeFix(payload)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(201).json({
+            fix: data
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to call when editing a document proposition
+
+async function editProposedDocument(req, res) {
+    try {
+        const { id } = req.params
+        const { docpicture, ...bodyWithoutPicture } = req.body;
+        var payload = {
+            ...bodyWithoutPicture,
+        }
+
+        if (!payload.docname || !payload.doctype || !payload.steps || payload.steps.length == 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'document name , type , and steps are required '
+            });
+        }
+
+
+        if (req.file) {
+            const url = await storageService.uploadImage(req.file);
+            payload.docpicture = url;
+        }
+
+        const { data, error } = await propose.updateProposedDocument(id, payload, req.user)
+        if (error) {
+
+            return res.status(400).json({
+                error: error.message
+            })
+
+        }
+
+        res.status(200).json({
+            document: data
+        })
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error: error.message
+            })
+        }
+
+        res.status(500).json({
+            error: error.message
+        })
+
+    }
+}
+
+//function to call when updating a fix proposition
+
+async function editProposedFix(req, res) {
+    try {
+        const { id } = req.params
+        const payload = {
+            ...req.body,
+        }
+        const { data, error } = await propose.updateProposedFix(id, payload, req.user)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            fix: data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error: error.message
+            })
+        }
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to call when fetching all proposed documents by a user
+
+async function getProposedDocumentsByUser(req, res) {
+    try {
+        const { data, error } = await propose.fetchProposedDocumentsByUser(req.user.userId)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            documents: data
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to call to fetch all proposed fixes by a user
+
+async function getProposedFixesByUser(req, res) {
+
+    try {
+        const { data, error } = await propose.fetchProposedFixesByUser(req.user.userId)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            fixes: data
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to call when deleting a proposed document
+async function deleteProposedDocuemnt(req, res) {
+    try {
+        const { id } = req.params
+        const { data, error } = await propose.deleteProposedDocuemnt(id, req.user)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            document: data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error: error.message
+            })
+        }
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to call to delete a proposed fix
+async function deleteProposedFix(req, res) {
+    try {
+        const { id } = req.params
+        const { data, error } = await propose.deleteProposedFix(id, req.user)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            fix: data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error: error.message
+            })
+        }
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to fetch proposed document details
+async function fetchProposedDocumentDetails(req, res) {
+    try {
+        const { id } = req.params
+        const { data, error } = await admin.fetchProposedDocumentDetails(id, req.user)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            document: data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error: error.message
+            })
+        }
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+//function to fetch fix details
+async function fetchProposedFixDetails(req, res) {
+    try {
+        const { id } = req.params
+        const { data, error } = await admin.fetchProposedFixDetails(id, req.user)
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            })
+        }
+        res.status(200).json({
+            fix: data
+        })
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                error: error.message
+            })
+        }
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
+
+module.exports = {
+    proposeDocument,
+    proposeFix,
+    editProposedDocument,
+    editProposedFix,
+    getProposedDocumentsByUser,
+    getProposedFixesByUser,
+    deleteProposedDocuemnt,
+    deleteProposedFix,
+    fetchProposedDocumentDetails,
+    fetchProposedFixDetails,
+}

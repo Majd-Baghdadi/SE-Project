@@ -86,6 +86,7 @@ export default function SignUp() {
     setLoading(true);
 
     try {
+      console.log("Attempting to register with fullName:", formData.fullName); // Added console.log
       const response = await authService.register(
         formData.fullName,
         formData.email,
@@ -109,10 +110,10 @@ export default function SignUp() {
           navigate('/signin');
         }, 3000);
       } else {
-        setError(response.error || 'Registration failed. Please try again.');
+        setError(response.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
-      setError(err.error || 'Registration failed. Please try again.');
+      setError(typeof err.message === 'string' ? err.message : 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

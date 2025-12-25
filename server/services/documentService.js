@@ -12,4 +12,6 @@ async function getRelatedDocuments(ids) {
     return await supabase.from("documents").select("docid,docname").in("docid",ids);
 }
 
+
+
 module.exports={getDocuments,getDocumentDetails,getRelatedDocuments}

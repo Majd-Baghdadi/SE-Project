@@ -10,28 +10,42 @@ const generateVerificationToken = (userId) => {
             purpose: 'email_verification'
         },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' } // or 3600 for seconds
+        { expiresIn: '1h' }
     );
 
     return token;
 };
 
 
-const generateAuthToken=(userId)=>{
-      const token = jwt.sign(
+const generateAuthToken = (userId,role) => {
+    const token = jwt.sign(
         {
             userId,
-            purpose: 'auth'
+            purpose: 'auth',
+            role:role,
         },
         process.env.JWT_SECRET,
-        { expiresIn: '10d' } 
+        { expiresIn: '10d' }
     );
 
     return token;
 }
 
 
+const generateResetToken = (userId) => {
+    const token = jwt.sign(
+        {
+            userId,
+            purpose: 'password_reset'
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
 
-module.exports = {generateVerificationToken,generateAuthToken} ;
+    return token;
+}
+
+
+module.exports = { generateVerificationToken, generateAuthToken, generateResetToken };
 
 

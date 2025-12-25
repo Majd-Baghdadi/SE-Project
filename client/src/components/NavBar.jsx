@@ -46,8 +46,8 @@ export default function NavBar() {
           <Link to="/categories" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             Categories
           </Link>
-          <Link to="/community" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
-            Community
+          <Link to="/propose" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+            Propose
           </Link>
           <Link to="/about" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             About Us
