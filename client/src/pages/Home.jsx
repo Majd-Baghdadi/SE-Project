@@ -209,8 +209,8 @@ export default function Home() {
             Community-verified guides for passports, visas, national IDs, and all governmental procedures. Get accurate, up-to-date information from real experiences.
           </p>
           
-          {/* Search Bar */}
-          <SearchBar onSearch={handleSearch} />
+          {/* Search Bar with live suggestions */}
+          <SearchBar documents={documents} />
         </div>
       </section>
 

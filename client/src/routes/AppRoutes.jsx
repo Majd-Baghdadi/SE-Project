@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from '../pages/Home'
 import DocumentDetails from '../pages/DocumentDetails'
+import AllDocuments from '../pages/AllDocuments'
 
 import ContactUs from '../pages/ContactUs'
 import AboutUs from '../pages/AboutUs'
@@ -10,11 +11,15 @@ import RecoverPassword from '../pages/RecoverPassword'
 
 // Future pages (to be implemented in later sprints)
 import Profile from '../pages/Profile'
-// import ProposeDocument from '../pages/ProposeDocument'
-// import AdminDashboard from '../pages/Admin/AdminDashboard'
-// import ManageProposals from '../pages/Admin/ManageProposals'
-// import ManageFixes from '../pages/Admin/ManageFixes'
-// import ManageDocuments from '../pages/Admin/ManageDocuments'
+import ProposeAndFixPage from '../pages/ProposeAndFix'
+
+// Admin pages
+import AdminDashboard from '../pages/Admin/AdminDashboard'
+import ManageProposedDocs from '../pages/Admin/ManageProposedDocs'
+import ManageProposedFixes from '../pages/Admin/ManageProposedFixes'
+
+// Protected Route
+import ProtectedRoute from '../components/ProtectedRoute'
 
 
 export default function AppRoutes() {
@@ -22,6 +27,7 @@ export default function AppRoutes() {
     <Routes>
       {/* Sprint 1 Routes - Public */}
       <Route path="/" element={<Home />} />
+      <Route path="/documents" element={<AllDocuments />} />
       <Route path="/document/:docId" element={<DocumentDetails />} />
       <Route path="/about" element={<AboutUs />} />
       <Route path="/conntact" element={<ContactUs />} />
@@ -33,13 +39,33 @@ export default function AppRoutes() {
 
       {/* Future Sprint Routes - Protected (User) */}
       <Route path="/profile" element={<Profile />} />
-      {/* <Route path="/propose" element={<ProposeDocument />} /> */}
+      <Route path="/propose-fix" element={<ProposeAndFixPage />} />
 
-      {/* Future Sprint Routes - Protected (Admin) */}
-      {/* <Route path="/admin" element={<AdminDashboard />} /> */}
-      {/* <Route path="/admin/proposals" element={<ManageProposals />} /> */}
-      {/* <Route path="/admin/fixes" element={<ManageFixes />} /> */}
-      {/* <Route path="/admin/documents" element={<ManageDocuments />} /> */}
+      {/* Admin Routes - Protected (Admin Only) */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/proposals" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <ManageProposedDocs />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/fixes" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <ManageProposedFixes />
+          </ProtectedRoute>
+        } 
+      />
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />

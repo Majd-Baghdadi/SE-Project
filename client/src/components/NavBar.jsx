@@ -40,7 +40,7 @@ export default function NavBar() {
           <Link to="/" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             Home
           </Link>
-          <Link to="/procedures" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+          <Link to="/documents" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             Procedures
           </Link>
           <Link to="/categories" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
@@ -59,9 +59,14 @@ export default function NavBar() {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-4">
-          <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors">
-            🔔
-          </button>
+          {localStorage.getItem('userRole') === 'admin' && (
+            <Link 
+              to="/admin" 
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors no-underline"
+            >
+              Admin
+            </Link>
+          )}
           {isAuthenticated ? (
             <Link 
               to="/profile" 

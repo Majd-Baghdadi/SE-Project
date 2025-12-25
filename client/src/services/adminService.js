@@ -31,51 +31,111 @@
  * Note: All endpoints require admin role
  */
 
-import apiClient from './apiClient';
+import api from './api';
 
 const adminService = {
   // Proposals
   getAllProposals: async () => {
-    // Returns array of proposals
+    try {
+      const response = await api.get('/admin/proposals');
+      return response.data || response;
+    } catch (error) {
+      console.error('Error fetching proposals:', error);
+      throw error;
+    }
   },
 
   validateProposal: async (proposedDocId) => {
-    // Approves proposal, converts to document
+    try {
+      const response = await api.post(`/admin/proposals/${proposedDocId}/approve`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error approving proposal:', error);
+      throw error;
+    }
   },
 
   discardProposal: async (proposedDocId) => {
-    // Rejects proposal
+    try {
+      const response = await api.post(`/admin/proposals/${proposedDocId}/reject`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error rejecting proposal:', error);
+      throw error;
+    }
   },
 
   editProposal: async (proposedDocId, data) => {
-    // Edits proposal before approval
+    try {
+      const response = await api.put(`/admin/proposals/${proposedDocId}`, data);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error editing proposal:', error);
+      throw error;
+    }
   },
 
   // Fixes
   getAllFixes: async () => {
-    // Returns array of fixes
+    try {
+      const response = await api.get('/admin/fixes');
+      return response.data || response;
+    } catch (error) {
+      console.error('Error fetching fixes:', error);
+      throw error;
+    }
   },
 
   validateFix: async (fixId) => {
-    // Approves fix, updates document
+    try {
+      const response = await api.post(`/admin/fixes/${fixId}/approve`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error approving fix:', error);
+      throw error;
+    }
   },
 
   discardFix: async (fixId) => {
-    // Rejects fix
+    try {
+      const response = await api.post(`/admin/fixes/${fixId}/reject`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error rejecting fix:', error);
+      throw error;
+    }
   },
 
   // Documents
   editDocument: async (docId, data) => {
-    // Updates document
+    try {
+      const response = await api.put(`/admin/documents/${docId}`, data);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error editing document:', error);
+      throw error;
+    }
   },
 
   deleteDocument: async (docId) => {
-    // Deletes document
+    try {
+      const response = await api.delete(`/admin/documents/${docId}`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      throw error;
+    }
   },
 
   // Dashboard
   getDashboardStats: async () => {
-    // Returns dashboard statistics
+    try {
+      const response = await api.get('/admin/dashboard');
+      return response.data || response;
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
   },
 };
 
