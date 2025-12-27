@@ -31,51 +31,105 @@
  * Note: All endpoints require admin role
  */
 
-import apiClient from './apiClient';
+import api from './api';
 
 const adminService = {
   // Proposals
   getAllProposals: async () => {
-    // Returns array of proposals
+    try {
+      const response = await api.get('/admin/proposedDocuments');
+      return response.documents || response.data || response;
+    } catch (error) {
+      console.error('Error fetching proposals:', error);
+      throw error;
+    }
   },
 
   validateProposal: async (proposedDocId) => {
-    // Approves proposal, converts to document
+    try {
+      const response = await api.post(`/admin/validateProposition/${proposedDocId}`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error approving proposal:', error);
+      throw error;
+    }
   },
 
   discardProposal: async (proposedDocId) => {
-    // Rejects proposal
-  },
-
-  editProposal: async (proposedDocId, data) => {
-    // Edits proposal before approval
+    try {
+      // Backend doesn't seem to have a specific 'reject' endpoint in routes yet, 
+      // but let's assume it might be deleteProposedDocuemnt or similar if added.
+      // For now, keeping as is or matching if I find it.
+      const response = await api.delete(`/admin/rejectProposition/${proposedDocId}`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error rejecting proposal:', error);
+      throw error;
+    }
   },
 
   // Fixes
   getAllFixes: async () => {
-    // Returns array of fixes
+    try {
+      const response = await api.get('/admin/proposedFixes');
+      return response.fixes || response.data || response;
+    } catch (error) {
+      console.error('Error fetching fixes:', error);
+      throw error;
+    }
   },
 
-  validateFix: async (fixId) => {
-    // Approves fix, updates document
+  validateFix: async (fixId, data) => {
+    try {
+      // Backend uses PATCH /validateFix/:fixId and expects the updated document data
+      const response = await api.patch(`/admin/validateFix/${fixId}`, data);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error approving fix:', error);
+      throw error;
+    }
   },
 
   discardFix: async (fixId) => {
-    // Rejects fix
+    try {
+      const response = await api.delete(`/admin/rejectFix/${fixId}`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error rejecting fix:', error);
+      throw error;
+    }
   },
 
   // Documents
   editDocument: async (docId, data) => {
-    // Updates document
+    try {
+      const response = await api.put(`/admin/documents/${docId}`, data);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error editing document:', error);
+      throw error;
+    }
   },
 
   deleteDocument: async (docId) => {
-    // Deletes document
+    try {
+      const response = await api.delete(`/admin/documents/${docId}`);
+      return response.data || response;
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      throw error;
+    }
   },
 
   // Dashboard
   getDashboardStats: async () => {
-    // Returns dashboard statistics
+    try {
+      const response = await api.get('/admin/dashboard');
+      return response.data || response;
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
   },
 };
 

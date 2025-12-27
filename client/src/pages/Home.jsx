@@ -19,7 +19,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [usingMockData, setUsingMockData] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
-  
+
   const banners = [banner, banner3];
 
   // Mock data fallback (used if API fails)
@@ -98,7 +98,7 @@ export default function Home() {
       try {
         setLoading(true);
         const data = await getAllDocuments();
-        
+
         // If we got data, use it
         if (data && data.length > 0) {
           setDocuments(data);
@@ -155,14 +155,6 @@ export default function Home() {
     { id: 6, name: 'Healthcare Documents', icon: '🏥', count: 28 },
   ];
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'Easy': return 'text-emerald-500';
-      case 'Medium': return 'text-amber-500';
-      case 'Hard': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
 
   return (
     <div className="w-full bg-white min-h-screen">
@@ -182,10 +174,10 @@ export default function Home() {
             }}
           />
         ))}
-        
+
         {/* Overlay */}
         <div className="absolute inset-0 bg-blue-900/50 z-[1]" />
-        
+
         {/* Content */}
         <div className="relative z-10 text-center max-w-4xl px-8">
           {/* Slide Indicators */}
@@ -194,23 +186,22 @@ export default function Home() {
               <button
                 key={index}
                 onClick={() => setCurrentBanner(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  currentBanner === index ? 'bg-white w-8' : 'bg-white/50'
-                }`}
+                className={`w-3 h-3 rounded-full transition-all ${currentBanner === index ? 'bg-white w-8' : 'bg-white/50'
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
-          
-          <h1 className="text-[2.75rem] font-bold mb-6 leading-tight" style={{textShadow: '2px 2px 8px rgba(0,0,0,0.6)'}}>
+
+          <h1 className="text-[2.75rem] font-bold mb-6 leading-tight" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.6)' }}>
             Get any government document in Algeria - <span className="text-primary">step by step</span>
           </h1>
-          <p className="text-base mb-10 max-w-2xl mx-auto leading-normal" style={{textShadow: '1px 1px 3px rgba(0,0,0,0.6)'}}>
+          <p className="text-base mb-10 max-w-2xl mx-auto leading-normal" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6)' }}>
             Community-verified guides for passports, visas, national IDs, and all governmental procedures. Get accurate, up-to-date information from real experiences.
           </p>
-          
-          {/* Search Bar */}
-          <SearchBar onSearch={handleSearch} />
+
+          {/* Search Bar with live suggestions */}
+          <SearchBar documents={documents} />
         </div>
       </section>
 
@@ -223,37 +214,44 @@ export default function Home() {
                 {stat.value}
               </div>
               <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">
-                {stat.label === 'Available Documents' ? 'Verified Procedures' : 
-                 stat.label === 'Active Users' ? 'Community Members' : stat.label}
+                {stat.label === 'Available Documents' ? 'Verified Procedures' :
+                  stat.label === 'Active Users' ? 'Community Members' : stat.label}
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Browse by Category Section */}
+      {/* Review Pending Tasks Section */}
       <section className="max-w-7xl mx-auto my-16 px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-2 text-gray-900">Browse by Category</h2>
-          <p className="text-gray-600">Find documents organized by category</p>
+          <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
+          <p className="text-gray-600">Review and moderate community contributions</p>
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              to={`/search?category=${encodeURIComponent(category.name)}`}
-              className="block no-underline"
-            >
-              <div className="bg-white border border-gray-200 rounded-lg p-5 text-center cursor-pointer transition-all hover:border-primary hover:shadow-lg hover:scale-105">
-                <div className="text-4xl mb-2">{category.icon}</div>
-                <h3 className="text-xs font-bold mb-1 text-gray-900 leading-tight">{category.name}</h3>
-                <p className="text-xs text-gray-500">{category.count} procedures</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Link to="/admin/proposals" className="no-underline group">
+            <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-blue-50/30 flex items-center gap-6">
+              <div className="text-6xl group-hover:scale-110 transition-transform">📋</div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Document Proposals</h3>
+                <p className="text-gray-600">Review new procedures suggested by the community.</p>
+                <span className="inline-block mt-4 text-primary font-semibold">View Proposals →</span>
               </div>
-            </Link>
-          ))}
+            </div>
+          </Link>
+          <Link to="/admin/fixes" className="no-underline group">
+            <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-orange-50/30 flex items-center gap-6">
+              <div className="text-6xl group-hover:scale-110 transition-transform">🔧</div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Proposed Fixes</h3>
+                <p className="text-gray-600">Review edits and corrections submitted by users.</p>
+                <span className="inline-block mt-4 text-orange-600 font-semibold">View Fixes →</span>
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
+
 
       {/* Popular Procedures Section */}
       <section className="bg-white py-16 border-t border-gray-100">
@@ -307,13 +305,7 @@ export default function Home() {
                     </p>
 
                     {/* Meta Info */}
-                    <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Difficulty</div>
-                        <div className={`font-semibold ${getDifficultyColor(procedure.difficulty || 'Medium')}`}>
-                          {procedure.difficulty || 'Medium'}
-                        </div>
-                      </div>
+                    <div className="grid grid-cols-1 gap-4 mb-4 text-sm">
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Duration</div>
                         <div className="font-semibold text-gray-900">{procedure.duration || 'Varies'}</div>

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
-import authService from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 export default function SignIn() {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -13,6 +14,8 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [needsVerification, setNeedsVerification] = useState(false);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -20,58 +23,48 @@ export default function SignIn() {
       [name]: value
     }));
     setError('');
+    setNeedsVerification(false);
+  };
+
+  const handleResendVerification = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await authService.resendVerificationEmail(formData.email);
+      if (response.success) {
+        alert('A new verification link has been sent to your email.');
+        setNeedsVerification(false);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to resend verification email.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setNeedsVerification(false);
     setLoading(true);
 
     try {
-      // Mock data for testing
-      const mockUsers = {
-        'test@example.com': { password: 'password123', name: 'Test User' },
-        'user@test.com': { password: 'test123', name: 'Demo User' },
-        'admin@test.com': { password: 'admin123', name: 'Admin User' }
-      };
+      const response = await login(formData.email, formData.password);
 
-      // Check mock data first (for testing without backend)
-      if (mockUsers[formData.email] && mockUsers[formData.email].password === formData.password) {
-        // Simulate successful login
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData.email);
-        localStorage.setItem('userName', mockUsers[formData.email].name);
-        window.dispatchEvent(new Event('authStateChanged'));
-        navigate('/');
-        setLoading(false);
-        return;
-      }
-
-      // Try real API call
-      const response = await authService.login(formData.email, formData.password);
-      
       if (response.success) {
-        // Navigate to home or previous page
         navigate('/');
       } else {
         setError(response.error || 'Login failed. Please try again.');
       }
     } catch (err) {
-      // If API fails, check mock data as fallback
-      const mockUsers = {
-        'test@example.com': { password: 'password123', name: 'Test User' },
-        'user@test.com': { password: 'test123', name: 'Demo User' },
-        'admin@test.com': { password: 'admin123', name: 'Admin User' }
-      };
-      
-      if (mockUsers[formData.email] && mockUsers[formData.email].password === formData.password) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData.email);
-        localStorage.setItem('userName', mockUsers[formData.email].name);
-        window.dispatchEvent(new Event('authStateChanged'));
-        navigate('/');
+      console.error('Login error details:', err);
+
+      // The error object thrown by api.js interceptor has status and message
+      if (err.status === 403) {
+        setNeedsVerification(true);
+        setError('Your email is not verified yet.');
       } else {
-        setError(err.error || err.message || 'Login failed. Please check your credentials.');
+        setError(err.message || 'Login failed. Please check your credentials.');
       }
     } finally {
       setLoading(false);
@@ -101,10 +94,19 @@ export default function SignIn() {
             {/* Right Section - Sign In Form */}
             <div className="p-6 lg:p-10">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
-              
+
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                  {error}
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex flex-col gap-2">
+                  <span>{error}</span>
+                  {needsVerification && (
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      className="text-primary hover:underline font-semibold text-left"
+                    >
+                      Click here to resend verification email
+                    </button>
+                  )}
                 </div>
               )}
 

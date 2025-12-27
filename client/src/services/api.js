@@ -1,9 +1,9 @@
 import axios from 'axios';
-export const API_BASE_URL = 'http://localhost:8000/api';
+export const API_BASE_URL = 'http://localhost:4000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, 
+  timeout: 10000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -28,20 +28,7 @@ const extractErrorMessageFromHtml = (htmlString) => {
   return 'An unexpected error occurred.';
 };
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Request interceptor removed as we use HttpOnly cookies for authentication.
 
 api.interceptors.response.use(
   (response) => {
@@ -57,7 +44,7 @@ api.interceptors.response.use(
       } else if (typeof error.response.data === 'object' && error.response.data !== null) {
         errorMessage = error.response.data.message || error.response.data.error || JSON.stringify(error.response.data);
       }
-      
+
       switch (status) {
         case 401:
           console.error('Unauthorized access - redirecting to login');
@@ -69,23 +56,23 @@ api.interceptors.response.use(
             window.location.href = '/signin';
           }
           break;
-          
+
         case 403:
           console.error('Access forbidden');
           break;
-          
+
         case 404:
           console.error('Resource not found');
           break;
-          
+
         case 500:
           console.error('Server error - please try again later');
           break;
-          
+
         default:
           console.error(`Error ${status}:`, errorMessage);
       }
-      
+
       return Promise.reject({ message: errorMessage, status: status });
     } else if (error.request) {
       console.error('Network error - please check your connection');

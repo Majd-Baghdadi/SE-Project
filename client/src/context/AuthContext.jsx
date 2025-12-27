@@ -39,18 +39,20 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
       const userEmail = localStorage.getItem('userEmail');
       const userName = localStorage.getItem('userName');
       const userRole = localStorage.getItem('userRole');
 
-      if (token && userEmail) {
+      if (userEmail) {
         setUser({
           email: userEmail,
           name: userName || 'User',
           role: userRole || 'user'
         });
         setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -63,20 +65,19 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password);
-      
+
       if (response.success && response.user && response.token) {
         // Store auth data
-        localStorage.setItem('authToken', response.token);
         localStorage.setItem('userEmail', response.user.email);
         localStorage.setItem('userName', response.user.name || 'User');
         localStorage.setItem('userRole', response.user.role || 'user');
-        
+
         setUser(response.user);
         setIsAuthenticated(true);
-        
+
         // Dispatch event for other components
         window.dispatchEvent(new Event('authStateChanged'));
-        
+
         return { success: true };
       } else {
         throw new Error(response.error || 'Login failed');
@@ -90,15 +91,14 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     try {
       const response = await authService.register(name, email, password);
-      
+
       if (response.success) {
         // Auto-login after registration if token is provided
         if (response.token && response.user) {
-          localStorage.setItem('authToken', response.token);
           localStorage.setItem('userEmail', response.user.email);
           localStorage.setItem('userName', response.user.name || name);
           localStorage.setItem('userRole', response.user.role || 'user');
-          
+
           setUser(response.user);
           setIsAuthenticated(true);
           window.dispatchEvent(new Event('authStateChanged'));
@@ -113,19 +113,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    // Clear all auth data
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isAuthenticated');
-    
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error during context logout:', error);
+    }
+
+    // Auth state is reset by authService dispatching 'authStateChanged'
+    // but we can also set it here for immediate reactivity
     setUser(null);
     setIsAuthenticated(false);
-    
-    // Dispatch event for other components
-    window.dispatchEvent(new Event('authStateChanged'));
   };
 
   const isAdmin = user?.role === 'admin';

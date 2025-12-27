@@ -13,84 +13,27 @@ export default function RecoverPassword() {
   const [step, setStep] = useState(1); // 1: email input, 2: password reset
   const navigate = useNavigate();
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    // Basic email validation
+
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address');
       return;
     }
 
     setLoading(true);
-    
-    // Simulate processing delay (frontend only)
-    setTimeout(() => {
-      // Move to step 2 (password reset) - frontend only
-      setStep(2);
+    try {
+      const response = await authService.sendResetEmail(email);
+      if (response.success) {
+        setSuccess(response.message || 'If an account exists with this email, a reset link has been sent.');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email.');
+    } finally {
       setLoading(false);
-    }, 800);
-  };
-
-  // Password validation function
-  const validatePassword = (password) => {
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
     }
-    if (!/[0-9]/.test(password)) {
-      return 'Password must contain at least one digit';
-    }
-    if (!/[a-zA-Z]/.test(password)) {
-      return 'Password must contain at least one letter';
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return 'Password must contain at least one special character';
-    }
-    return null;
-  };
-
-  const handlePasswordReset = (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    // Validation
-    if (!newPassword || !confirmPassword) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    // Validate password strength
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    setLoading(true);
-
-    // Frontend-only password reset (no backend calls)
-    // Simulate processing delay
-    setTimeout(() => {
-      // Set authentication state (log user in after password reset)
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('userName', email.split('@')[0]); // Use email prefix as username
-      window.dispatchEvent(new Event('authStateChanged'));
-      
-      setSuccess('Password reset successfully! Redirecting to home...');
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-      setLoading(false);
-    }, 1000);
   };
 
   return (
@@ -115,10 +58,8 @@ export default function RecoverPassword() {
 
             {/* Right Section - Password Recovery Form */}
             <div className="p-6 lg:p-10">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {step === 1 ? 'Reset Your Password' : 'Reset Your Password'}
-              </h2>
-              
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Reset Your Password</h2>
+
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {error}
@@ -131,92 +72,32 @@ export default function RecoverPassword() {
                 </div>
               )}
 
-              {step === 1 ? (
-                // Step 1: Enter email
-                <form onSubmit={handleEmailSubmit} className="space-y-5">
-                  <div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email address"
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
+              <form onSubmit={handleEmailSubmit} className="space-y-5">
+                <div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 px-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Sending...' : 'Continue'}
-                  </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 px-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Sending...' : 'Send Recovery Link'}
+                </button>
 
-                  <div className="text-center text-sm text-gray-600">
-                    <Link to="/signin" className="text-primary hover:underline">
-                      Back to Sign in
-                    </Link>
-                  </div>
-                </form>
-              ) : (
-                // Step 2: Reset password
-                <form onSubmit={handlePasswordReset} className="space-y-5">
-                  <div>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter New Password"
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Password must contain: at least 6 characters, one digit, one letter, and one special character
-                    </p>
-                  </div>
-
-                  <div>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm Your Password"
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 px-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Saving...' : 'Save'}
-                  </button>
-
-                  <div className="text-center text-sm text-gray-600 space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep(1);
-                        setNewPassword('');
-                        setConfirmPassword('');
-                        setError('');
-                        setSuccess('');
-                      }}
-                      className="text-primary hover:underline"
-                    >
-                      ← Back to Email
-                    </button>
-                    <div className="border-t border-gray-300 pt-4">
-                      <Link to="/signin" className="text-primary hover:underline">
-                        Back to Sign In
-                      </Link>
-                    </div>
-                  </div>
-                </form>
-              )}
+                <div className="text-center text-sm text-gray-600">
+                  <Link to="/signin" className="text-primary hover:underline">
+                    Back to Sign in
+                  </Link>
+                </div>
+              </form>
             </div>
           </div>
         </div>

@@ -1,11 +1,13 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function ReportIssueButton({ docSlug }) {
+  const navigate = useNavigate();
   function onReport() {
-    // This would open a modal or navigate to a report form. For now we just log.
-    // In a full app you'd open a modal and POST to an API.
-    alert(`Report an issue for: ${docSlug}`)
+    // Navigate to the propose-fix page, optionally with docSlug as state
+    navigate('/propose-fix', { state: docSlug ? { docSlug } : undefined });
   }
 
   return (
     <button onClick={onReport} style={{ background: '#ffefef', borderColor: '#ff6b6b' }}>Report an issue</button>
-  )
+  );
 }

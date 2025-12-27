@@ -20,11 +20,27 @@
  * Note: User is identified by auth token
  */
 
-import apiClient from './apiClient';
+import api from './api';
 
 const userService = {
   getUserProfile: async () => {
-    // Returns user profile with contributions
+    try {
+      const response = await api.get('/user/profile');
+      return response;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
+    }
+  },
+
+  updateProfile: async (profileData) => {
+    try {
+      const response = await api.put('/user/profile', profileData);
+      return response;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
   },
 };
 

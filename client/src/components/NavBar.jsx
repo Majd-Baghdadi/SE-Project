@@ -1,28 +1,18 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import authService from '../services/authService'
+import { useAuth } from '../context/AuthContext'
 
 export default function NavBar() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { user, isAuthenticated, isAdmin, checkAuth } = useAuth()
 
   useEffect(() => {
-    // Check authentication status
-    const checkAuth = () => {
-      setIsAuthenticated(authService.isAuthenticated())
-    }
-    
-    checkAuth()
-    
-    // Listen for custom auth state change event
-    window.addEventListener('authStateChanged', checkAuth)
-    // Listen for storage changes (when user logs in/out in another tab)
-    window.addEventListener('storage', checkAuth)
-    
-    return () => {
-      window.removeEventListener('authStateChanged', checkAuth)
-      window.removeEventListener('storage', checkAuth)
-    }
-  }, [])
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+    window.addEventListener('authStateChanged', handleAuthChange);
+    return () => window.removeEventListener('authStateChanged', handleAuthChange);
+  }, [checkAuth]);
 
   return (
     <nav className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-50 shadow-sm">
@@ -34,21 +24,28 @@ export default function NavBar() {
           </div>
           <span className="text-xl font-bold text-gray-900">DZ Procedures</span>
         </Link>
-        
+
         {/* Navigation Links */}
         <div className="flex items-center gap-8">
           <Link to="/" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             Home
           </Link>
-          <Link to="/procedures" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+          <Link to="/documents" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             Procedures
           </Link>
-          <Link to="/categories" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
-            Categories
-          </Link>
-          <Link to="/propose" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
-            Propose
-          </Link>
+          {isAdmin && (<>
+            <Link to="/admin/proposals" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+              Proposed Docs
+            </Link>
+            <Link to="/admin/fixes" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+              Proposed Fixes
+            </Link>
+          </>)}
+          {isAuthenticated && (
+            <Link to="/propose" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
+              Propose Document
+            </Link>
+          )}
           <Link to="/about" className="text-gray-700 hover:text-primary no-underline font-medium transition-colors">
             About Us
           </Link>
@@ -59,22 +56,27 @@ export default function NavBar() {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-4">
-          <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors">
-            🔔
-          </button>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors no-underline"
+            >
+              Admin
+            </Link>
+          )}
           {isAuthenticated ? (
-            <Link 
-              to="/profile" 
+            <Link
+              to="/profile"
               className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-lg hover:bg-gray-300 transition-colors no-underline cursor-pointer"
             >
               👤
             </Link>
           ) : (
-            <Link 
-              to="/signin" 
+            <Link
+              to="/signin"
               className="px-5 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors no-underline"
             >
-              Register
+              Sign In
             </Link>
           )}
         </div>
