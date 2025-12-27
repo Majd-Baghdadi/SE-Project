@@ -7,15 +7,13 @@ export default function AllDocuments() {
   const [documents, setDocuments] = useState([]);
   const [filteredDocs, setFilteredDocs] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
   const categories = ['Identity', 'Civil Status', 'Education', 'Transport', 'Legal', 'Health', 'Other'];
-  const difficulties = ['Easy', 'Medium', 'Hard'];
 
   useEffect(() => {
     fetchDocuments();
@@ -23,7 +21,7 @@ export default function AllDocuments() {
 
   useEffect(() => {
     filterAndSortDocuments();
-  }, [documents, searchQuery, selectedCategory, selectedDifficulty, sortBy]);
+  }, [documents, searchQuery, selectedCategory, sortBy]);
 
   const fetchDocuments = async () => {
     try {
@@ -38,23 +36,23 @@ export default function AllDocuments() {
           docid: '1',
           docname: 'Passport Application',
           category: 'Identity',
-          difficulty: 'Medium',
+          difficulty: 'Medium', // Keep in mock data for consistency, but not displayed
           duration: '15-20 days',
           steps: 8,
           submittedBy: 'Admin User',
           date: 'Nov 20, 2025',
-          views: '1.2K'
+          views: '1.2K' // Keep in mock data for consistency, but not displayed
         },
         {
           docid: '2',
           docname: 'National ID Renewal',
           category: 'Identity',
-          difficulty: 'Easy',
+          difficulty: 'Easy', // Keep in mock data for consistency, but not displayed
           duration: '7-10 days',
           steps: 5,
           submittedBy: 'Admin User',
           date: 'Nov 18, 2025',
-          views: '980'
+          views: '980' // Keep in mock data for consistency, but not displayed
         }
       ]);
     } finally {
@@ -78,11 +76,6 @@ export default function AllDocuments() {
       filtered = filtered.filter(doc => doc.category === selectedCategory);
     }
 
-    // Difficulty filter
-    if (selectedDifficulty !== 'all') {
-      filtered = filtered.filter(doc => doc.difficulty === selectedDifficulty);
-    }
-
     // Sort
     switch (sortBy) {
       case 'newest':
@@ -90,9 +83,6 @@ export default function AllDocuments() {
         break;
       case 'oldest':
         filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-        break;
-      case 'popular':
-        filtered.sort((a, b) => parseInt(b.views) - parseInt(a.views));
         break;
       case 'name':
         filtered.sort((a, b) => a.docname.localeCompare(b.docname));
@@ -109,7 +99,7 @@ export default function AllDocuments() {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-      
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-8 py-8">
@@ -149,20 +139,6 @@ export default function AllDocuments() {
               </select>
             </div>
 
-            {/* Difficulty Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
-              <select
-                value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Difficulties</option>
-                {difficulties.map(diff => (
-                  <option key={diff} value={diff}>{diff}</option>
-                ))}
-              </select>
-            </div>
 
             {/* Sort By */}
             <div>
@@ -174,7 +150,6 @@ export default function AllDocuments() {
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="popular">Most Popular</option>
                 <option value="name">Name (A-Z)</option>
               </select>
             </div>
@@ -203,13 +178,6 @@ export default function AllDocuments() {
                   <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                     {doc.category}
                   </span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    doc.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                    doc.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {doc.difficulty}
-                  </span>
                 </div>
 
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{doc.docname}</h3>
@@ -222,10 +190,6 @@ export default function AllDocuments() {
                   <div className="flex items-center gap-2">
                     <span>📋</span>
                     <span>{doc.steps} steps</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>👁️</span>
-                    <span>{doc.views} views</span>
                   </div>
                 </div>
 

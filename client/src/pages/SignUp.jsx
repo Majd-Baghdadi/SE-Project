@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
-import authService from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 export default function SignUp() {
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -59,14 +60,14 @@ export default function SignUp() {
       setError('Password is required');
       return false;
     }
-    
+
     // Validate password strength
     const passwordError = validatePassword(formData.password);
     if (passwordError) {
       setError(passwordError);
       return false;
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
@@ -78,7 +79,7 @@ export default function SignUp() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
+
     if (!validateForm()) {
       return;
     }
@@ -87,16 +88,15 @@ export default function SignUp() {
 
     try {
       console.log("Attempting to register with fullName:", formData.fullName); // Added console.log
-      const response = await authService.register(
+      const response = await register(
         formData.fullName,
         formData.email,
-        formData.password,
-        'user'
+        formData.password
       );
-      
+
       if (response.success) {
         setSuccess(response.message || 'Registration successful! Please check your email to verify your account.');
-        
+
         // Clear form
         setFormData({
           fullName: '',
@@ -104,7 +104,7 @@ export default function SignUp() {
           password: '',
           confirmPassword: '',
         });
-        
+
         // Navigate to sign in after a delay
         setTimeout(() => {
           navigate('/signin');
@@ -142,7 +142,7 @@ export default function SignUp() {
             {/* Right Section - Sign Up Form */}
             <div className="p-6 lg:p-10">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign Up</h2>
-              
+
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {error}
