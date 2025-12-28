@@ -62,31 +62,47 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
-    try {
-      const response = await authService.login(email, password);
-
-      if (response.success && response.user && response.token) {
-        // Store auth data
-        localStorage.setItem('userEmail', response.user.email);
-        localStorage.setItem('userName', response.user.name || 'User');
-        localStorage.setItem('userRole', response.user.role || 'user');
-
-        setUser(response.user);
-        setIsAuthenticated(true);
-
-        // Dispatch event for other components
-        window.dispatchEvent(new Event('authStateChanged'));
-
-        return { success: true };
-      } else {
-        throw new Error(response.error || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: error.message };
+const login = async (email, password) => {
+  try {
+    const response = await authService.login(email, password);
+    
+    console.log('Login response:', response);
+    console.log('response.success is:', response.success); // Debug line
+    
+    // Make sure we're checking the right property
+    if (response && response.success === true) {
+      setIsAuthenticated(true);
+      setUser({
+        email: email,
+        userName: localStorage.getItem('userName')
+      });
+      return { success: true };
+    } else {
+      // Don't throw, just return error
+      return { 
+        success: false, 
+        error: response?.error || response?.message || 'Login failed' 
+      };
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    // Handle 403 status (unverified email)
+    if (error.status === 403) {
+      return {
+        success: false,
+        error: 'Your email is not verified yet.',
+        status: 403
+      };
+    }
+    
+    // Return error instead of throwing
+    return {
+      success: false,
+      error: error.message || 'Login failed. Please check your credentials.'
+    };
+  }
+};
 
   const register = async (name, email, password) => {
     try {
