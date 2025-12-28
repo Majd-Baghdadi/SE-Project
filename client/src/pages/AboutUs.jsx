@@ -399,7 +399,7 @@ const AboutUsPage = () => {
                       color: "#273248"
                     }}
                   >
-                    imene.tifour@ensia.edu.dz
+                    Government@gmail.com
                   </span>
                 </a>
 
