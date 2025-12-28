@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import { useAuth } from '../context/AuthContext';
 
@@ -142,9 +143,10 @@ export default function SignIn() {
                   <button
                     type="button"
                     onClick={handleShowPassword}
-                    className="text-gray-600 hover:text-gray-900"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
 

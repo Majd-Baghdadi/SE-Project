@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function SignUp() {
@@ -14,8 +15,12 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+    const handleShowPassword = () => {
+      setShowPassword(!showPassword);
+    };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -183,9 +188,9 @@ export default function SignUp() {
                 </div>
 
                 {/* Password Input */}
-                <div>
+                <div class="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
@@ -193,6 +198,14 @@ export default function SignUp() {
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
+                   <button
+                    type="button"
+                    onClick={handleShowPassword}
+                    className="absolute right-3 top-1/3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                   <p className="text-xs text-gray-500 mt-1">
                     Password must contain: at least 6 characters, one digit, one letter, and one special character
                   </p>
