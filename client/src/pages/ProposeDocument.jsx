@@ -10,9 +10,9 @@ const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
   return new Promise((resolve, reject) => {
     const img = document.createElement('img');
     img.src = base64Str;
-
+    
     img.onerror = () => reject(new Error('Failed to load image'));
-
+    
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let width = img.width;
@@ -29,12 +29,12 @@ const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
           height = maxHeight;
         }
       }
-
+      
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-
+      
       // Balance between quality and size
       const resized = canvas.toDataURL('image/jpeg', 0.2);
       resolve(resized);
@@ -44,13 +44,13 @@ const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
 // Helper function to convert time string to integer (days)
 const convertTimeToInteger = (timeString) => {
   if (!timeString) return undefined;
-
+  
   const match = timeString.match(/^(\d+)\s*(day|week|month|year|hour|minute)s?$/i);
   if (!match) return undefined;
-
+  
   const value = parseInt(match[1]);
   const unit = match[2].toLowerCase();
-
+  
   // Convert everything to days
   switch (unit) {
     case 'minute':
@@ -113,8 +113,9 @@ const CustomDropdown = ({ label, icon: Icon, options, value, onChange, placehold
           {options.map((option) => (
             <div
               key={option}
-              className={`px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${value === option ? 'bg-green-50 text-green-700' : ''
-                }`}
+              className={`px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
+                value === option ? 'bg-green-50 text-green-700' : ''
+              }`}
               onClick={() => {
                 onChange(option);
                 setOpen(false);
@@ -213,10 +214,11 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
           {options.map((doc) => (
             <div
               key={doc.id}
-              className={`px-4 py-3 cursor-pointer transition-colors flex justify-between items-center ${selected.includes(doc.id)
+              className={`px-4 py-3 cursor-pointer transition-colors flex justify-between items-center ${
+                selected.includes(doc.id)
                   ? 'bg-green-50 text-green-700'
                   : 'hover:bg-gray-50'
-                }`}
+              }`}
               onClick={() => toggleOption(doc.id)}
               style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
             >
@@ -314,7 +316,7 @@ const ProposeDocumentPage = () => {
   const [submitError, setSubmitError] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
   const [availableDocuments, setAvailableDocuments] = useState([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(true);
+const [loadingDocuments, setLoadingDocuments] = useState(true);
 
   const categories = [
     'Visa',
@@ -329,41 +331,41 @@ const ProposeDocumentPage = () => {
 
 
   // Check authentication on any form interaction
-  // Check authentication on any form interaction
-  const checkAuthAndProceed = (callback) => {
-    if (!proposalService.isAuthenticated()) {
-      setShowSignInModal(true);
-      return false;
+// Check authentication on any form interaction
+const checkAuthAndProceed = (callback) => {
+  if (!proposalService.isAuthenticated()) {
+    setShowSignInModal(true);
+    return false;
+  }
+  callback();
+  return true;
+};
+
+// Fetch available documents on component mount
+useEffect(() => {
+  const fetchDocuments = async () => {
+    try {
+      setLoadingDocuments(true);
+      const response = await fetch('http://localhost:8000/api/documents');
+      const data = await response.json();
+      
+      if (data.documents && Array.isArray(data.documents)) {
+        // Transform to format needed for dropdown: {id: uuid, name: docname}
+        setAvailableDocuments(data.documents.map(doc => ({
+          id: doc.docid,
+          name: doc.docname
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setAvailableDocuments([]);
+    } finally {
+      setLoadingDocuments(false);
     }
-    callback();
-    return true;
   };
 
-  // Fetch available documents on component mount
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        setLoadingDocuments(true);
-        const response = await fetch('http://localhost:4000/api/documents');
-        const data = await response.json();
-
-        if (data.documents && Array.isArray(data.documents)) {
-          // Transform to format needed for dropdown: {id: uuid, name: docname}
-          setAvailableDocuments(data.documents.map(doc => ({
-            id: doc.docid,
-            name: doc.docname
-          })));
-        }
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-        setAvailableDocuments([]);
-      } finally {
-        setLoadingDocuments(false);
-      }
-    };
-
-    fetchDocuments();
-  }, []);
+  fetchDocuments();
+}, []);
   // Validation functions
   const validateName = (name) => {
     if (!name.trim()) return 'Document name is required';
@@ -403,53 +405,53 @@ const ProposeDocumentPage = () => {
     return '';
   };
 
-  const handleImageUpload = (e) => {
-    if (!hasInteracted) setHasInteracted(true);
-
-    checkAuthAndProceed(() => {
-      const file = e.target.files[0];
-      if (file) {
-        console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
-
-        if (!file.type.startsWith('image/')) {
-          setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const originalSize = reader.result.length;
-          console.log('📸 Original base64 size:', (originalSize / 1024).toFixed(2), 'KB');
-
-          try {
-            const resizedImage = await resizeImage(reader.result);
-            const finalSize = resizedImage.length;
-            console.log('📸 Resized base64 size:', (finalSize / 1024).toFixed(2), 'KB');
-            console.log('📸 First 100 chars:', resizedImage.substring(0, 100));
-
-            // Remove data:image/jpeg;base64, prefix if exists
-            const base64Only = resizedImage.includes(',')
-              ? resizedImage.split(',')[1]
-              : resizedImage;
-
-            console.log('📸 After removing prefix:', (base64Only.length / 1024).toFixed(2), 'KB');
-            console.log('📸 Storing in formData');
-
-            setFormData({ ...formData, picture: base64Only });
-            setErrors({ ...errors, picture: '' });
-          } catch (err) {
-            console.error('📸 Error resizing:', err);
-            setErrors({ ...errors, picture: 'Failed to process image' });
-          }
-        };
-        reader.readAsDataURL(file);
+const handleImageUpload = (e) => {
+  if (!hasInteracted) setHasInteracted(true);
+  
+  checkAuthAndProceed(() => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+      
+      if (!file.type.startsWith('image/')) {
+        setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
+        return;
       }
-    });
-  };
+      
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const originalSize = reader.result.length;
+        console.log('📸 Original base64 size:', (originalSize / 1024).toFixed(2), 'KB');
+        
+        try {
+          const resizedImage = await resizeImage(reader.result);
+          const finalSize = resizedImage.length;
+          console.log('📸 Resized base64 size:', (finalSize / 1024).toFixed(2), 'KB');
+          console.log('📸 First 100 chars:', resizedImage.substring(0, 100));
+          
+          // Remove data:image/jpeg;base64, prefix if exists
+          const base64Only = resizedImage.includes(',') 
+            ? resizedImage.split(',')[1] 
+            : resizedImage;
+          
+          console.log('📸 After removing prefix:', (base64Only.length / 1024).toFixed(2), 'KB');
+          console.log('📸 Storing in formData');
+          
+          setFormData({ ...formData, picture: base64Only });
+          setErrors({ ...errors, picture: '' });
+        } catch (err) {
+          console.error('📸 Error resizing:', err);
+          setErrors({ ...errors, picture: 'Failed to process image' });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+};
 
   const handleNameChange = (e) => {
     if (!hasInteracted) setHasInteracted(true);
-
+    
     checkAuthAndProceed(() => {
       const value = e.target.value;
       setFormData({ ...formData, name: value });
@@ -459,7 +461,7 @@ const ProposeDocumentPage = () => {
 
   const handlePriceChange = (e) => {
     if (!hasInteracted) setHasInteracted(true);
-
+    
     checkAuthAndProceed(() => {
       const value = e.target.value;
       setFormData({ ...formData, price: value });
@@ -469,7 +471,7 @@ const ProposeDocumentPage = () => {
 
   const handleTimeChange = (e) => {
     if (!hasInteracted) setHasInteracted(true);
-
+    
     checkAuthAndProceed(() => {
       const value = e.target.value;
       setFormData({ ...formData, expectedTime: value });
@@ -479,7 +481,7 @@ const ProposeDocumentPage = () => {
 
   const handleStepsChange = (e) => {
     if (!hasInteracted) setHasInteracted(true);
-
+    
     checkAuthAndProceed(() => {
       const value = e.target.value;
       setFormData({ ...formData, steps: value });
@@ -489,22 +491,22 @@ const ProposeDocumentPage = () => {
 
   const handleCategoryChange = (value) => {
     if (!hasInteracted) setHasInteracted(true);
-
+    
     checkAuthAndProceed(() => {
       setFormData({ ...formData, category: value });
       setErrors({ ...errors, category: validateCategory(value) });
     });
   };
 
-  const handleRelatedDocumentsChange = (updated) => {
-    if (!hasInteracted) setHasInteracted(true);
-
-    checkAuthAndProceed(() => {
-      // 'updated' contains document IDs (UUIDs)
-      setFormData({ ...formData, relatedDocuments: updated });
-      setErrors({ ...errors, relatedDocuments: validateRelatedDocuments(updated) });
-    });
-  };
+const handleRelatedDocumentsChange = (updated) => {
+  if (!hasInteracted) setHasInteracted(true);
+  
+  checkAuthAndProceed(() => {
+    // 'updated' contains document IDs (UUIDs)
+    setFormData({ ...formData, relatedDocuments: updated });
+    setErrors({ ...errors, relatedDocuments: validateRelatedDocuments(updated) });
+  });
+};
   const validateAll = () => {
     const newErrors = {
       name: validateName(formData.name),
@@ -514,73 +516,73 @@ const ProposeDocumentPage = () => {
       relatedDocuments: validateRelatedDocuments(formData.relatedDocuments),
       steps: validateSteps(formData.steps),
     };
-
+    
     setErrors(newErrors);
     return Object.values(newErrors).every(error => error === '');
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitError('');
 
-    if (!proposalService.isAuthenticated()) {
-      setShowSignInModal(true);
-      return;
+  if (!proposalService.isAuthenticated()) {
+    setShowSignInModal(true);
+    return;
+  }
+  
+  if (!validateAll()) {
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+  const proposalData = {
+  docname: formData.name,
+  doctype: formData.category || undefined,
+  steps: formData.steps.trim() 
+    ? formData.steps.split('\n').map(s => s.trim()).filter(s => s) 
+    : [],
+  docprice: formData.price ? parseFloat(formData.price) : undefined,
+  duration: formData.expectedTime ? convertTimeToInteger(formData.expectedTime) : undefined,
+  relateddocs: formData.relatedDocuments.length > 0 ? formData.relatedDocuments : undefined,
+};
+
+    // Add picture if exists
+    if (formData.picture) {
+      console.log('📸 Including picture in payload');
+      console.log('📸 Picture length:', formData.picture.length);
+      console.log('📸 Picture preview:', formData.picture.substring(0, 50));
+      proposalData.docpicture = formData.picture;
+    } else {
+      console.log('📸 No picture in formData');
     }
 
-    if (!validateAll()) {
-      return;
+    // Remove undefined
+    Object.keys(proposalData).forEach(key => 
+      (proposalData[key] === undefined || proposalData[key] === null) && delete proposalData[key]
+    );
+
+  console.log('📤 Payload:', {
+  ...proposalData,
+  docpicture: proposalData.docpicture 
+    ? `[BASE64 ${proposalData.docpicture.length} chars]` 
+    : 'NOT INCLUDED',
+  relateddocs: proposalData.relateddocs || 'NOT INCLUDED'
+});
+    const response = await proposalService.proposeDocument(proposalData);
+
+    if (response.success) {
+      setShowSuccessModal(true);
+    } else {
+      setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
     }
-
-    setIsSubmitting(true);
-
-    try {
-      const proposalData = {
-        docname: formData.name,
-        doctype: formData.category || undefined,
-        steps: formData.steps.trim()
-          ? formData.steps.split('\n').map(s => s.trim()).filter(s => s)
-          : [],
-        docprice: formData.price ? parseFloat(formData.price) : undefined,
-        duration: formData.expectedTime ? convertTimeToInteger(formData.expectedTime) : undefined,
-        relateddocs: formData.relatedDocuments.length > 0 ? formData.relatedDocuments : undefined,
-      };
-
-      // Add picture if exists
-      if (formData.picture) {
-        console.log('📸 Including picture in payload');
-        console.log('📸 Picture length:', formData.picture.length);
-        console.log('📸 Picture preview:', formData.picture.substring(0, 50));
-        proposalData.docpicture = formData.picture;
-      } else {
-        console.log('📸 No picture in formData');
-      }
-
-      // Remove undefined
-      Object.keys(proposalData).forEach(key =>
-        (proposalData[key] === undefined || proposalData[key] === null) && delete proposalData[key]
-      );
-
-      console.log('📤 Payload:', {
-        ...proposalData,
-        docpicture: proposalData.docpicture
-          ? `[BASE64 ${proposalData.docpicture.length} chars]`
-          : 'NOT INCLUDED',
-        relateddocs: proposalData.relateddocs || 'NOT INCLUDED'
-      });
-      const response = await proposalService.proposeDocument(proposalData);
-
-      if (response.success) {
-        setShowSuccessModal(true);
-      } else {
-        setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
-      }
-    } catch (error) {
-      console.error('Submit error:', error);
-      setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  } catch (error) {
+    console.error('Submit error:', error);
+    setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const handleCancel = () => setShowCancelModal(true);
 
   const confirmCancel = () => {
@@ -655,13 +657,13 @@ const ProposeDocumentPage = () => {
                 </div>
               </label>
               {errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
-              {formData.picture && (
-                <img
-                  src={`data:image/jpeg;base64,${formData.picture}`}
-                  alt="Preview"
-                  className="mt-3 max-w-xs rounded-lg border border-gray-200"
-                />
-              )}
+             {formData.picture && (
+  <img 
+    src={`data:image/jpeg;base64,${formData.picture}`} 
+    alt="Preview" 
+    className="mt-3 max-w-xs rounded-lg border border-gray-200" 
+  />
+)}
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
@@ -802,8 +804,8 @@ const ProposeDocumentPage = () => {
         {showSuccessModal && <SuccessModal onClose={closeSuccessModal} />}
         {showCancelModal && <CancelModal onClose={() => setShowCancelModal(false)} onConfirm={confirmCancel} />}
         {showSignInModal && (
-          <SignInModal
-            isOpen={showSignInModal}
+          <SignInModal 
+            isOpen={showSignInModal} 
             onClose={() => setShowSignInModal(false)}
             onSuccess={handleSignInSuccess}
           />
