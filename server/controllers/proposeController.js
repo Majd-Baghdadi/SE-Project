@@ -275,7 +275,7 @@ async function deleteProposedFix(req, res) {
 async function fetchProposedDocumentDetails(req, res) {
     try {
         const { id } = req.params
-        const { data, error } = await admin.fetchProposedDocumentDetails(id, req.user)
+        const { data, error } = await propose.fetchProposedDocumentDetails(id, req.user)
         if (error) {
             return res.status(400).json({
                 error: error.message
@@ -300,7 +300,7 @@ async function fetchProposedDocumentDetails(req, res) {
 async function fetchProposedFixDetails(req, res) {
     try {
         const { id } = req.params
-        const { data, error } = await admin.fetchProposedFixDetails(id, req.user)
+        const { data, error } = await propose.fetchProposedFixDetails(id, req.user)
         if (error) {
             return res.status(400).json({
                 error: error.message
