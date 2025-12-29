@@ -123,7 +123,7 @@ export default function Home() {
 
   // Mock data for statistics
   const stats = [
-    { label: 'Available Documents', value: '150+', color: 'text-emerald-500' },
+    { label: 'Available Documents', value: documents.length > 0 ? `${documents.length}+` : '150+', color: 'text-emerald-500' },
     { label: 'Active Users', value: '25K+', color: 'text-blue-500' },
     { label: 'Success Rate', value: '98%', color: 'text-amber-500' },
   ];
@@ -180,8 +180,6 @@ export default function Home() {
             Community-verified guides for passports, visas, national IDs, and all governmental procedures. Get accurate, up-to-date information from real experiences.
           </p>
 
-          {/* Search Bar with live suggestions */}
-          <SearchBar documents={documents} />
         </div>
       </section>
 
@@ -199,6 +197,14 @@ export default function Home() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Search Section */}
+      <section className="max-w-4xl mx-auto mt-8 px-8 relative z-20">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">Find a procedure</h3>
+          <SearchBar documents={documents} />
         </div>
       </section>
 

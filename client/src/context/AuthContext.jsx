@@ -39,70 +39,76 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       setLoading(true);
-      const userEmail = localStorage.getItem('userEmail');
-      const userName = localStorage.getItem('userName');
-      const userRole = localStorage.getItem('userRole');
+      // Try to get current user from backend (validates session cookie)
+      const user = await authService.fetchCurrentUser();
 
-      if (userEmail) {
-        setUser({
-          email: userEmail,
-          name: userName || 'User',
-          role: userRole || 'user'
-        });
+      if (user) {
+        setUser(user);
         setIsAuthenticated(true);
       } else {
-        setUser(null);
-        setIsAuthenticated(false);
+        // Fallback: check localStorage if backend call returns null but no error
+        // (This part might be redundant if fetchCurrentUser handles everything, but keeps robust)
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          setUser({
+            email: userEmail,
+            name: localStorage.getItem('userName') || 'User',
+            role: localStorage.getItem('userRole') || 'user'
+          });
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      logout();
+      // If error (401), clear everything
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
 
-const login = async (email, password) => {
-  try {
-    const response = await authService.login(email, password);
-    
-    console.log('Login response:', response);
-    console.log('response.success is:', response.success); // Debug line
-    
-    // Make sure we're checking the right property
-    if (response && response.success === true) {
-      setIsAuthenticated(true);
-      setUser({
-        email: email,
-        userName: localStorage.getItem('userName')
-      });
-      return { success: true };
-    } else {
-      // Don't throw, just return error
-      return { 
-        success: false, 
-        error: response?.error || response?.message || 'Login failed' 
-      };
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    
-    // Handle 403 status (unverified email)
-    if (error.status === 403) {
+  const login = async (email, password) => {
+    try {
+      const response = await authService.login(email, password);
+
+      console.log('Login response:', response);
+      console.log('response.success is:', response.success); // Debug line
+
+      // Make sure we're checking the right property
+      if (response && response.success === true) {
+        // Fetch full user details (including role) from backend now that we have the cookie
+        await checkAuth();
+        return { success: true };
+      } else {
+        // Don't throw, just return error
+        return {
+          success: false,
+          error: response?.error || response?.message || 'Login failed'
+        };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+
+      // Handle 403 status (unverified email)
+      if (error.status === 403) {
+        return {
+          success: false,
+          error: 'Your email is not verified yet.',
+          status: 403
+        };
+      }
+
+      // Return error instead of throwing
       return {
         success: false,
-        error: 'Your email is not verified yet.',
-        status: 403
+        error: error.message || 'Login failed. Please check your credentials.'
       };
     }
-    
-    // Return error instead of throwing
-    return {
-      success: false,
-      error: error.message || 'Login failed. Please check your credentials.'
-    };
-  }
-};
+  };
 
   const register = async (name, email, password) => {
     try {

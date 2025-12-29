@@ -8,7 +8,14 @@ const authService = {
       if (response.success) {
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', email);
-        if (response.user && response.user.role) localStorage.setItem('userRole', response.user.role || 'user');
+        if (response.user && response.user.role) {
+          localStorage.setItem('userRole', response.user.role);
+        } else {
+          // Fallback or explicit check to see if we can decode it, 
+          // but usually backend sends it. 
+          // If missing, default to 'user'
+          localStorage.setItem('userRole', 'user');
+        }
         if (response.user && response.user.name) localStorage.setItem('userName', response.user.name);
         window.dispatchEvent(new Event('authStateChanged'));
       }
@@ -101,6 +108,32 @@ const authService = {
     window.dispatchEvent(new Event('authStateChanged'));
 
     return { success: true, message: 'Logged out successfully' };
+  },
+
+  fetchCurrentUser: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      if (response && response.user) {
+        // Update local storage to keep it in sync
+        localStorage.setItem('isAuthenticated', 'true');
+        if (response.user.email) localStorage.setItem('userEmail', response.user.email);
+        if (response.user.userName || response.user.name) {
+          localStorage.setItem('userName', response.user.userName || response.user.name);
+        }
+        if (response.user.role) localStorage.setItem('userRole', response.user.role);
+        return response.user;
+      }
+      return null;
+    } catch (error) {
+      // If 401, clear storage
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userRole');
+      }
+      throw error;
+    }
   },
 
   getCurrentUser: () => {

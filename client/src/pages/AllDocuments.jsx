@@ -82,7 +82,7 @@ export default function AllDocuments() {
 
     // Category filter
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(doc => (doc.doctype || doc.category) === selectedCategory);
+      filtered = filtered.filter(doc => (doc.doctype) === selectedCategory);
     }
 
     // Sort

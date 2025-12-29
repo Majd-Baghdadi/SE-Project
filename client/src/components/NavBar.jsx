@@ -29,7 +29,7 @@ export default function NavBar() {
       { title: 'Proposed Docs', path: '/admin/proposals' },
       { title: 'Proposed Fixes', path: '/admin/fixes' }
     ] : []),
-    ...(isAuthenticated ? [{ title: 'Propose Document', path: '/propose' }] : []),
+    ...(isAuthenticated ? [{ title: isAdmin ? 'Add Document' : 'Propose Document', path: '/propose' }] : []),
     { title: 'About Us', path: '/about' },
     { title: 'Contact Us', path: '/conntact' },
   ];

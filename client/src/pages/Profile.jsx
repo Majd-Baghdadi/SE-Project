@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Edit2, Check, LogOut } from 'lucide-react';
 import authService from '../services/authService';
 import userService from '../services/userService';
+import proposalService from '../services/proposalService';
 import { useAuth } from '../context/AuthContext';
+import Notification from '../components/Notification';
 
 export default function ProfileForm() {
   const navigate = useNavigate();
@@ -22,31 +24,80 @@ export default function ProfileForm() {
     dateOfBirth: '1995-03-15'
   });
 
+  const [contributions, setContributions] = useState({
+    documents: [],
+    fixes: []
+  });
+  const [notification, setNotification] = useState({ message: '', type: '' });
+
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileData = async () => {
       try {
         if (!authService.isAuthenticated()) {
           navigate('/signin');
           return;
         }
 
-        const response = await userService.getUserProfile();
-        if (response.success && response.user) {
+        const [profileRes, docsRes, fixesRes] = await Promise.all([
+          userService.getUserProfile(),
+          proposalService.getProposedDocumentsByUser(),
+          proposalService.getProposedFixesByUser()
+        ]);
+
+        if (profileRes.success && profileRes.user) {
           setFormData(prev => ({
             ...prev,
-            name: response.user.name || '',
-            email: response.user.email || ''
+            name: profileRes.user.name || '',
+            email: profileRes.user.email || ''
           }));
         }
+
+        if (docsRes.success) {
+          setContributions(prev => ({ ...prev, documents: docsRes.data || [] }));
+        }
+        if (fixesRes.success) {
+          setContributions(prev => ({ ...prev, fixes: fixesRes.data || [] }));
+        }
+
       } catch (error) {
-        console.error('Failed to fetch profile:', error);
+        console.error('Failed to fetch profile data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchProfileData();
   }, [navigate]);
+
+  const handleDeleteDoc = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this proposal?")) return;
+
+    const res = await proposalService.deleteProposedDocument(id);
+    if (res.success) {
+      setContributions(prev => ({
+        ...prev,
+        documents: prev.documents.filter(d => d.proposeddocid !== id)
+      }));
+      setNotification({ message: 'Proposal deleted successfully', type: 'success' });
+    } else {
+      setNotification({ message: 'Failed to delete proposal', type: 'error' });
+    }
+  };
+
+  const handleDeleteFix = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this fix?")) return;
+
+    const res = await proposalService.deleteProposedFix(id);
+    if (res.success) {
+      setContributions(prev => ({
+        ...prev,
+        fixes: prev.fixes.filter(f => f.fixid !== id)
+      }));
+      setNotification({ message: 'Fix deleted successfully', type: 'success' });
+    } else {
+      setNotification({ message: 'Failed to delete fix', type: 'error' });
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -94,6 +145,11 @@ export default function ProfileForm() {
 
   return (
     <>
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ ...notification, message: '' })}
+      />
 
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -292,6 +348,70 @@ export default function ProfileForm() {
                 </div>
               </div>
             </div>
+
+            {/* Contributions Section - Only for non-admin users */}
+            {authUser && authUser.role !== 'admin' && (
+              <div className="max-w-4xl mx-auto mt-8 bg-white rounded-lg shadow-sm p-8">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">My Contributions</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Proposed Documents */}
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      📄 Proposed Documents
+                      <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{contributions.documents.length}</span>
+                    </h3>
+                    <div className="space-y-3">
+                      {contributions.documents.length > 0 ? (
+                        contributions.documents.map(doc => (
+                          <div key={doc.proposeddocid} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center group hover:border-green-200 transition-colors">
+                            <span className="font-medium text-gray-800">{doc.docname}</span>
+                            <button
+                              onClick={() => handleDeleteDoc(doc.proposeddocid)}
+                              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                              title="Delete Proposal"
+                            >
+                              <LogOut className="w-4 h-4 transform rotate-180" />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">No documents proposed yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Proposed Fixes */}
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      🔧 Proposed Fixes
+                      <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{contributions.fixes.length}</span>
+                    </h3>
+                    <div className="space-y-3">
+                      {contributions.fixes.length > 0 ? (
+                        contributions.fixes.map(fix => (
+                          <div key={fix.fixid} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center group hover:border-blue-200 transition-colors">
+                            <div>
+                              <span className="font-medium text-gray-800 block text-sm">{fix.documents?.docname || 'Unknown Document'}</span>
+                              <span className="text-xs text-gray-500">Fix ID: {fix.fixid}</span>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteFix(fix.fixid)}
+                              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                              title="Delete Fix"
+                            >
+                              <LogOut className="w-4 h-4 transform rotate-180" />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">No fixes proposed yet.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

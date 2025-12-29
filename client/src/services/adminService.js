@@ -57,10 +57,7 @@ const adminService = {
 
   discardProposal: async (proposedDocId) => {
     try {
-      // Backend doesn't seem to have a specific 'reject' endpoint in routes yet, 
-      // but let's assume it might be deleteProposedDocuemnt or similar if added.
-      // For now, keeping as is or matching if I find it.
-      const response = await api.delete(`/admin/rejectProposition/${proposedDocId}`);
+      const response = await api.delete(`/propose/document/${proposedDocId}`);
       return response.data || response;
     } catch (error) {
       console.error('Error rejecting proposal:', error);
@@ -92,7 +89,7 @@ const adminService = {
 
   discardFix: async (fixId) => {
     try {
-      const response = await api.delete(`/admin/rejectFix/${fixId}`);
+      const response = await api.delete(`/propose/fix/${fixId}`);
       return response.data || response;
     } catch (error) {
       console.error('Error rejecting fix:', error);

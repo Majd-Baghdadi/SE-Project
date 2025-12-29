@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import documentService from '../../services/documentService';
+import Notification from '../../components/Notification';
 
 export default function ManageProposedFixes() {
   const [fixes, setFixes] = useState([]);
@@ -9,6 +10,7 @@ export default function ManageProposedFixes() {
   const [selectedFix, setSelectedFix] = useState(null);
   const [originalDoc, setOriginalDoc] = useState(null);
   const [fetchingDoc, setFetchingDoc] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
 
   const getModifiedDoc = () => {
     if (!originalDoc || !selectedFix) return null;
@@ -145,22 +147,24 @@ export default function ManageProposedFixes() {
   const handleApprove = async (fixId, data) => {
     try {
       await adminService.validateFix(fixId, data);
-      setFixes(fixes.filter(f => (f.fixid || f.id) !== fixId));
-      alert('Fix approved successfully!');
+      // Update UI immediately by removing the approved fix from the list
+      setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
+      setNotification({ message: 'Fix approved successfully!', type: 'success' });
     } catch (error) {
       console.error('Error approving fix:', error);
-      alert('Failed to approve fix. Please try again.');
+      setNotification({ message: 'Failed to approve fix. Please try again.', type: 'error' });
     }
   };
 
   const handleReject = async (fixId) => {
     try {
       await adminService.discardFix(fixId);
-      setFixes(fixes.filter(f => (f.fixid || f.id) !== fixId));
-      alert('Fix rejected successfully!');
+      // Immediate UI update to remove the rejected fix from the list
+      setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
+      setNotification({ message: 'Fix rejected successfully!', type: 'success' });
     } catch (error) {
       console.error('Error rejecting fix:', error);
-      alert('Failed to reject fix. Please try again.');
+      setNotification({ message: 'Failed to reject fix. Please try again.', type: 'error' });
     }
   };
 
@@ -195,6 +199,11 @@ export default function ManageProposedFixes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ ...notification, message: '' })}
+      />
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

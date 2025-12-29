@@ -186,7 +186,7 @@ export default function SignUp() {
                 </div>
 
                 {/* Password Input */}
-                <div class="relative">
+                <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -212,7 +212,7 @@ export default function SignUp() {
                 {/* Confirm Password Input */}
                 <div>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}

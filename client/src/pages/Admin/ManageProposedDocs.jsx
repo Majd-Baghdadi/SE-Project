@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import adminService from '../../services/adminService';
+import Notification from '../../components/Notification';
 
 export default function ManageProposedDocs() {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const [notification, setNotification] = useState({ message: '', type: '' });
 
   useEffect(() => {
     fetchProposals();
@@ -50,22 +52,24 @@ export default function ManageProposedDocs() {
   const handleApprove = async (proposalId) => {
     try {
       await adminService.validateProposal(proposalId);
-      setProposals(proposals.filter(p => p.id !== proposalId));
-      alert('Proposal approved successfully!');
+      // Update UI immediately by removing the approved proposal from the list
+      setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
+      setNotification({ message: 'Proposal approved successfully!', type: 'success' });
     } catch (error) {
       console.error('Error approving proposal:', error);
-      alert('Failed to approve proposal. Please try again.');
+      setNotification({ message: 'Failed to approve proposal. Please try again.', type: 'error' });
     }
   };
 
   const handleReject = async (proposalId) => {
     try {
       await adminService.discardProposal(proposalId);
-      setProposals(proposals.filter(p => p.id !== proposalId));
-      alert('Proposal rejected successfully!');
+      // Immediate UI update to remove the rejected proposal from the list
+      setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
+      setNotification({ message: 'Proposal rejected successfully!', type: 'success' });
     } catch (error) {
       console.error('Error rejecting proposal:', error);
-      alert('Failed to reject proposal. Please try again.');
+      setNotification({ message: 'Failed to reject proposal. Please try again.', type: 'error' });
     }
   };
 
@@ -82,6 +86,11 @@ export default function ManageProposedDocs() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ ...notification, message: '' })}
+      />
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
