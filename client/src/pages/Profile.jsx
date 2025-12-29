@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Edit2, Check, LogOut } from 'lucide-react';
-import NavBar from '../components/NavBar';
 import authService from '../services/authService';
 import userService from '../services/userService';
 import { useAuth } from '../context/AuthContext';
@@ -95,7 +94,6 @@ export default function ProfileForm() {
 
   return (
     <>
-      <NavBar />
 
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">

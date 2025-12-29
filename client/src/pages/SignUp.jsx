@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import NavBar from '../components/NavBar';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,12 +14,12 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-    const handleShowPassword = () => {
-      setShowPassword(!showPassword);
-    };
+  const handleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -126,7 +125,6 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <NavBar />
       <div className="max-w-5xl mx-auto px-5 py-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
@@ -198,7 +196,7 @@ export default function SignUp() {
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
-                   <button
+                  <button
                     type="button"
                     onClick={handleShowPassword}
                     className="absolute right-3 top-1/3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"

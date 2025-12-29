@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import authService from '../services/authService';
-import NavBar from '../components/NavBar';
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
@@ -60,7 +59,6 @@ export default function ResetPassword() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            <NavBar />
             <div className="flex-1 flex items-center justify-center p-4">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
                     {success ? (

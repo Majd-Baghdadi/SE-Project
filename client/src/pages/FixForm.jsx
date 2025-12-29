@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, List, DollarSign, Clock, Check, X } from 'lucide-react';
-import NavBar from '../components/NavBar';
 import fixService from '../services/fixService';
 // Utility function to convert time strings to integer days
 const convertTimeToInteger = (timeString) => {
   if (!timeString) return undefined;
-  
+
   const match = timeString.match(/^(\d+)\s*(day|week|month|year|hour|minute)s?$/i);
   if (!match) return undefined;
-  
+
   const value = parseInt(match[1]);
   const unit = match[2].toLowerCase();
-  
+
   // Convert everything to days
   switch (unit) {
     case 'minute':
@@ -98,7 +97,7 @@ const CancelModal = ({ onClose, onConfirm }) => (
 const ReportIssuePage = () => {
   const navigate = useNavigate();
   const { docid } = useParams(); // Get docid from URL parameter
-  
+
   console.log('📋 Document ID from URL:', docid);
 
   const [formData, setFormData] = useState({
@@ -163,41 +162,41 @@ const ReportIssuePage = () => {
       price: validatePrice(formData.price),
       processingTime: validateProcessingTime(formData.processingTime)
     };
-    
+
     setErrors(newErrors);
-    
+
     if (!hasAtLeastOneFieldFilled()) {
       setShowEmptyFieldError(true);
       return false;
     }
-    
+
     return Object.values(newErrors).every(error => error === '');
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!validateAll()) {
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  setIsSubmitting(true);
-  console.log('📤 Submitting fix for document:', docid);
-  console.log('📤 Form data:', formData);
+    if (!validateAll()) {
+      return;
+    }
 
-  // Convert processing time to integer (days) before sending
-  const processedFormData = {
-    ...formData,
-    processingTime: formData.processingTime 
-      ? convertTimeToInteger(formData.processingTime) 
-      : formData.processingTime
-  };
+    setIsSubmitting(true);
+    console.log('📤 Submitting fix for document:', docid);
+    console.log('📤 Form data:', formData);
 
-  console.log('📤 Processed form data (time converted to days):', processedFormData);
+    // Convert processing time to integer (days) before sending
+    const processedFormData = {
+      ...formData,
+      processingTime: formData.processingTime
+        ? convertTimeToInteger(formData.processingTime)
+        : formData.processingTime
+    };
 
-  try {
-    const response = await fixService.submitFix(docid, processedFormData);
-      
+    console.log('📤 Processed form data (time converted to days):', processedFormData);
+
+    try {
+      const response = await fixService.submitFix(docid, processedFormData);
+
       if (response.success) {
         console.log('✅ Fix submitted successfully');
         setShowSuccessModal(true);
@@ -243,7 +242,6 @@ const handleSubmit = async (e) => {
 
   return (
     <>
-      <NavBar />
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
@@ -253,7 +251,7 @@ const handleSubmit = async (e) => {
             <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
               Help us improve! Report any problems with the document information.
             </p>
-          
+
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

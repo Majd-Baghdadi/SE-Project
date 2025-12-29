@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import documentService from '../../services/documentService';
-import NavBar from '../../components/NavBar';
 
 export default function ManageProposedFixes() {
   const [fixes, setFixes] = useState([]);
@@ -196,7 +195,6 @@ export default function ManageProposedFixes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar />
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

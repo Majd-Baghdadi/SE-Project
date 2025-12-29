@@ -7,13 +7,14 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import NavBar from '../components/NavBar';
 import SearchBar from '../components/SearchBar';
+import { useAuth } from '../context/AuthContext';
 import { getAllDocuments } from '../services/documentService';
 import banner from '../assets/images/banner.jpg';
 import banner3 from '../assets/images/banner3.jpg';
 
 export default function Home() {
+  const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,68 +28,50 @@ export default function Home() {
     {
       docid: '1',
       docname: 'Passport Application',
-      category: 'Identity',
-      difficulty: 'Medium',
+      doctype: 'Passport',
       duration: '15-20 days',
-      steps: 8,
       submittedBy: 'Admin User',
-      date: 'Nov 20, 2025',
-      views: '1.2K'
+      created_at: '2025-11-20T10:00:00Z'
     },
     {
       docid: '2',
       docname: 'National ID Renewal',
-      category: 'Identity',
-      difficulty: 'Easy',
+      doctype: 'ID Card',
       duration: '7-10 days',
-      steps: 5,
       submittedBy: 'Admin User',
-      date: 'Nov 18, 2025',
-      views: '980'
+      created_at: '2025-11-18T10:00:00Z'
     },
     {
       docid: '3',
       docname: 'Birth Certificate',
-      category: 'Civil Status',
-      difficulty: 'Easy',
+      doctype: 'Birth Certificate',
       duration: '3-5 days',
-      steps: 4,
       submittedBy: 'Admin User',
-      date: 'Nov 15, 2025',
-      views: '850'
+      created_at: '2025-11-15T10:00:00Z'
     },
     {
       docid: '4',
-      docname: 'University Enrollment',
-      category: 'Education',
-      difficulty: 'Medium',
+      docname: 'Visa Application',
+      doctype: 'Visa',
       duration: '10-15 days',
-      steps: 6,
       submittedBy: 'Community',
-      date: 'Nov 12, 2025',
-      views: '720'
+      created_at: '2025-11-12T10:00:00Z'
     },
     {
       docid: '5',
       docname: "Driver's License",
-      category: 'Transport',
-      difficulty: 'Hard',
+      doctype: 'Driving License',
       duration: '30-45 days',
-      steps: 10,
       submittedBy: 'Admin User',
-      date: 'Nov 10, 2025',
-      views: '1.5K'
+      created_at: '2025-11-10T10:00:00Z'
     },
     {
       docid: '6',
-      docname: 'Business Registration',
-      category: 'Legal',
-      difficulty: 'Hard',
+      docname: 'Work Permit',
+      doctype: 'Work Permit',
       duration: '20-30 days',
-      steps: 12,
       submittedBy: 'Community',
-      date: 'Nov 8, 2025',
-      views: '640'
+      created_at: '2025-11-08T10:00:00Z'
     },
   ];
 
@@ -158,9 +141,6 @@ export default function Home() {
 
   return (
     <div className="w-full bg-white min-h-screen">
-      {/* Navigation Bar */}
-      <NavBar />
-
       {/* Hero Section */}
       <section className="relative h-[calc(100vh-73px)] min-h-[600px] flex items-center justify-center text-white overflow-hidden">
         {/* Sliding Background Images */}
@@ -222,35 +202,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Review Pending Tasks Section */}
-      <section className="max-w-7xl mx-auto my-16 px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
-          <p className="text-gray-600">Review and moderate community contributions</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Link to="/admin/proposals" className="no-underline group">
-            <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-blue-50/30 flex items-center gap-6">
-              <div className="text-6xl group-hover:scale-110 transition-transform">📋</div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Document Proposals</h3>
-                <p className="text-gray-600">Review new procedures suggested by the community.</p>
-                <span className="inline-block mt-4 text-primary font-semibold">View Proposals →</span>
+      {/* Review Pending Tasks Section (Admins Only) */}
+      {isAdmin && (
+        <section className="max-w-7xl mx-auto my-16 px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
+            <p className="text-gray-600">Review and moderate community contributions</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Link to="/admin/proposals" className="no-underline group">
+              <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-blue-50/30 flex items-center gap-6">
+                <div className="text-6xl group-hover:scale-110 transition-transform">📋</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Document Proposals</h3>
+                  <p className="text-gray-600">Review new procedures suggested by the community.</p>
+                  <span className="inline-block mt-4 text-primary font-semibold">View Proposals →</span>
+                </div>
               </div>
-            </div>
-          </Link>
-          <Link to="/admin/fixes" className="no-underline group">
-            <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-orange-50/30 flex items-center gap-6">
-              <div className="text-6xl group-hover:scale-110 transition-transform">🔧</div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Proposed Fixes</h3>
-                <p className="text-gray-600">Review edits and corrections submitted by users.</p>
-                <span className="inline-block mt-4 text-orange-600 font-semibold">View Fixes →</span>
+            </Link>
+            <Link to="/admin/fixes" className="no-underline group">
+              <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-orange-50/30 flex items-center gap-6">
+                <div className="text-6xl group-hover:scale-110 transition-transform">🔧</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Proposed Fixes</h3>
+                  <p className="text-gray-600">Review edits and corrections submitted by users.</p>
+                  <span className="inline-block mt-4 text-orange-600 font-semibold">View Fixes →</span>
+                </div>
               </div>
-            </div>
-          </Link>
-        </div>
-      </section>
+            </Link>
+          </div>
+        </section>
+      )}
 
 
       {/* Popular Procedures Section */}
@@ -279,13 +261,13 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {documents.map((procedure) => (
+              {documents.slice(0, 6).map((procedure) => (
                 <Link
                   key={procedure.docid}
                   to={`/document/${procedure.docid}`}
                   className="block no-underline"
                 >
-                  <div className="bg-white rounded-lg p-6 cursor-pointer transition-all border-l-4 border-l-primary shadow-sm hover:shadow-md">
+                  <div className="bg-white rounded-lg p-6 cursor-pointer transition-all border-l-4 border-l-green-600 shadow-sm hover:shadow-md">
                     {/* Header */}
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
@@ -293,8 +275,8 @@ export default function Home() {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-base font-bold mb-2 text-gray-900 leading-tight">{procedure.docname}</h3>
-                        <span className="inline-block px-2.5 py-0.5 bg-emerald-50 text-primary rounded text-xs font-semibold border border-primary/20">
-                          {procedure.category || 'General'}
+                        <span className="inline-block px-2.5 py-0.5 bg-green-50 text-green-700 rounded text-xs font-bold border border-green-100 uppercase tracking-wide">
+                          {procedure.doctype || 'General'}
                         </span>
                       </div>
                     </div>
@@ -335,13 +317,13 @@ export default function Home() {
             </div>
           )}
 
-          {/* View All Button */}
+          {/* Show More Button */}
           <div className="text-center mt-12">
             <Link
               to="/documents"
-              className="inline-block px-10 py-4 bg-primary text-white no-underline rounded-lg font-semibold transition-colors hover:bg-primary-dark"
+              className="inline-block px-10 py-4 bg-green-600 text-white no-underline rounded-full font-bold transition-all hover:bg-green-700 hover:scale-105 shadow-lg"
             >
-              View All Procedures
+              Show More →
             </Link>
           </div>
         </div>

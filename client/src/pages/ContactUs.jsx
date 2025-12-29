@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import NavBar from '../components/NavBar';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -28,35 +27,35 @@ const ContactPage = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
-    
+
     if (!formData.message.trim()) {
       newErrors.message = 'Message is required';
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = () => {
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     console.log('Form submitted:', formData);
     setSubmitStatus('success');
-    
+
     // Reset form
     setFormData({
       fullName: '',
@@ -64,7 +63,7 @@ const ContactPage = () => {
       phone: '',
       message: ''
     });
-    
+
     // Clear success message after 3 seconds
     setTimeout(() => {
       setSubmitStatus(null);
@@ -73,8 +72,7 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar />
-      
+
       <div className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -90,7 +88,7 @@ const ContactPage = () => {
           {/* Main Contact Container */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-              
+
               {/* Contact Information Section - Stacked Vertically */}
               <div className="lg:col-span-1 bg-green-600 p-8 text-white space-y-6">
                 <div className="mb-8">

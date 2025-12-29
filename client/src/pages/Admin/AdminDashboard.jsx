@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
-import NavBar from '../../components/NavBar';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -36,14 +35,12 @@ export default function AdminDashboard() {
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 uppercase">
-      <NavBar />
       <div className="p-8">Loading...</div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar />
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

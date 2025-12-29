@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import adminService from '../../services/adminService';
-import NavBar from '../../components/NavBar';
 
 export default function ManageProposedDocs() {
   const [proposals, setProposals] = useState([]);
@@ -83,7 +82,6 @@ export default function ManageProposedDocs() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar />
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

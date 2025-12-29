@@ -23,7 +23,11 @@ import api from './api';
 async function getAllDocuments() {
   try {
     const response = await api.get('/documents/');
-    return response.documents || []; // Backend returns { documents: [...] }
+    // Handle different response structures (array directly or { documents: [...] })
+    if (Array.isArray(response)) {
+      return response;
+    }
+    return response.documents || response.data || [];
   } catch (error) {
     console.error('Error fetching documents:', error);
     throw error;
@@ -54,10 +58,10 @@ async function getDocumentById(docId) {
 async function searchDocuments(query) {
   // TODO: Implement when backend search endpoint is ready
   console.warn('Search not yet implemented on backend');
-  
+
   // Temporary: fetch all and filter client-side
   const documents = await getAllDocuments();
-  return documents.filter(doc => 
+  return documents.filter(doc =>
     doc.docname.toLowerCase().includes(query.toLowerCase())
   );
 }

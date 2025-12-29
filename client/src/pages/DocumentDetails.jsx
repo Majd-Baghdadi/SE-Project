@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getDocumentById } from '../services/documentService';
-import NavBar from '../components/NavBar';
 import SignInModal from '../components/SignInModal';
 import authService from '../services/authService';
 
@@ -138,7 +137,7 @@ export default function DocumentDetail() {
       try {
         // Try to fetch from API
         const response = await getDocumentById(docId);
-        
+
         if (response && response.data) {
           setData(response.data);
           setRelatedDocuments(response.relatedDocuments || []);
@@ -150,7 +149,7 @@ export default function DocumentDetail() {
       } catch (err) {
         // Fallback to mock data
         console.warn('⚠️ API unavailable, using mock data:', err.message);
-        
+
         const mockDoc = mockDocuments[docId];
         if (mockDoc) {
           setData(mockDoc);
@@ -170,29 +169,26 @@ export default function DocumentDetail() {
   }, [docId]);
   // Handle "Report Issue" button click
   const handleReportIssue = () => {
-  if (authService.isAuthenticated()) {
-    // Navigate to FixForm page with docid in URL
-    navigate(`/fixform/${docId}`);
-  } else {
-    // Show sign in modal
-    setShowSignInModal(true);
-  }
-};
+    if (authService.isAuthenticated()) {
+      // Navigate to FixForm page with docid in URL
+      navigate(`/fixform/${docId}`);
+    } else {
+      // Show sign in modal
+      setShowSignInModal(true);
+    }
+  };
 
-const handleSignInSuccess = () => {
-  setShowSignInModal(false);
-  // After successful login, navigate to FixForm
-  navigate(`/fixform/${docId}`);
-};
+  const handleSignInSuccess = () => {
+    setShowSignInModal(false);
+    // After successful login, navigate to FixForm
+    navigate(`/fixform/${docId}`);
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-        <NavBar />
-        <div className="max-w-6xl mx-auto px-5 py-6">
-          <div className="flex items-center justify-center py-20">
-            <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
+      <div className="max-w-6xl mx-auto px-5 py-6">
+        <div className="flex items-center justify-center py-20">
+          <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -201,7 +197,6 @@ const handleSignInSuccess = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-        <NavBar />
         <div className="max-w-6xl mx-auto px-5 py-6 text-center py-20">
           <p className="text-red-600 text-xl mb-4">{error}</p>
           <Link to="/" className="text-primary hover:underline">← Back to Home</Link>
@@ -211,7 +206,7 @@ const handleSignInSuccess = () => {
   }
 
   const doc = data || {};
-  
+
 
   // Helper to format price
   const formatPrice = (price) => {
@@ -221,7 +216,6 @@ const handleSignInSuccess = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
-      <NavBar />
       <div className="max-w-6xl mx-auto px-5 py-6 flex-1 w-full">
         {/* Mock data indicator */}
         {usingMockData && (
@@ -307,11 +301,11 @@ const handleSignInSuccess = () => {
                 Please report any errors or unclear information found in this document, and we will ensure they are handled appropriately.
               </p>
               <button
-  onClick={handleReportIssue}
-  className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
->
-  ✏️ Report Issue
-</button>
+                onClick={handleReportIssue}
+                className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              >
+                ✏️ Report Issue
+              </button>
             </div>
 
             {/* Related Documents */}
@@ -321,8 +315,8 @@ const handleSignInSuccess = () => {
                 <ul className="space-y-2">
                   {relatedDocuments.map((relDoc) => (
                     <li key={relDoc.docid}>
-                      <Link 
-                        to={`/document/${relDoc.docid}`} 
+                      <Link
+                        to={`/document/${relDoc.docid}`}
                         className="text-sm text-primary hover:underline"
                       >
                         {relDoc.docname}
@@ -391,12 +385,12 @@ const handleSignInSuccess = () => {
         </div>
       </footer>
 
-     {/* Sign In Modal */}
-<SignInModal
-  isOpen={showSignInModal}
-  onClose={() => setShowSignInModal(false)}
-  onSuccess={handleSignInSuccess}
-/>
+      {/* Sign In Modal */}
+      <SignInModal
+        isOpen={showSignInModal}
+        onClose={() => setShowSignInModal(false)}
+        onSuccess={handleSignInSuccess}
+      />
     </div>
   );
 }

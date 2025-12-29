@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import NavBar from '../components/NavBar';
 import { useAuth } from '../context/AuthContext';
 
 export default function SignIn() {
@@ -78,7 +77,6 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <NavBar />
       <div className="max-w-5xl mx-auto px-5 py-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">

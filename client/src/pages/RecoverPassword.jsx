@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import NavBar from '../components/NavBar';
 import authService from '../services/authService';
 
 export default function RecoverPassword() {
@@ -38,7 +37,6 @@ export default function RecoverPassword() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <NavBar />
       <div className="max-w-5xl mx-auto px-5 py-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
