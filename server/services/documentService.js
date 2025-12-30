@@ -2,7 +2,7 @@
 const supabase=require("../config/supabase");
 
 async function getDocuments() {
-    return await supabase.from("documents").select("docid,docname,docpicture,doctype,created_at");
+    return await supabase.from("documents").select("docid,docname,docpicture,doctype,created_at,duration");
 }
 async function getDocumentDetails(id) {
     return await supabase.from("documents").select("*").eq("docid",id).single();
