@@ -335,27 +335,7 @@ export default function ProfileForm() {
                       className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ID Card Number
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        name="idCard"
-                        value={formData.idCard}
-                        onChange={handleChange}
-                        disabled={true}
-                        className="w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-500 cursor-not-allowed uppercase tracking-wider font-mono text-sm"
-                      />
-                      <div className="absolute right-3 top-2 title='Verified by system'">✅</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email and Gender Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address
                     </label>
@@ -367,69 +347,10 @@ export default function ProfileForm() {
                       className="w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender
-                    </label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500 appearance-none bg-white"
-                    >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                    </select>
-                  </div>
                 </div>
 
-                {/* Place of Birth and Phone Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Place of Birth
-                    </label>
-                    <input
-                      type="text"
-                      name="placeOfBirth"
-                      value={formData.placeOfBirth}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    />
-                  </div>
-                </div>
 
-                {/* Date of Birth Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      name="dateOfBirth"
-                      value={formData.dateOfBirth}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    />
-                  </div>
-                </div>
+
               </div>
             </div>
 
