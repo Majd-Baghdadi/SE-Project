@@ -16,4 +16,16 @@ const getProfileById = async (userId) => {
     return data;
 };
 
-module.exports = { getProfileById };
+const updateProfile = async (newName,userId)=>{
+    console.log(userId)
+    const {data,error}=await supabase.from('users').update({name:newName}).eq('id',userId).select().maybeSingle();
+
+    if(error){
+        console.error('Failed to update user profile', error);
+        throw new Error('Failed to update user profile ');
+    }
+    console.log(data);
+    return data;
+}
+
+module.exports = { getProfileById ,updateProfile};
