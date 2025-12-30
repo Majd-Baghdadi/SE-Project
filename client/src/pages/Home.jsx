@@ -23,6 +23,15 @@ export default function Home() {
 
   const banners = [banner, banner3];
 
+  // Background gradient overlay colors
+  const bgColors = [
+    'from-blue-900/80 to-slate-900/80',
+    'from-emerald-900/80 to-teal-900/80',
+    'from-purple-900/80 to-indigo-900/80',
+    'from-rose-900/80 to-orange-900/80'
+  ];
+  const [currentColor, setCurrentColor] = useState(0);
+
   // Mock data fallback (used if API fails)
   const mockDocuments = [
     {
@@ -111,10 +120,18 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 5000); // Change every 5 seconds
+    }, 5000); // Change image every 5 seconds
 
     return () => clearInterval(interval);
   }, [banners.length]);
+
+  // Auto-cycle background colors
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentColor((prev) => (prev + 1) % bgColors.length);
+    }, 3000); // Change color every 3 seconds for dynamic effect
+    return () => clearInterval(interval);
+  }, [bgColors.length]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -155,28 +172,33 @@ export default function Home() {
           />
         ))}
 
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-blue-900/50 z-[1]" />
+        {/* Dynamic Gradient Overlay */}
+        <div
+          className={`absolute inset-0 z-[1] bg-gradient-to-br ${bgColors[currentColor]} transition-all duration-[2000ms] ease-in-out`}
+        />
 
         {/* Content */}
-        <div className="relative z-10 text-center max-w-4xl px-8">
+        <div className="relative z-10 text-center max-w-5xl px-4 md:px-8">
           {/* Slide Indicators */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
             {banners.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentBanner(index)}
-                className={`w-3 h-3 rounded-full transition-all ${currentBanner === index ? 'bg-white w-8' : 'bg-white/50'
+                className={`h-2 rounded-full transition-all duration-300 ${currentBanner === index ? 'bg-white w-8' : 'bg-white/40 w-2'
                   }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
 
-          <h1 className="text-[2.75rem] font-bold mb-6 leading-tight" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.6)' }}>
-            Get any government document in Algeria - <span className="text-primary">step by step</span>
+          <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold mb-6 leading-tight drop-shadow-lg">
+            Get any government document in Algeria <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">
+              step by step
+            </span>
           </h1>
-          <p className="text-base mb-10 max-w-2xl mx-auto leading-normal" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6)' }}>
+          <p className="text-base md:text-xl text-gray-100 mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             Community-verified guides for passports, visas, national IDs, and all governmental procedures. Get accurate, up-to-date information from real experiences.
           </p>
 

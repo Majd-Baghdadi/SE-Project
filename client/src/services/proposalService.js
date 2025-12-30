@@ -151,9 +151,10 @@ class ProposalService {
   async getProposedDocumentDetails(id) {
     try {
       const response = await api.get(`/propose/proposedDocument/${id}`);
+      const data = response.document || response;
       return {
         success: true,
-        data: response.document || response
+        data: Array.isArray(data) ? data[0] : data
       };
     } catch (error) {
       console.error('Error fetching proposed document details:', error);
@@ -168,9 +169,10 @@ class ProposalService {
   async getProposedFixDetails(id) {
     try {
       const response = await api.get(`/propose/proposedFix/${id}`);
+      const data = response.fix || response;
       return {
         success: true,
-        data: response.fix || response
+        data: Array.isArray(data) ? data[0] : data
       };
     } catch (error) {
       console.error('Error fetching proposed fix details:', error);

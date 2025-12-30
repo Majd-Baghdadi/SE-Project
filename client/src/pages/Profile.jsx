@@ -38,11 +38,7 @@ export default function ProfileForm() {
           return;
         }
 
-        const [profileRes, docsRes, fixesRes] = await Promise.all([
-          userService.getUserProfile(),
-          proposalService.getProposedDocumentsByUser(),
-          proposalService.getProposedFixesByUser()
-        ]);
+        const profileRes = await userService.getUserProfile();
 
         if (profileRes.success && profileRes.user) {
           setFormData(prev => ({
@@ -50,13 +46,21 @@ export default function ProfileForm() {
             name: profileRes.user.name || '',
             email: profileRes.user.email || ''
           }));
-        }
 
-        if (docsRes.success) {
-          setContributions(prev => ({ ...prev, documents: docsRes.data || [] }));
-        }
-        if (fixesRes.success) {
-          setContributions(prev => ({ ...prev, fixes: fixesRes.data || [] }));
+          // Only fetch contributions if user is NOT an admin
+          if (profileRes.user.role !== 'admin') {
+            const [docsRes, fixesRes] = await Promise.all([
+              proposalService.getProposedDocumentsByUser(),
+              proposalService.getProposedFixesByUser()
+            ]);
+
+            if (docsRes.success) {
+              setContributions(prev => ({ ...prev, documents: docsRes.data || [] }));
+            }
+            if (fixesRes.success) {
+              setContributions(prev => ({ ...prev, fixes: fixesRes.data || [] }));
+            }
+          }
         }
 
       } catch (error) {

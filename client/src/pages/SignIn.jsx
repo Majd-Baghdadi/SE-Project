@@ -58,7 +58,13 @@ export default function SignIn() {
       if (response.success) {
         navigate('/');
       } else {
-        setError(response.error || 'Login failed. Please try again.');
+        // Check if the failure was due to verification
+        if (response.status === 403 || response.error?.includes('verified')) {
+          setNeedsVerification(true);
+          setError('Your email is not verified yet. Please check your inbox or verify below.');
+        } else {
+          setError(response.error || 'Login failed. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Login error details:', err);
@@ -66,7 +72,7 @@ export default function SignIn() {
       // The error object thrown by api.js interceptor has status and message
       if (err.status === 403) {
         setNeedsVerification(true);
-        setError('Your email is not verified yet.');
+        setError('Your email is not verified yet. Please check your inbox or verify below.');
       } else {
         setError(err.message || 'Login failed. Please check your credentials.');
       }
@@ -105,7 +111,7 @@ export default function SignIn() {
                     <button
                       type="button"
                       onClick={handleResendVerification}
-                      className="text-primary hover:underline font-semibold text-left"
+                      className="text-primary hover:underline font-semibold text-left mt-1"
                     >
                       Click here to resend verification email
                     </button>

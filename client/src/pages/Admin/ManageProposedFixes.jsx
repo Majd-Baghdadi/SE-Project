@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
+import proposalService from '../../services/proposalService';
 import documentService from '../../services/documentService';
 import Notification from '../../components/Notification';
 
@@ -169,17 +170,40 @@ export default function ManageProposedFixes() {
   };
 
   const handleViewDetails = async (fix) => {
-    setSelectedFix(fix);
+    console.log("🧪 [CLICK] Fix object:", fix);
+    console.log("🧪 [CLICK] Document ID from fix:", fix.docid || fix.docId);
+
+
     setFetchingDoc(true);
+    setSelectedFix(null);
+    setOriginalDoc(null);
+
     try {
-      if (fix.docid) {
-        const response = await documentService.getDocumentById(fix.docid);
-        // Backend returns { data: {...}, relatedDocuments: [...] }
-        setOriginalDoc(response.data || response);
+      const fixId = fix.fixid || fix.id;
+      console.log('🟡 Fetching fix details for ID:', fixId);
+
+      const fixRes = await proposalService.getProposedFixDetails(fixId);
+      console.log('🟢 Fix details response:', fixRes);
+
+      if (!fixRes.success || !fixRes.data) {
+        console.error('🔴 Fix details fetch failed:', fixRes);
+        throw new Error('Fix details missing');
+      }
+
+      setSelectedFix(fixRes.data);
+
+      if (fixRes.data.docid) {
+        console.log('🟡 Fetching original document, docid:', fixRes.data.docid);
+
+        const docRes = await documentService.getDocumentById(fixRes.data.docid);
+        console.log('🟢 Original document response:', docRes);
+
+        setOriginalDoc(docRes.data || docRes);
+      } else {
+        console.warn('⚠️ Fix has no docid');
       }
     } catch (error) {
-      console.error('Error fetching original document:', error);
-      setOriginalDoc(null);
+      console.error('❌ handleViewDetails error:', error);
     } finally {
       setFetchingDoc(false);
     }
@@ -188,11 +212,8 @@ export default function ManageProposedFixes() {
   const filteredFixes = fixes.filter(f => {
     const docName = f.documents?.docname || '';
     const userName = f.users?.name || '';
-    const title = f.title || ''; // title might not be in the select, but keeping it as fallback
-
     return docName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      title.toLowerCase().includes(searchQuery.toLowerCase());
+      userName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   if (loading) return <div className="p-8">Loading...</div>;
@@ -232,15 +253,11 @@ export default function ManageProposedFixes() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fix Title
-                  </th>
+
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Document
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Problem Type
-                  </th>
+
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Submitted By
                   </th>
@@ -255,26 +272,16 @@ export default function ManageProposedFixes() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredFixes.map((fix) => (
                   <tr key={fix.fixid || fix.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{fix.title || 'No Title'}</div>
-                      <div className="text-sm text-gray-500 truncate max-w-xs">{fix.description || 'No description provided'}</div>
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {fix.documents?.docname || 'Unknown Document'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {fix.problemTypes ? fix.problemTypes.map(type => (
-                          <span key={type} className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                            {type}
-                          </span>
-                        )) : (
-                          <span className="text-xs text-gray-400italic">N/A</span>
-                        )}
-                      </div>
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {fix.users?.name || 'Anonymous'}
+                      <div>
+                        <div className="font-medium text-gray-900">{fix.users?.name || 'Anonymous'}</div>
+                        <div className="text-xs text-gray-500">{fix.users?.email}</div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ID: {fix.fixid || fix.id}
