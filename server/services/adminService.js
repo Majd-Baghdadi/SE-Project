@@ -7,7 +7,7 @@ async function fetchProposedDocuments(user) {
     if (user.role !== "admin") {
         throw new ForbiddenError("you are not an admin")
     }
-    return await supabase.from("proposed_documents").select(`proposeddocid,docname,docpicture, users!inner (name,email)`)
+    return await supabase.from("proposed_documents").select(`proposeddocid,docname,docpicture, doctype, created_at, users!inner (name,email)`)
 }
 
 //function to fetch all proposed fixes main infos 
