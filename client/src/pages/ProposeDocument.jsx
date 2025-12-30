@@ -35,7 +35,6 @@ const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Balance between quality and size
       const resized = canvas.toDataURL('image/jpeg', 0.2);
       resolve(resized);
     };
@@ -318,18 +317,14 @@ const ProposeDocumentPage = () => {
   const [loadingDocuments, setLoadingDocuments] = useState(true);
 
   const categories = [
-    'Visa',
-    'Passport',
-    'ID Card',
-    'Birth Certificate',
-    'Marriage Certificate',
-    'Driving License',
-    'Residence Permit',
-    'Work Permit'
+    'Biometric Services',
+    'Civil Status Services',
+    'Administrative Services',
+
   ];
 
 
-  // Check authentication on any form interaction
+
   // Check authentication on any form interaction
   const checkAuthAndProceed = (callback) => {
     if (!proposalService.isAuthenticated()) {
@@ -349,7 +344,7 @@ const ProposeDocumentPage = () => {
         const data = await response.json();
 
         if (data.documents && Array.isArray(data.documents)) {
-          // Transform to format needed for dropdown: {id: uuid, name: docname}
+
           setAvailableDocuments(data.documents.map(doc => ({
             id: doc.docid,
             name: doc.docname
@@ -478,7 +473,7 @@ const ProposeDocumentPage = () => {
     if (!hasInteracted) setHasInteracted(true);
 
     checkAuthAndProceed(() => {
-      // 'updated' contains document IDs (UUIDs)
+     
       setFormData({ ...formData, relatedDocuments: updated });
       setErrors({ ...errors, relatedDocuments: validateRelatedDocuments(updated) });
     });
