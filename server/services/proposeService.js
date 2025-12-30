@@ -96,7 +96,7 @@ async function fetchProposedDocumentDetails(id,user) {
         throw new ForbiddenError("Access denied")
     }
     
-    return await supabase.from("proposed_documents").select("*").eq("proposeddocid",id)
+    return await supabase.from("proposed_documents").select(`*,users!inner (name,email)`).eq("proposeddocid",id)
 }
 
 //function to fetch proposed fix details
@@ -108,7 +108,7 @@ async function fetchProposedFixDetails(id,user) {
     if (user.role!=="admin" && user.userId!==data.userid) {
         throw new ForbiddenError("Access denied")
     }
-    return await supabase.from("fixes").select("*").eq("fixid",id)
+    return await supabase.from("fixes").select(`*,documents!inner (*),users!inner (name,email)`).eq("fixid",id)
 }
 
 module.exports={
