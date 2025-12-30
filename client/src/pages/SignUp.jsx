@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,6 +16,7 @@ export default function SignUp() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleShowPassword = () => {
@@ -99,7 +101,14 @@ export default function SignUp() {
       );
 
       if (response.success) {
-        setSuccess(response.message || 'Registration successful! Please check your email to verify your account.');
+        Swal.fire({
+          title: 'Registration Successful!',
+          text: response.message || 'Please check your email to verify your account.',
+          icon: 'success',
+          confirmButtonColor: '#10b981',
+        }).then(() => {
+          navigate('/signin');
+        });
 
         // Clear form
         setFormData({
@@ -108,11 +117,6 @@ export default function SignUp() {
           password: '',
           confirmPassword: '',
         });
-
-        // Navigate to sign in after a delay
-        setTimeout(() => {
-          navigate('/signin');
-        }, 3000);
       } else {
         setError(response.message || 'Registration failed. Please try again.');
       }
@@ -210,9 +214,9 @@ export default function SignUp() {
                 </div>
 
                 {/* Confirm Password Input */}
-                <div>
+                <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
@@ -220,6 +224,13 @@ export default function SignUp() {
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
 
                 {/* Sign Up Button */}

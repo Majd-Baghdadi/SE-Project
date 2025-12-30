@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import standard from '../assets/images/standard2.png'
 
 export default function SearchBar({ documents = [] }) {
   const [query, setQuery] = useState('')
@@ -7,6 +8,13 @@ export default function SearchBar({ documents = [] }) {
   const [showResults, setShowResults] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const searchRef = useRef(null)
+  const getImgSrc = (src) => {
+    if (!src) return standard;
+    const cleanSrc = src.toString().trim();
+    if (cleanSrc.startsWith('http') || cleanSrc.includes('://')) return cleanSrc;
+    if (cleanSrc.startsWith('data:')) return cleanSrc;
+    return `data:image/jpeg;base64,${cleanSrc}`;
+  };
   const navigate = useNavigate()
 
   // Close dropdown when clicking outside
@@ -50,7 +58,7 @@ export default function SearchBar({ documents = [] }) {
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex(prev => 
+      setSelectedIndex(prev =>
         prev < searchResults.length - 1 ? prev + 1 : prev
       )
     } else if (e.key === 'ArrowUp') {
@@ -98,8 +106,8 @@ export default function SearchBar({ documents = [] }) {
           onKeyDown={handleKeyDown}
           className="flex-1 py-4 px-4 border-0 outline-none text-base text-gray-800 placeholder-gray-400"
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="py-4 px-8 bg-primary text-white border-0 cursor-pointer text-base font-semibold transition-colors hover:bg-primary-dark"
         >
           Search
@@ -113,74 +121,59 @@ export default function SearchBar({ documents = [] }) {
             <div
               key={doc.docid}
               onClick={() => navigateToDocument(doc.docid)}
-              className={`p-4 border-b border-gray-100 cursor-pointer transition-all duration-200 ${
-                index === selectedIndex ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'hover:bg-gradient-to-r hover:from-emerald-500 hover:to-green-600 hover:scale-[1.01]'
-              } ${index === selectedIndex || 'group'}`}
+              className={`p-4 border-b border-gray-100 cursor-pointer transition-colors duration-200 ${index === selectedIndex ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'hover:bg-gradient-to-r hover:from-emerald-500 hover:to-green-600'
+                } ${index === selectedIndex || 'group'}`}
             >
               <div className="flex items-center gap-4">
                 {/* Document Image/Icon */}
-                <div className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden ${
-                  index === selectedIndex ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-white/20'
-                }`}>
-                  {doc.image ? (
-                    <img 
-                      src={doc.image} 
-                      alt={doc.docname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className={`w-full h-full flex items-center justify-center text-2xl ${
-                      index === selectedIndex ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                    }`}>
-                      📄
-                    </div>
-                  )}
+                <div className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden ${index === selectedIndex ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-white/20'
+                  }`}>
+                  <img
+                    src={getImgSrc(doc.docpicture)}
+                    alt={doc.docname}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 {/* Document Info */}
                 <div className="flex-1 min-w-0">
-                  <h4 className={`font-bold text-lg mb-1 truncate ${
-                    index === selectedIndex ? 'text-white' : 'text-gray-900 group-hover:text-white'
-                  }`}>
+                  <h4 className={`font-bold text-lg mb-1 truncate ${index === selectedIndex ? 'text-white' : 'text-gray-900 group-hover:text-white'
+                    }`}>
                     {doc.docname}
                   </h4>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      index === selectedIndex ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-800 group-hover:bg-white/30 group-hover:text-white'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${index === selectedIndex ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-800 group-hover:bg-white/30 group-hover:text-white'
+                      }`}>
                       {doc.category}
                     </span>
-                    <span className={`flex items-center gap-1 text-sm font-medium ${
-                      index === selectedIndex ? 'text-white' : 'text-gray-600 group-hover:text-white'
-                    }`}>
+                    <span className={`flex items-center gap-1 text-sm font-medium ${index === selectedIndex ? 'text-white' : 'text-gray-600 group-hover:text-white'
+                      }`}>
                       ⏱️ {doc.duration}
                     </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                      index === selectedIndex ? 'bg-white/30 text-white' : 
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${index === selectedIndex ? 'bg-white/30 text-white' :
                       doc.difficulty === 'Easy' ? 'bg-green-100 text-green-800 group-hover:bg-white/30 group-hover:text-white' :
-                      doc.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 group-hover:bg-white/30 group-hover:text-white' :
-                      'bg-red-100 text-red-800 group-hover:bg-white/30 group-hover:text-white'
-                    }`}>
+                        doc.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 group-hover:bg-white/30 group-hover:text-white' :
+                          'bg-red-100 text-red-800 group-hover:bg-white/30 group-hover:text-white'
+                      }`}>
                       {doc.difficulty}
                     </span>
                   </div>
                 </div>
 
                 {/* Arrow Icon */}
-                <svg className={`w-6 h-6 flex-shrink-0 transition-transform ${
-                  index === selectedIndex ? 'text-white translate-x-1' : 'text-gray-400 group-hover:text-white group-hover:translate-x-1'
-                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-6 h-6 flex-shrink-0 transition-transform ${index === selectedIndex ? 'text-white translate-x-1' : 'text-gray-400 group-hover:text-white group-hover:translate-x-1'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
             </div>
           ))}
-          
+
           {searchResults.length === 5 && (
             <div className="p-4 text-center text-sm bg-gradient-to-r from-emerald-50 to-green-50">
               <span className="text-gray-600">Showing top 5 results.</span>{' '}
-              <button 
-                onClick={() => navigate('/documents')} 
+              <button
+                onClick={() => navigate('/documents')}
                 className="text-emerald-700 hover:text-emerald-900 font-semibold hover:underline"
               >
                 View all procedures →

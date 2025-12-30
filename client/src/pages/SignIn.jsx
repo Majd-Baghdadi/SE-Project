@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -36,7 +37,12 @@ export default function SignIn() {
     try {
       const response = await authService.resendVerificationEmail(formData.email);
       if (response.success) {
-        alert('A new verification link has been sent to your email.');
+        Swal.fire({
+          title: 'Email Sent!',
+          text: 'A new verification link has been sent to your email.',
+          icon: 'success',
+          confirmButtonColor: '#10b981',
+        });
         setNeedsVerification(false);
       }
     } catch (err) {
@@ -56,6 +62,18 @@ export default function SignIn() {
       const response = await login(formData.email, formData.password);
 
       if (response.success) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+
+        Toast.fire({
+          icon: 'success',
+          title: 'Signed in successfully'
+        });
         navigate('/');
       } else {
         // Check if the failure was due to verification

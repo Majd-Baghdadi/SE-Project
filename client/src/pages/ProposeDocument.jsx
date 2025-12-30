@@ -3,6 +3,7 @@ import { Image, FileText, List, DollarSign, Clock, Tag, Link, Check, AlertTriang
 import { useNavigate } from 'react-router-dom';
 import SignInModal from '../components/SignInModal';
 import proposalService from '../services/proposalService';
+import { useAuth } from '../context/AuthContext';
 
 // Utility function to resize image with more aggressive compression
 const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
@@ -213,8 +214,8 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
             <div
               key={doc.id}
               className={`px-4 py-3 cursor-pointer transition-colors flex justify-between items-center ${selected.includes(doc.id)
-                  ? 'bg-green-50 text-green-700'
-                  : 'hover:bg-gray-50'
+                ? 'bg-green-50 text-green-700'
+                : 'hover:bg-gray-50'
                 }`}
               onClick={() => toggleOption(doc.id)}
               style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
@@ -295,6 +296,7 @@ const CancelModal = ({ onClose, onConfirm }) => (
 // ---------------- ProposeDocumentPage ----------------
 const ProposeDocumentPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     pictureFile: null,
     name: '',
@@ -402,26 +404,26 @@ const ProposeDocumentPage = () => {
     return '';
   };
 
-const handleImageUpload = (e) => {
-  if (!hasInteracted) setHasInteracted(true);
-  
-  checkAuthAndProceed(() => {
-    const file = e.target.files[0];
-    if (file) {
-      console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
-      
-      if (!file.type.startsWith('image/')) {
-        setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
-        return;
-      }
+  const handleImageUpload = (e) => {
+    if (!hasInteracted) setHasInteracted(true);
 
-      // Just store the file
-      setFormData({ ...formData, pictureFile: file });
-      setErrors({ ...errors, picture: '' });
-      console.log('✅ File stored:', file.name);
-    }
-  });
-};
+    checkAuthAndProceed(() => {
+      const file = e.target.files[0];
+      if (file) {
+        console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+
+        if (!file.type.startsWith('image/')) {
+          setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
+          return;
+        }
+
+        // Just store the file
+        setFormData({ ...formData, pictureFile: file });
+        setErrors({ ...errors, picture: '' });
+        console.log('✅ File stored:', file.name);
+      }
+    });
+  };
 
   const handleNameChange = (e) => {
     if (!hasInteracted) setHasInteracted(true);
@@ -494,80 +496,80 @@ const handleImageUpload = (e) => {
     setErrors(newErrors);
     return Object.values(newErrors).every(error => error === '');
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitError('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitError('');
 
-  if (!proposalService.isAuthenticated()) {
-    setShowSignInModal(true);
-    return;
-  }
-  
-  if (!validateAll()) {
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    // Create FormData
-    const submitData = new FormData();
-    
-    submitData.append('docname', formData.name);
-    submitData.append('doctype', formData.category);
-    
-    const stepsArray = formData.steps.trim() 
-      ? formData.steps.split('\n').map(s => s.trim()).filter(s => s) 
-      : [];
-    submitData.append('steps', JSON.stringify(stepsArray));
-    
-    if (formData.price) {
-      submitData.append('docprice', formData.price);
-    }
-    
-    if (formData.expectedTime) {
-      submitData.append('duration', convertTimeToInteger(formData.expectedTime));
-    }
-    
-    if (formData.relatedDocuments.length > 0) {
-      submitData.append('relateddocs', JSON.stringify(formData.relatedDocuments));
-    }
-    
-    // Add file
-    if (formData.pictureFile) {
-      submitData.append('docpicture', formData.pictureFile);
-      console.log('📸 File attached:', formData.pictureFile.name);
+    if (!proposalService.isAuthenticated()) {
+      setShowSignInModal(true);
+      return;
     }
 
-    // Debug: Log FormData contents
-    console.log('📤 FormData contents:');
-    for (let [key, value] of submitData.entries()) {
-      if (key === 'docpicture') {
-        console.log(`  ${key}:`, value.name, value.type, value.size);
-      } else {
-        console.log(`  ${key}:`, value);
+    if (!validateAll()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Create FormData
+      const submitData = new FormData();
+
+      submitData.append('docname', formData.name);
+      submitData.append('doctype', formData.category);
+
+      const stepsArray = formData.steps.trim()
+        ? formData.steps.split('\n').map(s => s.trim()).filter(s => s)
+        : [];
+      submitData.append('steps', JSON.stringify(stepsArray));
+
+      if (formData.price) {
+        submitData.append('docprice', formData.price);
       }
-    }
 
-    const response = await proposalService.proposeDocument(submitData);
+      if (formData.expectedTime) {
+        submitData.append('duration', convertTimeToInteger(formData.expectedTime));
+      }
 
-    if (response.success) {
-      setShowSuccessModal(true);
-    } else {
-      setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
+      if (formData.relatedDocuments.length > 0) {
+        submitData.append('relateddocs', JSON.stringify(formData.relatedDocuments));
+      }
+
+      // Add file
+      if (formData.pictureFile) {
+        submitData.append('docpicture', formData.pictureFile);
+        console.log('📸 File attached:', formData.pictureFile.name);
+      }
+
+      // Debug: Log FormData contents
+      console.log('📤 FormData contents:');
+      for (let [key, value] of submitData.entries()) {
+        if (key === 'docpicture') {
+          console.log(`  ${key}:`, value.name, value.type, value.size);
+        } else {
+          console.log(`  ${key}:`, value);
+        }
+      }
+
+      const response = await proposalService.proposeDocument(submitData);
+
+      if (response.success) {
+        setShowSuccessModal(true);
+      } else {
+        setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error('Submit error:', error);
-    setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
   const handleCancel = () => setShowCancelModal(true);
 
   const confirmCancel = () => {
     setFormData({
-      pictureFile: null, 
+      pictureFile: null,
       name: '',
       steps: '',
       price: '',
@@ -635,14 +637,14 @@ const handleSubmit = async (e) => {
                   </span>
                 </div>
               </label>
-{errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
-{formData.pictureFile && (
-  <div className="mt-3">
-    <p className="text-sm text-green-600">
-      ✓ Selected: {formData.pictureFile.name} ({(formData.pictureFile.size / 1024).toFixed(2)} KB)
-    </p>
-  </div>
-)}
+              {errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
+              {formData.pictureFile && (
+                <div className="mt-3">
+                  <p className="text-sm text-green-600">
+                    ✓ Selected: {formData.pictureFile.name} ({(formData.pictureFile.size / 1024).toFixed(2)} KB)
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
@@ -774,7 +776,9 @@ const handleSubmit = async (e) => {
                 className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
+                {isSubmitting
+                  ? (user?.role === 'admin' ? 'Adding...' : 'Submitting...')
+                  : (user?.role === 'admin' ? 'Add Document' : 'Submit Proposal')}
               </button>
             </div>
           </form>

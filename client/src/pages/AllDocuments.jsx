@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import documentService from '../services/documentService';
+import standard from '../assets/images/standard2.png';
 
 export default function AllDocuments() {
   const [documents, setDocuments] = useState([]);
   const [filteredDocs, setFilteredDocs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const getImgSrc = (src) => {
+    if (!src) return standard;
+    const cleanSrc = src.toString().trim();
+    if (cleanSrc.startsWith('http') || cleanSrc.includes('://')) return cleanSrc;
+    if (cleanSrc.startsWith('data:')) return cleanSrc;
+    return `data:image/jpeg;base64,${cleanSrc}`;
+  };
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -186,29 +194,41 @@ export default function AllDocuments() {
               <Link
                 key={doc.docid}
                 to={`/document/${doc.docid}`}
-                className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-6 no-underline border border-gray-100 hover:-translate-y-1"
+                className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 no-underline border border-gray-100 hover:-translate-y-1 overflow-hidden flex flex-col h-full"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <span className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-green-50 text-green-700 border border-green-100">
-                    {doc.doctype || doc.category || 'Other'}
-                  </span>
-                </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors uppercase tracking-tight">{doc.docname}</h3>
-
-                <div className="space-y-3 text-sm text-gray-600 mb-6 font-sans">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">⏱️</span>
-                    <span className="font-medium text-gray-700">{doc.duration || 'Varies'}</span>
+                {/* Image */}
+                <div className="h-48 w-full relative">
+                  <img
+                    src={getImgSrc(doc.docpicture)}
+                    alt={doc.docname}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <span className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-white/90 text-green-700 shadow-sm backdrop-blur-sm border border-green-100">
+                      {doc.doctype || doc.category || 'Other'}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">👤</div>
-                    <span>By {doc.submittedBy || 'Official'}</span>
+                <div className="p-6 flex flex-col flex-grow">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors uppercase tracking-tight line-clamp-2">
+                    {doc.docname}
+                  </h3>
+
+                  <div className="space-y-3 text-sm text-gray-600 mb-6 font-sans flex-grow">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">⏱️</span>
+                      <span className="font-medium text-gray-700">{doc.duration || 'Varies'}</span>
+                    </div>
                   </div>
-                  <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Recent'}</span>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-[11px] font-semibold uppercase tracking-widest text-gray-400 mt-auto">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">👤</div>
+                      <span>By {doc.submittedBy || 'Official'}</span>
+                    </div>
+                    <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Recent'}</span>
+                  </div>
                 </div>
               </Link>
             ))}

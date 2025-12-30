@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Edit2, Check, LogOut } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { ChevronDown, Edit2, Check, LogOut, Eye, X } from 'lucide-react';
 import authService from '../services/authService';
 import userService from '../services/userService';
 import proposalService from '../services/proposalService';
 import { useAuth } from '../context/AuthContext';
 import Notification from '../components/Notification';
+import standard from '../assets/images/standard2.png';
 
 export default function ProfileForm() {
   const navigate = useNavigate();
   const { user: authUser, checkAuth, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [originalFormData, setOriginalFormData] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +32,15 @@ export default function ProfileForm() {
     fixes: []
   });
   const [notification, setNotification] = useState({ message: '', type: '' });
+  const [viewModal, setViewModal] = useState({ isOpen: false, data: null, type: 'doc', loading: false });
+
+  const getImgSrc = (src) => {
+    if (!src) return standard;
+    const cleanSrc = src.toString().trim();
+    if (cleanSrc.startsWith('http') || cleanSrc.includes('://')) return cleanSrc;
+    if (cleanSrc.startsWith('data:')) return cleanSrc;
+    return `data:image/jpeg;base64,${cleanSrc}`;
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -74,33 +86,75 @@ export default function ProfileForm() {
   }, [navigate]);
 
   const handleDeleteDoc = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this proposal?")) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, delete it!'
+    });
 
-    const res = await proposalService.deleteProposedDocument(id);
-    if (res.success) {
-      setContributions(prev => ({
-        ...prev,
-        documents: prev.documents.filter(d => d.proposeddocid !== id)
-      }));
-      setNotification({ message: 'Proposal deleted successfully', type: 'success' });
-    } else {
-      setNotification({ message: 'Failed to delete proposal', type: 'error' });
+    if (result.isConfirmed) {
+      const res = await proposalService.deleteProposedDocument(id);
+      if (res.success) {
+        setContributions(prev => ({
+          ...prev,
+          documents: prev.documents.filter(d => d.proposeddocid !== id)
+        }));
+        Swal.fire('Deleted!', 'Your proposal has been deleted.', 'success');
+      } else {
+        Swal.fire('Error!', 'Failed to delete proposal.', 'error');
+      }
     }
   };
 
   const handleDeleteFix = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this fix?")) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, delete it!'
+    });
 
-    const res = await proposalService.deleteProposedFix(id);
-    if (res.success) {
-      setContributions(prev => ({
-        ...prev,
-        fixes: prev.fixes.filter(f => f.fixid !== id)
-      }));
-      setNotification({ message: 'Fix deleted successfully', type: 'success' });
-    } else {
-      setNotification({ message: 'Failed to delete fix', type: 'error' });
+    if (result.isConfirmed) {
+      const res = await proposalService.deleteProposedFix(id);
+      if (res.success) {
+        setContributions(prev => ({
+          ...prev,
+          fixes: prev.fixes.filter(f => f.fixid !== id)
+        }));
+        Swal.fire('Deleted!', 'Your fix proposal has been deleted.', 'success');
+      } else {
+        Swal.fire('Error!', 'Failed to delete fix.', 'error');
+      }
     }
+  };
+
+  const handleViewDoc = async (doc) => {
+    setViewModal({ isOpen: true, type: 'doc', data: doc, loading: true });
+    try {
+      const id = doc.proposeddocid || doc.id;
+      const res = await proposalService.getProposedDocumentDetails(id);
+      if (res.success) {
+        setViewModal(prev => ({ ...prev, data: res.data, loading: false }));
+      } else {
+        setViewModal(prev => ({ ...prev, loading: false }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch doc details", err);
+      setViewModal(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleViewFix = (fix) => {
+    // For fixes, we assume the list has enough info, or we display what we have. 
+    // Ideally we'd fetch details too but let's start with list object.
+    setViewModal({ isOpen: true, type: 'fix', data: fix, loading: false });
   };
 
   const handleChange = (e) => {
@@ -111,7 +165,15 @@ export default function ProfileForm() {
   };
 
   const handleEdit = () => {
+    setOriginalFormData({ ...formData });
     setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    if (originalFormData) {
+      setFormData(originalFormData);
+    }
+    setIsEditing(false);
   };
 
   const handleSave = async () => {
@@ -123,27 +185,53 @@ export default function ProfileForm() {
 
       if (response.success) {
         setIsEditing(false);
-        setShowSuccess(true);
         // Refresh auth state to update navbar etc if name changed
         await checkAuth();
 
-        setTimeout(() => {
-          setShowSuccess(false);
-        }, 3000);
+        Swal.fire({
+          title: 'Updated!',
+          text: 'Your profile has been updated successfully.',
+          icon: 'success',
+          confirmButtonColor: '#10b981',
+        });
       }
     } catch (error) {
       console.error('Failed to update profile:', error);
-      alert('Failed to update profile');
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to update profile. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#10b981',
+      });
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      navigate('/');
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: "Are you sure you want to logout?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, logout'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await logout();
+        navigate('/');
+        Swal.fire({
+          title: 'Logged Out',
+          text: 'You have been successfully logged out.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+        navigate('/');
+      }
     }
   };
 
@@ -176,19 +264,19 @@ export default function ProfileForm() {
             </div>
           )}
 
-          <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8">
+          <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-4 md:p-8">
               {/* Header */}
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl md:text-2xl font-semibold text-gray-900 truncate">
                     {formData.name || 'User Profile'}
                   </h1>
-                  <p className="text-gray-500 text-sm mt-1">
+                  <p className="text-gray-500 text-sm mt-1 truncate">
                     {formData.email}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                   {!isEditing ? (
                     <button
                       onClick={handleEdit}
@@ -206,13 +294,23 @@ export default function ProfileForm() {
                       Save
                     </button>
                   )}
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
+                  {!isEditing ? (
+                    <button
+                      onClick={handleLogout}
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCancel}
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -234,7 +332,7 @@ export default function ProfileForm() {
                         }`}
                     />
                   </div>
-<div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email
                     </label>
@@ -257,7 +355,7 @@ export default function ProfileForm() {
 
             {/* Contributions Section - Only for non-admin users */}
             {authUser && authUser.role !== 'admin' && (
-              <div className="max-w-4xl mx-auto mt-8 bg-white rounded-lg shadow-sm p-8">
+              <div className="max-w-4xl mx-auto mt-8 bg-white rounded-lg shadow-sm p-4 md:p-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">My Contributions</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -270,15 +368,26 @@ export default function ProfileForm() {
                     <div className="space-y-3">
                       {contributions.documents.length > 0 ? (
                         contributions.documents.map(doc => (
-                          <div key={doc.proposeddocid} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center group hover:border-green-200 transition-colors">
-                            <span className="font-medium text-gray-800">{doc.docname}</span>
-                            <button
-                              onClick={() => handleDeleteDoc(doc.proposeddocid)}
-                              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
-                              title="Delete Proposal"
-                            >
-                              <LogOut className="w-4 h-4 transform rotate-180" />
-                            </button>
+                          <div key={doc.proposeddocid} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center group hover:border-green-200 transition-colors gap-3">
+                            <div className="min-w-0 flex-1">
+                              <span className="font-medium text-gray-800 truncate block text-sm">{doc.docname}</span>
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0">
+                              <button
+                                onClick={() => handleViewDoc(doc)}
+                                className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDoc(doc.proposeddocid)}
+                                className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                                title="Delete Proposal"
+                              >
+                                <LogOut className="w-4 h-4 transform rotate-180" />
+                              </button>
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -296,18 +405,26 @@ export default function ProfileForm() {
                     <div className="space-y-3">
                       {contributions.fixes.length > 0 ? (
                         contributions.fixes.map(fix => (
-                          <div key={fix.fixid} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center group hover:border-blue-200 transition-colors">
-                            <div>
-                              <span className="font-medium text-gray-800 block text-sm">{fix.documents?.docname || 'Unknown Document'}</span>
-                              <span className="text-xs text-gray-500">Fix ID: {fix.fixid}</span>
+                          <div key={fix.fixid} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center group hover:border-blue-200 transition-colors gap-3">
+                            <div className="min-w-0 flex-1">
+                              <span className="font-medium text-gray-800 block text-sm truncate">{fix.documents?.docname || 'Unknown Document'}</span>
                             </div>
-                            <button
-                              onClick={() => handleDeleteFix(fix.fixid)}
-                              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
-                              title="Delete Fix"
-                            >
-                              <LogOut className="w-4 h-4 transform rotate-180" />
-                            </button>
+                            <div className="flex gap-2 flex-shrink-0">
+                              <button
+                                onClick={() => handleViewFix(fix)}
+                                className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFix(fix.fixid)}
+                                className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                                title="Delete Fix"
+                              >
+                                <LogOut className="w-4 h-4 transform rotate-180" />
+                              </button>
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -320,6 +437,92 @@ export default function ProfileForm() {
             )}
           </div>
         </>
+      )}
+
+      {/* View Modal */}
+      {viewModal.isOpen && viewModal.data && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-slide-in">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-xl font-bold text-gray-900">
+                {viewModal.type === 'doc' ? 'Proposed Document' : 'Proposed Fix'}
+              </h2>
+              <button
+                onClick={() => setViewModal({ ...viewModal, isOpen: false })}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {viewModal.loading ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                </div>
+              ) : viewModal.type === 'doc' ? (
+                <div className="space-y-6">
+                  <div className="aspect-video w-full bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+                    <img
+                      src={getImgSrc(viewModal.data.docpicture)}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{viewModal.data.docname || 'Untitled'}</h3>
+                    <div className="flex gap-2 mb-4">
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full font-medium">
+                        {viewModal.data.category || 'General'}
+                      </span>
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
+                        {viewModal.data.duration || 'N/A'}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed p-4 bg-gray-50 rounded-lg">
+                      {/* Summary of steps if available, or just steps count */}
+                      {viewModal.data.steps && Array.isArray(viewModal.data.steps) ? (
+                        <div className="mt-2">
+                          <span className="font-semibold block mb-2">Procedures:</span>
+                          <ol className="list-decimal pl-4 space-y-1">
+                            {viewModal.data.steps.map((step, idx) => (
+                              <li key={idx}>{typeof step === 'string' ? step : step.title}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      ) : (
+                        <span className="italic">No detailed steps provided.</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-1">Description</h4>
+                    <p className="text-blue-800 text-sm whitespace-pre-wrap">{viewModal.data.description || 'No description provided.'}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Target Document</h4>
+                    <p className="text-gray-600 text-sm border p-2 rounded bg-gray-50">{viewModal.data.documents?.docname || 'Unknown'}</p>
+                  </div>
+                  {/* If we had detailed content for the fix, we would show it here */}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-gray-50 text-right">
+              <button
+                onClick={() => setViewModal({ ...viewModal, isOpen: false })}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`
