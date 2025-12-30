@@ -27,6 +27,20 @@ const extractErrorMessageFromHtml = (htmlString) => {
   }
   return 'An unexpected error occurred.';
 };
+// Request interceptor: Remove Content-Type header for FormData uploads
+// to allow browser to set correct multipart/form-data boundary automatically
+api.interceptors.request.use(
+  (config) => {
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Request interceptor removed as we use HttpOnly cookies for authentication.
 

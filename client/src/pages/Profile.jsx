@@ -234,7 +234,7 @@ export default function ProfileForm() {
                         }`}
                     />
                   </div>
-                  <div>
+<div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email
                     </label>
@@ -243,113 +243,15 @@ export default function ProfileForm() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      disabled={!isEditing}
-                      className={`w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isEditing ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                        }`}
-                    />
-                  </div>
-                </div>
-
-                {/* ID Card and Gender Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ID Card
-                    </label>
-                    <input
-                      type="text"
-                      name="idCard"
-                      value={formData.idCard}
-                      onChange={handleChange}
                       disabled
                       className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-md text-gray-500 cursor-not-allowed"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="gender"
-                        value={formData.gender}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className={`w-full px-4 py-2.5 border border-gray-200 rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isEditing ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          }`}
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                      <ChevronDown className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none ${isEditing ? 'text-gray-700' : 'text-gray-400'
-                        }`} />
-                    </div>
-                  </div>
                 </div>
 
-                {/* Place of Birth Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Place of Birth
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="placeOfBirth"
-                        value={formData.placeOfBirth}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className={`w-full px-4 py-2.5 border border-gray-200 rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isEditing ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          }`}
-                      >
-                        <option value="">Your Place of Birth</option>
-                        <option value="algiers">Algiers</option>
-                        <option value="oran">Oran</option>
-                        <option value="constantine">Constantine</option>
-                        <option value="annaba">Annaba</option>
-                        <option value="blida">Blida</option>
-                        <option value="other">Other</option>
-                      </select>
-                      <ChevronDown className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none ${isEditing ? 'text-gray-700' : 'text-gray-400'
-                        }`} />
-                    </div>
-                  </div>
-                </div>
 
-                {/* Phone Number and Date of Birth Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                      disabled
-                      className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-md text-gray-500 cursor-not-allowed"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date of Birth
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        name="dateOfBirth"
-                        value={formData.dateOfBirth}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className={`w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isEditing ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          }`}
-                      />
-                    </div>
-                  </div>
-                </div>
+
+
               </div>
             </div>
 
