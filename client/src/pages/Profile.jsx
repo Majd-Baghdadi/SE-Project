@@ -6,7 +6,7 @@ import userService from '../services/userService';
 import proposalService from '../services/proposalService';
 import { useAuth } from '../context/AuthContext';
 import Notification from '../components/Notification';
-
+import api from '../services/api'; 
 export default function ProfileForm() {
   const navigate = useNavigate();
   const { user: authUser, checkAuth, logout } = useAuth();
@@ -113,30 +113,30 @@ export default function ProfileForm() {
   const handleEdit = () => {
     setIsEditing(true);
   };
+const handleSave = async () => {
+  try {
+    
+    const response = await api.patch('/user/updateProfile', {
+      name: formData.name.trim() 
+    });
 
-  const handleSave = async () => {
-    try {
-      const response = await userService.updateProfile({
-        name: formData.name,
-        email: formData.email
-      });
+    if (response.success) {
+      setIsEditing(false);
+      setShowSuccess(true);
+      
+      await checkAuth();
 
-      if (response.success) {
-        setIsEditing(false);
-        setShowSuccess(true);
-        // Refresh auth state to update navbar etc if name changed
-        await checkAuth();
-
-        setTimeout(() => {
-          setShowSuccess(false);
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('Failed to update profile');
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    } else {
+      alert(response.error || 'Failed to update profile');
     }
-  };
-
+  } catch (error) {
+    console.error('Failed to update profile:', error);
+    alert(error.message || 'Failed to update profile');
+  }
+};
   const handleLogout = async () => {
     try {
       await logout();
