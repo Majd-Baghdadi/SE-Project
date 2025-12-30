@@ -5,5 +5,7 @@ const userController = require('../controllers/userController');
 const { verifyAuthToken } = require('../middlewares/authMiddleware');
 
 router.get('/profile', verifyAuthToken, userController.getProfile);
+router.patch('/updateProfile',verifyAuthToken,userController.updateProfile) ;
+
 
 module.exports = router;
