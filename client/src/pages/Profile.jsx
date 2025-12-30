@@ -8,6 +8,7 @@ import proposalService from '../services/proposalService';
 import { useAuth } from '../context/AuthContext';
 import Notification from '../components/Notification';
 import standard from '../assets/images/standard2.png';
+import api from '../services/api';
 
 export default function ProfileForm() {
   const navigate = useNavigate();
@@ -152,8 +153,6 @@ export default function ProfileForm() {
   };
 
   const handleViewFix = (fix) => {
-    // For fixes, we assume the list has enough info, or we display what we have. 
-    // Ideally we'd fetch details too but let's start with list object.
     setViewModal({ isOpen: true, type: 'fix', data: fix, loading: false });
   };
 
@@ -178,14 +177,12 @@ export default function ProfileForm() {
 
   const handleSave = async () => {
     try {
-      const response = await userService.updateProfile({
-        name: formData.name,
-        email: formData.email
+      const response = await api.patch('/user/updateProfile', {
+        name: formData.name.trim()
       });
 
       if (response.success) {
         setIsEditing(false);
-        // Refresh auth state to update navbar etc if name changed
         await checkAuth();
 
         Swal.fire({
@@ -194,12 +191,19 @@ export default function ProfileForm() {
           icon: 'success',
           confirmButtonColor: '#10b981',
         });
+      } else {
+        Swal.fire({
+          title: 'Error!',
+          text: response.error || 'Failed to update profile. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#10b981',
+        });
       }
     } catch (error) {
       console.error('Failed to update profile:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Failed to update profile. Please try again.',
+        text: error.message || 'Failed to update profile. Please try again.',
         icon: 'error',
         confirmButtonColor: '#10b981',
       });
@@ -328,28 +332,104 @@ export default function ProfileForm() {
                       value={formData.name}
                       onChange={handleChange}
                       disabled={!isEditing}
-                      className={`w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${isEditing ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                        }`}
+                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
+                      ID Card Number
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="idCard"
+                        value={formData.idCard}
+                        onChange={handleChange}
+                        disabled={true}
+                        className="w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-500 cursor-not-allowed uppercase tracking-wider font-mono text-sm"
+                      />
+                      <div className="absolute right-3 top-2 title='Verified by system'">✅</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email and Gender Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address
                     </label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
+                      disabled={true}
+                      className="w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Gender
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
                       onChange={handleChange}
-                      disabled
-                      className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-md text-gray-500 cursor-not-allowed"
+                      disabled={!isEditing}
+                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500 appearance-none bg-white"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Place of Birth and Phone Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Place of Birth
+                    </label>
+                    <input
+                      type="text"
+                      name="placeOfBirth"
+                      value={formData.placeOfBirth}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
                     />
                   </div>
                 </div>
 
-
-
-
+                {/* Date of Birth Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -471,52 +551,49 @@ export default function ProfileForm() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{viewModal.data.docname || 'Untitled'}</h3>
-                    <div className="flex gap-2 mb-4">
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full font-medium">
-                        {viewModal.data.category || 'General'}
-                      </span>
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
-                        {viewModal.data.duration || 'N/A'}
-                      </span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Name</span>
+                      <span className="font-semibold text-gray-900">{viewModal.data.docname}</span>
                     </div>
-                    <p className="text-gray-600 text-sm leading-relaxed p-4 bg-gray-50 rounded-lg">
-                      {/* Summary of steps if available, or just steps count */}
-                      {viewModal.data.steps && Array.isArray(viewModal.data.steps) ? (
-                        <div className="mt-2">
-                          <span className="font-semibold block mb-2">Procedures:</span>
-                          <ol className="list-decimal pl-4 space-y-1">
-                            {viewModal.data.steps.map((step, idx) => (
-                              <li key={idx}>{typeof step === 'string' ? step : step.title}</li>
-                            ))}
-                          </ol>
-                        </div>
-                      ) : (
-                        <span className="italic">No detailed steps provided.</span>
-                      )}
-                    </p>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Type</span>
+                      <span className="font-semibold text-gray-900">{viewModal.data.doctype}</span>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Price</span>
+                      <span className="font-semibold text-green-700">{viewModal.data.docprice} DA</span>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Duration</span>
+                      <span className="font-semibold text-blue-700">{viewModal.data.duration}</span>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-1">Description</h4>
-                    <p className="text-blue-800 text-sm whitespace-pre-wrap">{viewModal.data.description || 'No description provided.'}</p>
+                <div className="space-y-6">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <h4 className="font-bold text-amber-800 mb-2">Description of the issue:</h4>
+                    <p className="text-amber-900 text-sm leading-relaxed">{viewModal.data.description}</p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Target Document</h4>
-                    <p className="text-gray-600 text-sm border p-2 rounded bg-gray-50">{viewModal.data.documents?.docname || 'Unknown'}</p>
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-gray-900 border-b pb-2">Identified Problems:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {viewModal.data.stepsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Steps</span>}
+                      {viewModal.data.priceProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Price</span>}
+                      {viewModal.data.timeProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Duration</span>}
+                      {viewModal.data.relatedDocsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Files</span>}
+                    </div>
                   </div>
-                  {/* If we had detailed content for the fix, we would show it here */}
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-gray-100 bg-gray-50 text-right">
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
               <button
                 onClick={() => setViewModal({ ...viewModal, isOpen: false })}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium transition-colors"
+                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transition-colors"
               >
                 Close
               </button>
@@ -524,23 +601,6 @@ export default function ProfileForm() {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
     </>
   );
 }
