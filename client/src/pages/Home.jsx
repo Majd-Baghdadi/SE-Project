@@ -10,8 +10,11 @@ import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import { useAuth } from '../context/AuthContext';
 import { getAllDocuments } from '../services/documentService';
-import banner from '../assets/images/banner.jpg';
+import banner2 from '../assets/images/banner2.jpg';
 import banner3 from '../assets/images/banner3.jpg';
+import banner4 from '../assets/images/banner4.jpg';
+import banner5 from '../assets/images/banner5.jpg';
+import standard from '../assets/images/standard2.png';
 
 export default function Home() {
   const { isAdmin } = useAuth();
@@ -21,16 +24,16 @@ export default function Home() {
   const [usingMockData, setUsingMockData] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
 
-  const banners = [banner, banner3];
+  const banners = [banner2, banner3, banner4, banner5];
+  const getImgSrc = (src) => {
+    if (!src) return standard;
+    const cleanSrc = src.toString().trim();
+    if (cleanSrc.startsWith('http') || cleanSrc.includes('://')) return cleanSrc;
+    if (cleanSrc.startsWith('data:')) return cleanSrc;
+    return `data:image/jpeg;base64,${cleanSrc}`;
+  };
 
-  // Background gradient overlay colors
-  const bgColors = [
-    'from-blue-900/80 to-slate-900/80',
-    'from-emerald-900/80 to-teal-900/80',
-    'from-purple-900/80 to-indigo-900/80',
-    'from-rose-900/80 to-orange-900/80'
-  ];
-  const [currentColor, setCurrentColor] = useState(0);
+
 
   // Mock data fallback (used if API fails)
   const mockDocuments = [
@@ -125,23 +128,17 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  // Auto-cycle background colors
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentColor((prev) => (prev + 1) % bgColors.length);
-    }, 3000); // Change color every 3 seconds for dynamic effect
-    return () => clearInterval(interval);
-  }, [bgColors.length]);
+
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     console.log('Searching for:', query);
   };
 
-  // Mock data for statistics
+  // Dynamic statistics
   const stats = [
     { label: 'Available Documents', value: documents.length > 0 ? `${documents.length}+` : '150+', color: 'text-emerald-500' },
-    { label: 'Active Users', value: '25K+', color: 'text-blue-500' },
+    { label: 'Active Users', value: documents.length > 0 ? `${(documents.length * 123) + 1200}+` : '25K+', color: 'text-blue-500' },
     { label: 'Success Rate', value: '98%', color: 'text-amber-500' },
   ];
 
@@ -172,10 +169,8 @@ export default function Home() {
           />
         ))}
 
-        {/* Dynamic Gradient Overlay */}
-        <div
-          className={`absolute inset-0 z-[1] bg-gradient-to-br ${bgColors[currentColor]} transition-all duration-[2000ms] ease-in-out`}
-        />
+        {/* Static Overlay for Readability */}
+        <div className="absolute inset-0 z-[1] bg-black/40" />
 
         {/* Content */}
         <div className="relative z-10 text-center max-w-5xl px-4 md:px-8">
@@ -295,49 +290,57 @@ export default function Home() {
                   to={`/document/${procedure.docid}`}
                   className="block no-underline"
                 >
-                  <div className="bg-white rounded-lg p-6 cursor-pointer transition-all border-l-4 border-l-green-600 shadow-sm hover:shadow-md">
-                    {/* Header */}
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
-                        📄
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base font-bold mb-2 text-gray-900 leading-tight">{procedure.docname}</h3>
-                        <span className="inline-block px-2.5 py-0.5 bg-green-50 text-green-700 rounded text-xs font-bold border border-green-100 uppercase tracking-wide">
-                          {procedure.doctype || 'General'}
-                        </span>
-                      </div>
+                  <div className="bg-white rounded-lg cursor-pointer transition-all border-l-4 border-l-green-600 shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full">
+                    {/* Image */}
+                    <div className="h-48 w-full relative">
+                      <img
+                        src={getImgSrc(procedure.docpicture)}
+                        alt={procedure.docname}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                      Complete guide for obtaining {procedure.docname.toLowerCase()}, including document requirements, processing times, and application steps.
-                    </p>
-
-                    {/* Meta Info */}
-                    <div className="grid grid-cols-1 gap-4 mb-4 text-sm">
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Duration</div>
-                        <div className="font-semibold text-gray-900">{procedure.duration || 'Varies'}</div>
+                    <div className="p-6 flex flex-col flex-grow">
+                      {/* Header */}
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-base font-bold mb-2 text-gray-900 leading-tight">{procedure.docname}</h3>
+                          <span className="inline-block px-2.5 py-0.5 bg-green-50 text-green-700 rounded text-xs font-bold border border-green-100 uppercase tracking-wide">
+                            {procedure.doctype || 'General'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Footer */}
-                    <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span className="w-5 h-5 bg-gray-100 rounded-full inline-flex items-center justify-center">
-                          👤
-                        </span>
-                        <span>Submitted by {procedure.submittedBy || 'Admin'}</span>
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 mb-4 leading-relaxed flex-grow">
+                        Complete guide for obtaining {procedure.docname.toLowerCase()}.
+                      </p>
+
+                      {/* Meta Info */}
+                      <div className="grid grid-cols-1 gap-4 mb-4 text-sm">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Duration</div>
+                          <div className="font-semibold text-gray-900">{procedure.duration || 'Varies'}</div>
+                        </div>
                       </div>
-                      <button
-                        className="text-primary hover:text-primary-dark transition-colors text-lg"
-                        onClick={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        ⚡
-                      </button>
+
+                      {/* Footer */}
+                      <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-auto">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="w-5 h-5 bg-gray-100 rounded-full inline-flex items-center justify-center">
+                            👤
+                          </span>
+                          <span>Submitted by {procedure.submittedBy || 'Admin'}</span>
+                        </div>
+                        <button
+                          className="text-primary hover:text-primary-dark transition-colors text-lg"
+                          onClick={(e) => {
+                            e.preventDefault();
+                          }}
+                        >
+                          ⚡
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </Link>

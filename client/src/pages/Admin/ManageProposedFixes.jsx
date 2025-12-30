@@ -225,12 +225,12 @@ export default function ManageProposedFixes() {
         type={notification.type}
         onClose={() => setNotification({ ...notification, message: '' })}
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Proposed Fixes</h1>
-            <p className="text-gray-600">Review and approve user-submitted document fixes</p>
+          <div className="mb-8 overflow-hidden">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 truncate">Manage Proposed Fixes</h1>
+            <p className="text-sm md:text-base text-gray-600">Review and approve user-submitted document fixes</p>
           </div>
 
           {/* Filters */}
@@ -249,8 +249,8 @@ export default function ManageProposedFixes() {
           </div>
 
           {/* Fixes Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[800px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
 
@@ -265,6 +265,9 @@ export default function ManageProposedFixes() {
                     Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -273,7 +276,7 @@ export default function ManageProposedFixes() {
                 {filteredFixes.map((fix) => (
                   <tr key={fix.fixid || fix.id} className="hover:bg-gray-50">
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm text-gray-900">
                       {fix.documents?.docname || 'Unknown Document'}
                     </td>
 
@@ -284,32 +287,36 @@ export default function ManageProposedFixes() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ID: {fix.fixid || fix.id}
+                      {fix.creation_date ? new Date(fix.creation_date).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       Pending
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleViewDetails(fix)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        View
-                      </button>
-                      <>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleApprove(fix.fixid || fix.id)}
-                          className="text-green-600 hover:text-green-900"
+                          onClick={() => handleViewDetails(fix)}
+                          className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium transition-colors border border-blue-200"
                         >
-                          Approve
+                          👁️ View
                         </button>
-                        <button
-                          onClick={() => handleReject(fix.fixid || fix.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Reject
-                        </button>
-                      </>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleApprove(fix.fixid || fix.id)}
+                            className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 font-medium transition-colors border border-green-200"
+                            title="Approve"
+                          >
+                            ✅
+                          </button>
+                          <button
+                            onClick={() => handleReject(fix.fixid || fix.id)}
+                            className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors border border-red-200"
+                            title="Reject"
+                          >
+                            ❌
+                          </button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ))}

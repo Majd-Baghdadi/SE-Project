@@ -34,7 +34,7 @@ api.interceptors.request.use(
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
-    
+
     return config;
   },
   (error) => {
@@ -61,14 +61,11 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
-          console.error('Unauthorized access - redirecting to login');
+          console.error('Unauthorized access');
           localStorage.removeItem('authToken');
           localStorage.removeItem('isAuthenticated');
           localStorage.removeItem('userEmail');
           localStorage.removeItem('userName');
-          if (window.location.pathname !== '/signin' && window.location.pathname !== '/signup') {
-            window.location.href = '/signin';
-          }
           break;
 
         case 403:
