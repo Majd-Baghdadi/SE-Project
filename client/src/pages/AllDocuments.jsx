@@ -18,7 +18,7 @@ export default function AllDocuments() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('name');
 
   const categories = [
     'Visa',
@@ -82,10 +82,12 @@ export default function AllDocuments() {
 
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(doc =>
-        doc.docname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ((doc.doctype || doc.category) && (doc.doctype || doc.category).toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      filtered = filtered.filter(doc => {
+        const docName = (doc.docname || '').toLowerCase();
+        const docType = (doc.doctype || doc.category || '').toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        return docName.includes(searchLower) || docType.includes(searchLower);
+      });
     }
 
     // Category filter
@@ -94,21 +96,37 @@ export default function AllDocuments() {
     }
 
     // Sort
+    const sorted = [...filtered];
     switch (sortBy) {
       case 'newest':
-        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        sorted.sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
+        });
         break;
       case 'oldest':
-        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        sorted.sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateA - dateB;
+        });
         break;
       case 'name':
-        filtered.sort((a, b) => a.docname.localeCompare(b.docname));
+        sorted.sort((a, b) => {
+          const nameA = String(a.docname || a.docName || '').trim().toLowerCase();
+          const nameB = String(b.docname || b.docName || '').trim().toLowerCase();
+
+          // Move items starting with punctuation/quotes to the end if desired, 
+          // or just use localeCompare which is standard.
+          return nameA.localeCompare(nameB, 'en', { sensitivity: 'base', numeric: true });
+        });
         break;
       default:
         break;
     }
 
-    setFilteredDocs(filtered);
+    setFilteredDocs(sorted);
   };
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading documents...</div>;

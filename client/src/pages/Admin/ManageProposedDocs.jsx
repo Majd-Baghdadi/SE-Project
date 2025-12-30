@@ -5,6 +5,7 @@ import proposalService from '../../services/proposalService';
 import documentService from '../../services/documentService';
 import standard from '../../assets/images/standard2.png';
 import Notification from '../../components/Notification';
+import Swal from 'sweetalert2';
 
 export default function ManageProposedDocs() {
   const [proposals, setProposals] = useState([]);
@@ -13,6 +14,7 @@ export default function ManageProposedDocs() {
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
+  const [docLookup, setDocLookup] = useState({});
   const getImgSrc = (src) => {
     if (!src) return standard;
     const cleanSrc = src.toString().trim();
@@ -29,11 +31,15 @@ export default function ManageProposedDocs() {
   const fetchDocLookup = async () => {
     try {
       const docs = await documentService.getAllDocuments();
-      const lookup = {};
-      docs.forEach(d => {
-        lookup[d.docid] = d.docname;
-      });
-      setDocLookup(lookup);
+      if (Array.isArray(docs)) {
+        const lookup = {};
+        docs.forEach(d => {
+          if (d.docid && d.docname) {
+            lookup[d.docid] = d.docname;
+          }
+        });
+        setDocLookup(lookup);
+      }
     } catch (error) {
       console.error('Failed to fetch document lookup:', error);
     }
@@ -75,26 +81,60 @@ export default function ManageProposedDocs() {
   };
 
   const handleApprove = async (proposalId) => {
-    try {
-      await adminService.validateProposal(proposalId);
-      // Update UI immediately by removing the approved proposal from the list
-      setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
-      setNotification({ message: 'Proposal approved successfully!', type: 'success' });
-    } catch (error) {
-      console.error('Error approving proposal:', error);
-      setNotification({ message: 'Failed to approve proposal. Please try again.', type: 'error' });
+    const result = await Swal.fire({
+      title: 'Approve Proposal?',
+      text: "This document will be added to the live collection.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Approve it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await adminService.validateProposal(proposalId);
+        setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
+        Swal.fire({
+          title: 'Approved!',
+          text: 'The document is now live.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('Error approving proposal:', error);
+        Swal.fire('Error!', 'Failed to approve. Please try again.', 'error');
+      }
     }
   };
 
   const handleReject = async (proposalId) => {
-    try {
-      await adminService.discardProposal(proposalId);
-      // Immediate UI update to remove the rejected proposal from the list
-      setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
-      setNotification({ message: 'Proposal rejected successfully!', type: 'success' });
-    } catch (error) {
-      console.error('Error rejecting proposal:', error);
-      setNotification({ message: 'Failed to reject proposal. Please try again.', type: 'error' });
+    const result = await Swal.fire({
+      title: 'Reject Proposal?',
+      text: "This will permanently remove the suggestion from the queue.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Reject it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await adminService.discardProposal(proposalId);
+        setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
+        Swal.fire({
+          title: 'Rejected!',
+          text: 'Proposal has been removed.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('Error rejecting proposal:', error);
+        Swal.fire('Error!', 'Failed to reject. Please try again.', 'error');
+      }
     }
   };
 
@@ -114,10 +154,16 @@ export default function ManageProposedDocs() {
     }
   };
 
-  const filteredProposals = proposals.filter(p => {
-    const name = p.docname || p.docName || '';
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredProposals = proposals
+    .filter(p => {
+      const name = p.docname || p.docName || '';
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const nameA = (a.docname || a.docName || '').toLowerCase();
+      const nameB = (b.docname || b.docName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   if (loading) return <div className="p-8">Loading...</div>;
 
@@ -196,28 +242,30 @@ export default function ManageProposedDocs() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       Pending
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleViewDetails(proposal)}
-                        className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium transition-colors border border-blue-200"
-                      >
-                        👁️ View
-                      </button>
-                      <div className="flex gap-1">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleApprove(proposal.proposeddocid || proposal.id)}
-                          className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 font-medium transition-colors border border-green-200"
-                          title="Approve"
+                          onClick={() => handleViewDetails(proposal)}
+                          className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium transition-colors border border-blue-200"
                         >
-                          ✅
+                          👁️ View
                         </button>
-                        <button
-                          onClick={() => handleReject(proposal.proposeddocid || proposal.id)}
-                          className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors border border-red-200"
-                          title="Reject"
-                        >
-                          ❌
-                        </button>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleApprove(proposal.proposeddocid || proposal.id)}
+                            className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 font-medium transition-colors border border-green-200"
+                            title="Approve"
+                          >
+                            ✅
+                          </button>
+                          <button
+                            onClick={() => handleReject(proposal.proposeddocid || proposal.id)}
+                            className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors border border-red-200"
+                            title="Reject"
+                          >
+                            ❌
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>

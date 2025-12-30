@@ -141,23 +141,6 @@ export default function SearchBar({ documents = [] }) {
                     }`}>
                     {doc.docname}
                   </h4>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${index === selectedIndex ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-800 group-hover:bg-white/30 group-hover:text-white'
-                      }`}>
-                      {doc.category}
-                    </span>
-                    <span className={`flex items-center gap-1 text-sm font-medium ${index === selectedIndex ? 'text-white' : 'text-gray-600 group-hover:text-white'
-                      }`}>
-                      ⏱️ {doc.duration}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${index === selectedIndex ? 'bg-white/30 text-white' :
-                      doc.difficulty === 'Easy' ? 'bg-green-100 text-green-800 group-hover:bg-white/30 group-hover:text-white' :
-                        doc.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 group-hover:bg-white/30 group-hover:text-white' :
-                          'bg-red-100 text-red-800 group-hover:bg-white/30 group-hover:text-white'
-                      }`}>
-                      {doc.difficulty}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Arrow Icon */}

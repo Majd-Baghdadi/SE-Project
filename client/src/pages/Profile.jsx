@@ -33,7 +33,8 @@ export default function ProfileForm() {
     fixes: []
   });
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const [viewModal, setViewModal] = useState({ isOpen: false, data: null, type: 'doc', loading: false });
+  const [viewModal, setViewModal] = useState({ isOpen: false, data: null, type: 'doc', loading: false, isEditing: false });
+  const [editData, setEditData] = useState({});
 
   const getImgSrc = (src) => {
     if (!src) return standard;
@@ -153,7 +154,51 @@ export default function ProfileForm() {
   };
 
   const handleViewFix = (fix) => {
-    setViewModal({ isOpen: true, type: 'fix', data: fix, loading: false });
+    setViewModal({ isOpen: true, type: 'fix', data: fix, loading: false, isEditing: false });
+    setEditData({ ...fix });
+  };
+
+  const handleEditProposition = () => {
+    setEditData({ ...viewModal.data });
+    setViewModal(prev => ({ ...prev, isEditing: true }));
+  };
+
+  const handleUpdateProposition = async () => {
+    try {
+      const id = viewModal.type === 'doc'
+        ? (viewModal.data.proposeddocid || viewModal.data.id)
+        : (viewModal.data.fixid || viewModal.data.id);
+
+      let res;
+      if (viewModal.type === 'doc') {
+        res = await proposalService.editProposedDocument(id, editData);
+      } else {
+        res = await proposalService.editProposedFix(id, editData);
+      }
+
+      if (res.success) {
+        // Update local state
+        if (viewModal.type === 'doc') {
+          setContributions(prev => ({
+            ...prev,
+            documents: prev.documents.map(d => (d.proposeddocid === id ? { ...d, ...editData } : d))
+          }));
+        } else {
+          setContributions(prev => ({
+            ...prev,
+            fixes: prev.fixes.map(f => (f.fixid === id ? { ...f, ...editData } : f))
+          }));
+        }
+
+        setViewModal(prev => ({ ...prev, data: { ...prev.data, ...editData }, isEditing: false }));
+        Swal.fire('Updated!', 'Your proposal has been updated.', 'success');
+      } else {
+        Swal.fire('Error!', res.error || 'Failed to update.', 'error');
+      }
+    } catch (err) {
+      console.error("Update failed", err);
+      Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+    }
   };
 
   const handleChange = (e) => {
@@ -335,7 +380,7 @@ export default function ProfileForm() {
                       className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 disabled:text-gray-500"
                     />
                   </div>
-                                 <div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address
                     </label>
@@ -382,6 +427,16 @@ export default function ProfileForm() {
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button
+                                onClick={() => {
+                                  handleViewDoc(doc);
+                                  setTimeout(() => setViewModal(prev => ({ ...prev, isEditing: true })), 100);
+                                }}
+                                className="text-gray-400 hover:text-green-500 p-1 rounded-full hover:bg-green-50 transition-all opacity-0 group-hover:opacity-100"
+                                title="Edit Proposal"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
                                 onClick={() => handleDeleteDoc(doc.proposeddocid)}
                                 className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
                                 title="Delete Proposal"
@@ -417,6 +472,16 @@ export default function ProfileForm() {
                                 title="View Details"
                               >
                                 <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleViewFix(fix);
+                                  setViewModal(prev => ({ ...prev, isEditing: true }));
+                                }}
+                                className="text-gray-400 hover:text-green-500 p-1 rounded-full hover:bg-green-50 transition-all opacity-0 group-hover:opacity-100"
+                                title="Edit Fix"
+                              >
+                                <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteFix(fix.fixid)}
@@ -465,59 +530,249 @@ export default function ProfileForm() {
                 </div>
               ) : viewModal.type === 'doc' ? (
                 <div className="space-y-6">
-                  <div className="aspect-video w-full bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
-                    <img
-                      src={getImgSrc(viewModal.data.docpicture)}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Name</span>
-                      <span className="font-semibold text-gray-900">{viewModal.data.docname}</span>
+                  {!viewModal.isEditing ? (
+                    <>
+                      <div className="aspect-video w-full bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+                        <img
+                          src={getImgSrc(viewModal.data.docpicture)}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Name</span>
+                          <span className="font-semibold text-gray-900">{viewModal.data.docname}</span>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Type</span>
+                          <span className="font-semibold text-gray-900">{viewModal.data.doctype}</span>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Price</span>
+                          <span className="font-semibold text-green-700">{viewModal.data.docprice} DA</span>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Duration</span>
+                          <span className="font-semibold text-blue-700">{viewModal.data.duration}</span>
+                        </div>
+                      </div>
+                      {viewModal.data.steps && (
+                        <div className="mt-4">
+                          <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider mb-2">Steps</span>
+                          <div className="space-y-2">
+                            {Array.isArray(viewModal.data.steps) ? viewModal.data.steps.map((step, i) => (
+                              <div key={i} className="text-sm p-2 bg-gray-50 rounded border flex gap-2">
+                                <span className="font-bold text-green-600">{i + 1}.</span>
+                                {step}
+                              </div>
+                            )) : <p className="text-sm text-gray-600">{viewModal.data.steps}</p>}
+                          </div>
+                        </div>
+                      )}
+                      {viewModal.data.relateddocs && (
+                        <div className="mt-4">
+                          <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider mb-2">Related Documents</span>
+                          <div className="flex flex-wrap gap-2">
+                            {Array.isArray(viewModal.data.relateddocs) ? viewModal.data.relateddocs.map((rd, i) => (
+                              <span key={i} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+                                {rd}
+                              </span>
+                            )) : <span className="text-sm text-gray-600">{viewModal.data.relateddocs}</span>}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Document Name</label>
+                        <input
+                          type="text"
+                          value={editData.docname || ''}
+                          onChange={(e) => setEditData({ ...editData, docname: e.target.value })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Document Type</label>
+                        <select
+                          value={editData.doctype || ''}
+                          onChange={(e) => setEditData({ ...editData, doctype: e.target.value })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                        >
+                          <option value="Visa">Visa</option>
+                          <option value="Passport">Passport</option>
+                          <option value="ID Card">ID Card</option>
+                          <option value="Birth Certificate">Birth Certificate</option>
+                          <option value="Driving License">Driving License</option>
+                          <option value="Marriage Certificate">Marriage Certificate</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Document Image</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files[0]) {
+                              setEditData({ ...editData, docpicture: e.target.files[0] });
+                            }
+                          }}
+                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Price (DA)</label>
+                          <input
+                            type="number"
+                            value={editData.docprice || ''}
+                            onChange={(e) => setEditData({ ...editData, docprice: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Duration</label>
+                          <input
+                            type="text"
+                            value={editData.duration || ''}
+                            onChange={(e) => setEditData({ ...editData, duration: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                            placeholder="e.g. 5-10 days"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Steps (one per line)</label>
+                        <textarea
+                          rows="4"
+                          value={Array.isArray(editData.steps) ? editData.steps.join('\n') : editData.steps || ''}
+                          onChange={(e) => setEditData({ ...editData, steps: e.target.value.split('\n') })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Related Documents (comma separated)</label>
+                        <input
+                          type="text"
+                          value={Array.isArray(editData.relateddocs) ? editData.relateddocs.join(', ') : editData.relateddocs || ''}
+                          onChange={(e) => setEditData({ ...editData, relateddocs: e.target.value.split(',').map(s => s.trim()) })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                          placeholder="Doc A, Doc B, Doc C"
+                        />
+                      </div>
                     </div>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Type</span>
-                      <span className="font-semibold text-gray-900">{viewModal.data.doctype}</span>
-                    </div>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Price</span>
-                      <span className="font-semibold text-green-700">{viewModal.data.docprice} DA</span>
-                    </div>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Duration</span>
-                      <span className="font-semibold text-blue-700">{viewModal.data.duration}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <h4 className="font-bold text-amber-800 mb-2">Description of the issue:</h4>
-                    <p className="text-amber-900 text-sm leading-relaxed">{viewModal.data.description}</p>
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="font-bold text-gray-900 border-b pb-2">Identified Problems:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {viewModal.data.stepsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Steps</span>}
-                      {viewModal.data.priceProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Price</span>}
-                      {viewModal.data.timeProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Duration</span>}
-                      {viewModal.data.relatedDocsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Files</span>}
+                  {!viewModal.isEditing ? (
+                    <>
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <h4 className="font-bold text-amber-800 mb-2">Description of the issue:</h4>
+                        <p className="text-amber-900 text-sm leading-relaxed">{viewModal.data.description}</p>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-gray-900 border-b pb-2">Identified Problems:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {viewModal.data.stepsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Steps</span>}
+                          {viewModal.data.priceProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Price</span>}
+                          {viewModal.data.timeProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Duration</span>}
+                          {viewModal.data.relatedDocsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Files</span>}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Issue Description</label>
+                        <textarea
+                          rows="4"
+                          value={editData.description || ''}
+                          onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Mark problems with:</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editData.stepsProblem || false}
+                              onChange={(e) => setEditData({ ...editData, stepsProblem: e.target.checked })}
+                            />
+                            <span className="text-sm">Steps</span>
+                          </label>
+                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editData.priceProblem || false}
+                              onChange={(e) => setEditData({ ...editData, priceProblem: e.target.checked })}
+                            />
+                            <span className="text-sm">Price</span>
+                          </label>
+                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editData.timeProblem || false}
+                              onChange={(e) => setEditData({ ...editData, timeProblem: e.target.checked })}
+                            />
+                            <span className="text-sm">Duration</span>
+                          </label>
+                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editData.relatedDocsProblem || false}
+                              onChange={(e) => setEditData({ ...editData, relatedDocsProblem: e.target.checked })}
+                            />
+                            <span className="text-sm">Documents</span>
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-              <button
-                onClick={() => setViewModal({ ...viewModal, isOpen: false })}
-                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transition-colors"
-              >
-                Close
-              </button>
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              {!viewModal.isEditing ? (
+                <>
+                  <button
+                    onClick={handleEditProposition}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setViewModal({ ...viewModal, isOpen: false })}
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transition-colors"
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleUpdateProposition}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setViewModal(prev => ({ ...prev, isEditing: false }))}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

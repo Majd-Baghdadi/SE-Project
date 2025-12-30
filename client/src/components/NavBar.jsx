@@ -41,10 +41,10 @@ export default function NavBar() {
   const navLinks = [
     { title: 'Home', path: '/' },
     { title: 'Procedures', path: '/documents' },
-    ...(isAdmin ? [
-      { title: 'Proposed Docs', path: '/admin/proposals' },
-      { title: 'Proposed Fixes', path: '/admin/fixes' }
-    ] : []),
+    // ...(isAdmin ? [
+    //   { title: 'Proposed Docs', path: '/admin/proposals' },
+    //   { title: 'Proposed Fixes', path: '/admin/fixes' }
+    // ] : []),
     ...(isAuthenticated ? [{ title: isAdmin ? 'Add Document' : 'Propose Document', path: '/propose' }] : []),
     { title: 'About Us', path: '/about' },
     ...(!isAdmin ? [{ title: 'Contact Us', path: '/conntact' }] : []),

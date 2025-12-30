@@ -3,6 +3,7 @@ import adminService from '../../services/adminService';
 import proposalService from '../../services/proposalService';
 import documentService from '../../services/documentService';
 import Notification from '../../components/Notification';
+import Swal from 'sweetalert2';
 
 export default function ManageProposedFixes() {
   const [fixes, setFixes] = useState([]);
@@ -146,26 +147,60 @@ export default function ManageProposedFixes() {
   };
 
   const handleApprove = async (fixId, data) => {
-    try {
-      await adminService.validateFix(fixId, data);
-      // Update UI immediately by removing the approved fix from the list
-      setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
-      setNotification({ message: 'Fix approved successfully!', type: 'success' });
-    } catch (error) {
-      console.error('Error approving fix:', error);
-      setNotification({ message: 'Failed to approve fix. Please try again.', type: 'error' });
+    const result = await Swal.fire({
+      title: 'Apply This Fix?',
+      text: "This will merge the suggested changes into the live document.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Apply Fix'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await adminService.validateFix(fixId, data);
+        setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
+        Swal.fire({
+          title: 'Applied!',
+          text: 'The document has been updated successfully.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('Error approving fix:', error);
+        Swal.fire('Error!', 'Failed to apply fix. Please try again.', 'error');
+      }
     }
   };
 
   const handleReject = async (fixId) => {
-    try {
-      await adminService.discardFix(fixId);
-      // Immediate UI update to remove the rejected fix from the list
-      setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
-      setNotification({ message: 'Fix rejected successfully!', type: 'success' });
-    } catch (error) {
-      console.error('Error rejecting fix:', error);
-      setNotification({ message: 'Failed to reject fix. Please try again.', type: 'error' });
+    const result = await Swal.fire({
+      title: 'Discard Suggested Fix?',
+      text: "This will remove the suggestion from the queue.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Discard it'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await adminService.discardFix(fixId);
+        setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
+        Swal.fire({
+          title: 'Discarded!',
+          text: 'The suggestion has been removed.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('Error rejecting fix:', error);
+        Swal.fire('Error!', 'Failed to discard. Please try again.', 'error');
+      }
     }
   };
 
@@ -209,12 +244,18 @@ export default function ManageProposedFixes() {
     }
   };
 
-  const filteredFixes = fixes.filter(f => {
-    const docName = f.documents?.docname || '';
-    const userName = f.users?.name || '';
-    return docName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      userName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredFixes = fixes
+    .filter(f => {
+      const docName = f.documents?.docname || '';
+      const userName = f.users?.name || '';
+      return docName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        userName.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const docA = a.documents?.docname || '';
+      const docB = b.documents?.docname || '';
+      return docA.localeCompare(docB);
+    });
 
   if (loading) return <div className="p-8">Loading...</div>;
 

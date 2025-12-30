@@ -42,7 +42,6 @@ export default function Home() {
       docname: 'Passport Application',
       doctype: 'Passport',
       duration: '15-20 days',
-      submittedBy: 'Admin User',
       created_at: '2025-11-20T10:00:00Z'
     },
     {
@@ -50,7 +49,6 @@ export default function Home() {
       docname: 'National ID Renewal',
       doctype: 'ID Card',
       duration: '7-10 days',
-      submittedBy: 'Admin User',
       created_at: '2025-11-18T10:00:00Z'
     },
     {
@@ -58,7 +56,6 @@ export default function Home() {
       docname: 'Birth Certificate',
       doctype: 'Birth Certificate',
       duration: '3-5 days',
-      submittedBy: 'Admin User',
       created_at: '2025-11-15T10:00:00Z'
     },
     {
@@ -66,7 +63,6 @@ export default function Home() {
       docname: 'Visa Application',
       doctype: 'Visa',
       duration: '10-15 days',
-      submittedBy: 'Community',
       created_at: '2025-11-12T10:00:00Z'
     },
     {
@@ -74,7 +70,6 @@ export default function Home() {
       docname: "Driver's License",
       doctype: 'Driving License',
       duration: '30-45 days',
-      submittedBy: 'Admin User',
       created_at: '2025-11-10T10:00:00Z'
     },
     {
@@ -82,7 +77,6 @@ export default function Home() {
       docname: 'Work Permit',
       doctype: 'Work Permit',
       duration: '20-30 days',
-      submittedBy: 'Community',
       created_at: '2025-11-08T10:00:00Z'
     },
   ];
@@ -226,7 +220,7 @@ export default function Home() {
       </section>
 
       {/* Review Pending Tasks Section (Admins Only) */}
-      {isAdmin && (
+      {/* {isAdmin && (
         <section className="max-w-7xl mx-auto my-16 px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
@@ -255,7 +249,7 @@ export default function Home() {
             </Link>
           </div>
         </section>
-      )}
+      )} */}
 
 
       {/* Popular Procedures Section */}
@@ -319,27 +313,7 @@ export default function Home() {
                       {/* Meta Info */}
                       <div className="grid grid-cols-1 gap-4 mb-4 text-sm">
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Duration</div>
-                          <div className="font-semibold text-gray-900">{procedure.duration || 'Varies'}</div>
                         </div>
-                      </div>
-
-                      {/* Footer */}
-                      <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-auto">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="w-5 h-5 bg-gray-100 rounded-full inline-flex items-center justify-center">
-                            👤
-                          </span>
-                          <span>Submitted by {procedure.submittedBy || 'Admin'}</span>
-                        </div>
-                        <button
-                          className="text-primary hover:text-primary-dark transition-colors text-lg"
-                          onClick={(e) => {
-                            e.preventDefault();
-                          }}
-                        >
-                          ⚡
-                        </button>
                       </div>
                     </div>
                   </div>

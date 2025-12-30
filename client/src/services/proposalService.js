@@ -49,7 +49,21 @@ class ProposalService {
   // Edit a proposed document
   async editProposedDocument(id, documentData) {
     try {
-      const response = await api.patch(`/propose/document/${id}`, documentData);
+      let data = documentData;
+
+      // Handle FormData if there's a file for the picture
+      if (documentData.docpicture && typeof documentData.docpicture !== 'string') {
+        data = new FormData();
+        Object.keys(documentData).forEach(key => {
+          if (key === 'steps' || key === 'relateddocs') {
+            data.append(key, JSON.stringify(documentData[key]));
+          } else {
+            data.append(key, documentData[key]);
+          }
+        });
+      }
+
+      const response = await api.patch(`/propose/document/${id}`, data);
       return {
         success: true,
         data: response.document || response
