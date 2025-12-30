@@ -296,7 +296,7 @@ const CancelModal = ({ onClose, onConfirm }) => (
 const ProposeDocumentPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    picture: null,
+    pictureFile: null,
     name: '',
     steps: '',
     price: '',
@@ -402,49 +402,26 @@ const ProposeDocumentPage = () => {
     return '';
   };
 
-  const handleImageUpload = (e) => {
-    if (!hasInteracted) setHasInteracted(true);
-
-    checkAuthAndProceed(() => {
-      const file = e.target.files[0];
-      if (file) {
-        console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
-
-        if (!file.type.startsWith('image/')) {
-          setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const originalSize = reader.result.length;
-          console.log('📸 Original base64 size:', (originalSize / 1024).toFixed(2), 'KB');
-
-          try {
-            const resizedImage = await resizeImage(reader.result);
-            const finalSize = resizedImage.length;
-            console.log('📸 Resized base64 size:', (finalSize / 1024).toFixed(2), 'KB');
-            console.log('📸 First 100 chars:', resizedImage.substring(0, 100));
-
-            // Remove data:image/jpeg;base64, prefix if exists
-            const base64Only = resizedImage.includes(',')
-              ? resizedImage.split(',')[1]
-              : resizedImage;
-
-            console.log('📸 After removing prefix:', (base64Only.length / 1024).toFixed(2), 'KB');
-            console.log('📸 Storing in formData');
-
-            setFormData({ ...formData, picture: base64Only });
-            setErrors({ ...errors, picture: '' });
-          } catch (err) {
-            console.error('📸 Error resizing:', err);
-            setErrors({ ...errors, picture: 'Failed to process image' });
-          }
-        };
-        reader.readAsDataURL(file);
+const handleImageUpload = (e) => {
+  if (!hasInteracted) setHasInteracted(true);
+  
+  checkAuthAndProceed(() => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log('📸 Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+      
+      if (!file.type.startsWith('image/')) {
+        setErrors({ ...errors, picture: 'Please upload an image file (JPEG, PNG, etc.)' });
+        return;
       }
-    });
-  };
+
+      // Just store the file
+      setFormData({ ...formData, pictureFile: file });
+      setErrors({ ...errors, picture: '' });
+      console.log('✅ File stored:', file.name);
+    }
+  });
+};
 
   const handleNameChange = (e) => {
     if (!hasInteracted) setHasInteracted(true);
@@ -517,74 +494,80 @@ const ProposeDocumentPage = () => {
     setErrors(newErrors);
     return Object.values(newErrors).every(error => error === '');
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitError('');
 
-    if (!proposalService.isAuthenticated()) {
-      setShowSignInModal(true);
-      return;
+  if (!proposalService.isAuthenticated()) {
+    setShowSignInModal(true);
+    return;
+  }
+  
+  if (!validateAll()) {
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    // Create FormData
+    const submitData = new FormData();
+    
+    submitData.append('docname', formData.name);
+    submitData.append('doctype', formData.category);
+    
+    const stepsArray = formData.steps.trim() 
+      ? formData.steps.split('\n').map(s => s.trim()).filter(s => s) 
+      : [];
+    submitData.append('steps', JSON.stringify(stepsArray));
+    
+    if (formData.price) {
+      submitData.append('docprice', formData.price);
+    }
+    
+    if (formData.expectedTime) {
+      submitData.append('duration', convertTimeToInteger(formData.expectedTime));
+    }
+    
+    if (formData.relatedDocuments.length > 0) {
+      submitData.append('relateddocs', JSON.stringify(formData.relatedDocuments));
+    }
+    
+    // Add file
+    if (formData.pictureFile) {
+      submitData.append('docpicture', formData.pictureFile);
+      console.log('📸 File attached:', formData.pictureFile.name);
     }
 
-    if (!validateAll()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const proposalData = {
-        docname: formData.name,
-        doctype: formData.category || undefined,
-        steps: formData.steps.trim()
-          ? formData.steps.split('\n').map(s => s.trim()).filter(s => s)
-          : [],
-        docprice: formData.price ? parseFloat(formData.price) : undefined,
-        duration: formData.expectedTime ? convertTimeToInteger(formData.expectedTime) : undefined,
-        relateddocs: formData.relatedDocuments.length > 0 ? formData.relatedDocuments : undefined,
-      };
-
-      // Add picture if exists
-      if (formData.picture) {
-        console.log('📸 Including picture in payload');
-        console.log('📸 Picture length:', formData.picture.length);
-        console.log('📸 Picture preview:', formData.picture.substring(0, 50));
-        proposalData.docpicture = formData.picture;
+    // Debug: Log FormData contents
+    console.log('📤 FormData contents:');
+    for (let [key, value] of submitData.entries()) {
+      if (key === 'docpicture') {
+        console.log(`  ${key}:`, value.name, value.type, value.size);
       } else {
-        console.log('📸 No picture in formData');
+        console.log(`  ${key}:`, value);
       }
-
-      // Remove undefined
-      Object.keys(proposalData).forEach(key =>
-        (proposalData[key] === undefined || proposalData[key] === null) && delete proposalData[key]
-      );
-
-      console.log('📤 Payload:', {
-        ...proposalData,
-        docpicture: proposalData.docpicture
-          ? `[BASE64 ${proposalData.docpicture.length} chars]`
-          : 'NOT INCLUDED',
-        relateddocs: proposalData.relateddocs || 'NOT INCLUDED'
-      });
-      const response = await proposalService.proposeDocument(proposalData);
-
-      if (response.success) {
-        setShowSuccessModal(true);
-      } else {
-        setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
-      }
-    } catch (error) {
-      console.error('Submit error:', error);
-      setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+
+    const response = await proposalService.proposeDocument(submitData);
+
+    if (response.success) {
+      setShowSuccessModal(true);
+    } else {
+      setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
+    }
+  } catch (error) {
+    console.error('Submit error:', error);
+    setSubmitError(error.message || 'An unexpected error occurred. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const handleCancel = () => setShowCancelModal(true);
 
   const confirmCancel = () => {
     setFormData({
-      picture: null,
+      pictureFile: null, 
       name: '',
       steps: '',
       price: '',
@@ -600,7 +583,7 @@ const ProposeDocumentPage = () => {
   const closeSuccessModal = () => {
     setShowSuccessModal(false);
     setFormData({
-      picture: null,
+      pictureFile: null,
       name: '',
       steps: '',
       price: '',
@@ -648,18 +631,18 @@ const ProposeDocumentPage = () => {
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 <div className={`w-full p-3 border-2 ${errors.picture ? 'border-red-500' : 'border-gray-300'} rounded-lg hover:border-green-500 transition-colors flex items-center justify-center bg-gray-50 hover:bg-gray-100`}>
                   <span style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)', color: '#61646b' }}>
-                    {formData.picture ? 'Change image' : 'Click to upload image'}
+                    {formData.pictureFile ? 'Change image' : 'Click to upload image'}
                   </span>
                 </div>
               </label>
-              {errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
-              {formData.picture && (
-                <img
-                  src={`data:image/jpeg;base64,${formData.picture}`}
-                  alt="Preview"
-                  className="mt-3 max-w-xs rounded-lg border border-gray-200"
-                />
-              )}
+{errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
+{formData.pictureFile && (
+  <div className="mt-3">
+    <p className="text-sm text-green-600">
+      ✓ Selected: {formData.pictureFile.name} ({(formData.pictureFile.size / 1024).toFixed(2)} KB)
+    </p>
+  </div>
+)}
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
