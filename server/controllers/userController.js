@@ -81,6 +81,25 @@ exports.updateProfile = async (req, res) => {
         });
     }
 
+    
 
+}
 
+exports.getUsersCount= async (req,res) => {
+    try {
+        console.log("hi")
+        const {count,error}=await userService.getUsersCount()
+        if (error) {
+            return res.status(400).json({
+                error:error.message
+            })
+        }
+        res.status(200).json({
+            count:count
+        })
+    } catch (error) {
+        res.status(500).json({
+            error:error.message
+        })
+    }
 }

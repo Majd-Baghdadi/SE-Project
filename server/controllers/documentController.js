@@ -5,7 +5,7 @@ async function getDocuments(req,res) {
     try {
         const {data,error}= await Document.getDocuments();
         if (error){
-            res.status(400).json({
+            return res.status(400).json({
                 error:error.message,
             })
         }
@@ -32,7 +32,7 @@ async function getDocumentDetails(req,res) {
         const {relateddocs,...documentData}=data
         const {data:relatedDocs,error:err}=await Document.getRelatedDocuments(relateddocs||[])
         if (err) {
-            res.status(400).json({
+            return res.status(400).json({
                 error:err.message,
             })
         }
