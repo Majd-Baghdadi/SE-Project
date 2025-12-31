@@ -229,15 +229,13 @@ export default function AllDocuments() {
 
                   <div className="space-y-3 text-sm text-gray-600 mb-6 font-sans flex-grow">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">⏱️</span>
-                      <span className="font-medium text-gray-700">{doc.duration || 'Varies'}</span>
+
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-[11px] font-semibold uppercase tracking-widest text-gray-400 mt-auto">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">👤</div>
-                      <span>By {doc.submittedBy || 'Official'}</span>
                     </div>
                     <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Recent'}</span>
                   </div>
