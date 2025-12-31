@@ -49,8 +49,9 @@ const authService = {
   verifyEmail: async (token) => {
     try {
       const response = await api.post('/auth/verifyEmail', { token });
-
+      console.log('response');
       if (response.success && response.user) {
+        console.log('hello')
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userName', response.user.userName || response.user.name);
         localStorage.setItem('userEmail', response.user.email);
