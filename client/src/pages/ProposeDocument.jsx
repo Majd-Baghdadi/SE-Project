@@ -239,7 +239,7 @@ const ProposeDocumentPage = () => {
   const [formData, setFormData] = useState({
     pictureFile: null,
     name: '',
-    steps: '',
+    steps: [''], // Changed from string to array with one empty step
     price: '',
     expectedTime: '',
     category: '',
@@ -332,8 +332,12 @@ const ProposeDocumentPage = () => {
     return '';
   };
 
-  const validateSteps = (steps) => {
-    if (steps.trim() && steps.length > 2000) return 'Steps cannot exceed 2000 characters';
+  const validateSteps = (stepsArray) => {
+    if (!Array.isArray(stepsArray)) return '';
+    const validSteps = stepsArray.filter(s => s.trim());
+    if (validSteps.length === 0) return '';
+    const totalChars = validSteps.join('').length;
+    if (totalChars > 5000) return 'Total steps cannot exceed 5000 characters';
     return '';
   };
 
@@ -388,13 +392,34 @@ const ProposeDocumentPage = () => {
     });
   };
 
-  const handleStepsChange = (e) => {
+  const handleStepChange = (index, value) => {
     if (!hasInteracted) setHasInteracted(true);
 
     checkAuthAndProceed(() => {
-      const value = e.target.value;
-      setFormData({ ...formData, steps: value });
-      setErrors({ ...errors, steps: validateSteps(value) });
+      const newSteps = [...formData.steps];
+      newSteps[index] = value;
+      setFormData({ ...formData, steps: newSteps });
+      setErrors({ ...errors, steps: validateSteps(newSteps) });
+    });
+  };
+
+  const handleAddStep = () => {
+    if (!hasInteracted) setHasInteracted(true);
+
+    checkAuthAndProceed(() => {
+      setFormData({ ...formData, steps: [...formData.steps, ''] });
+    });
+  };
+
+  const handleRemoveStep = (index) => {
+    if (!hasInteracted) setHasInteracted(true);
+
+    checkAuthAndProceed(() => {
+      if (formData.steps.length > 1) {
+        const newSteps = formData.steps.filter((_, i) => i !== index);
+        setFormData({ ...formData, steps: newSteps });
+        setErrors({ ...errors, steps: validateSteps(newSteps) });
+      }
     });
   };
 
@@ -451,9 +476,9 @@ const ProposeDocumentPage = () => {
       submitData.append('docname', formData.name);
       submitData.append('doctype', formData.category);
 
-      const stepsArray = formData.steps.trim()
-        ? formData.steps.split('\n').map(s => s.trim()).filter(s => s)
-        : [];
+      const stepsArray = formData.steps
+        .map(s => s.trim())
+        .filter(s => s);
       submitData.append('steps', JSON.stringify(stepsArray));
 
       if (formData.price) {
@@ -528,7 +553,7 @@ const ProposeDocumentPage = () => {
     setFormData({
       pictureFile: null,
       name: '',
-      steps: '',
+      steps: [''],
       price: '',
       expectedTime: '',
       category: '',
@@ -543,7 +568,7 @@ const ProposeDocumentPage = () => {
     setFormData({
       pictureFile: null,
       name: '',
-      steps: '',
+      steps: [''],
       price: '',
       expectedTime: '',
       category: '',
@@ -562,14 +587,14 @@ const ProposeDocumentPage = () => {
     <>
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-4xl mx-auto">
-       <div className="text-center mb-10">
-  <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
-    {user?.role === 'admin' ? 'Add New Document' : 'Propose New Document'}
-  </h1>
-  <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
-    Fill in the form below to {user?.role === 'admin' ? 'add a new document' : 'propose a new document'}
-  </p>
-</div>
+          <div className="text-center mb-10">
+            <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
+              {user?.role === 'admin' ? 'Add New Document' : 'Propose New Document'}
+            </h1>
+            <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
+              Fill in the form below to {user?.role === 'admin' ? 'add a new document' : 'propose a new document'}
+            </p>
+          </div>
 
           {submitError && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -626,26 +651,54 @@ const ProposeDocumentPage = () => {
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <label className="block">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <List className="w-5 h-5 text-green-600" />
-                  </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>Steps</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <List className="w-5 h-5 text-green-600" />
                 </div>
-                <textarea
-                  value={formData.steps}
-                  onChange={handleStepsChange}
-                  placeholder="Add step-by-step instructions"
-                  rows="5"
-                  className={`w-full px-4 py-3 border-2 ${errors.steps ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
-                />
-                {errors.steps && <p className="text-red-500 text-xs mt-1">{errors.steps}</p>}
-                <p className="text-xs text-gray-500 mt-1">
-                  {formData.steps.length}/2000 characters
-                </p>
-              </label>
+                <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>Steps</h3>
+              </div>
+
+              <div className="space-y-3">
+                {formData.steps.map((step, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-8 h-10 flex items-center justify-center">
+                      <span className="text-sm font-bold text-gray-500">{index + 1}.</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={step}
+                      onChange={(e) => handleStepChange(index, e.target.value)}
+                      placeholder={`Step ${index + 1}`}
+                      className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all"
+                      style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                    />
+                    {formData.steps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStep(index)}
+                        className="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove step"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddStep}
+                className="mt-4 w-full px-4 py-3 border-2 border-dashed border-green-300 text-green-600 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 font-medium"
+                style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+              >
+                <span className="text-xl">+</span> Add Step
+              </button>
+
+              {errors.steps && <p className="text-red-500 text-xs mt-2">{errors.steps}</p>}
+              <p className="text-xs text-gray-500 mt-2">
+                {formData.steps.filter(s => s.trim()).length} step(s) added
+              </p>
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">

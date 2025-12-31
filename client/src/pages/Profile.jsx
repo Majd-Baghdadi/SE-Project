@@ -246,7 +246,7 @@ export default function ProfileForm() {
   };
 
   const handleViewDoc = async (doc, isEdit = false) => {
-    // Start with basic data from the list
+    // Start with basic data from the list (this includes our frontend updates)
     setViewModal({ isOpen: true, type: 'doc', data: doc, loading: true, isEditing: isEdit, detailsLoaded: false });
     setEditData({ ...doc });
 
@@ -263,7 +263,22 @@ export default function ProfileForm() {
 
       if (actualData && (actualData.proposeddocid || actualData.id)) {
         // Success! We have the steps, price, and duration now.
-        const fullData = { ...doc, ...actualData };
+        // IMPORTANT: Preserve frontend-only changes (like removed images) by prioritizing local state
+        const fullData = { 
+          ...actualData,  // Backend data
+          ...doc,         // Local state (includes image removal, etc.)
+          // But prefer backend data for actual content fields
+          steps: actualData.steps || doc.steps,
+          docprice: actualData.docprice ?? doc.docprice,
+          duration: actualData.duration || doc.duration,
+        };
+        
+        console.log('📥 Merged data for modal:', {
+          backendImage: actualData.docpicture,
+          localImage: doc.docpicture,
+          finalImage: fullData.docpicture
+        });
+        
         setViewModal(prev => ({ ...prev, data: fullData, loading: false, detailsLoaded: true }));
         if (isEdit) {
           setEditData(fullData);
@@ -322,7 +337,7 @@ export default function ProfileForm() {
 
       let res;
       // Sanitize editData to remove non-updatable fields or join data that causes DB errors
-      const { users, created_at, id: _id, proposeddocid: _pdid, fixid: _fid, documents, ...restPayload } = editData;
+      const { users, created_at, id: _id, proposeddocid: _pdid, fixid: _fid, documents, removeImage, ...restPayload } = editData;
 
       // CRITICAL: Ensure mandatory fields are present to prevent backend crash (TypeError on steps.length)
       // We use viewModal.data as a fallback to ensure we don't send empty values to the server
@@ -333,6 +348,17 @@ export default function ProfileForm() {
         sanitizedPayload.doctype = sanitizedPayload.doctype || viewModal.data.doctype || "Administrative Services";
         sanitizedPayload.steps = sanitizedPayload.steps || viewModal.data.steps || [];
         sanitizedPayload.relateddocs = sanitizedPayload.relateddocs || viewModal.data.relateddocs || [];
+
+        // Handle image removal: if removeImage flag is true, set docpicture to null
+        if (removeImage) {
+          console.log('🗑️ User requested image removal');
+          sanitizedPayload.docpicture = null;
+        }
+
+        console.log('📤 Sending payload:', {
+          ...sanitizedPayload,
+          docpicture: sanitizedPayload.docpicture instanceof File ? 'File' : sanitizedPayload.docpicture
+        });
 
         // Ensure price is a valid number, even if entered as a string
         if (sanitizedPayload.docprice !== undefined) {
@@ -348,19 +374,27 @@ export default function ProfileForm() {
 
       if (res.success) {
         // Update local state
+        // Prepare clean update data (remove frontend-only flags)
+        const { removeImage, ...cleanEditData } = editData;
+        const updatedData = {
+          ...cleanEditData,
+          // If image was removed, ensure docpicture is null in local state
+          docpicture: removeImage ? null : cleanEditData.docpicture
+        };
+
         if (viewModal.type === 'doc') {
           setContributions(prev => ({
             ...prev,
-            documents: prev.documents.map(d => (d.proposeddocid === id ? { ...d, ...editData } : d))
+            documents: prev.documents.map(d => (d.proposeddocid === id ? { ...d, ...updatedData } : d))
           }));
         } else {
           setContributions(prev => ({
             ...prev,
-            fixes: prev.fixes.map(f => (f.fixid === id ? { ...f, ...editData } : f))
+            fixes: prev.fixes.map(f => (f.fixid === id ? { ...f, ...updatedData } : f))
           }));
         }
 
-        setViewModal(prev => ({ ...prev, data: { ...prev.data, ...editData }, isEditing: false }));
+        setViewModal(prev => ({ ...prev, data: { ...prev.data, ...updatedData }, isEditing: false }));
         Swal.fire('Updated!', 'Your proposal has been updated.', 'success');
       } else {
         Swal.fire('Error!', res.error || 'Failed to update.', 'error');
@@ -779,16 +813,52 @@ export default function ProfileForm() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Document Image</label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            if (e.target.files[0]) {
-                              setEditData({ ...editData, docpicture: e.target.files[0] });
-                            }
-                          }}
-                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-                        />
+
+                        {/* Current Image Preview */}
+                        {(editData.docpicture || viewModal.data.docpicture) && !editData.removeImage && (
+                          <div className="mb-3 relative">
+                            <img
+                              src={editData.docpicture instanceof File
+                                ? URL.createObjectURL(editData.docpicture)
+                                : getImgSrc(viewModal.data.docpicture)
+                              }
+                              alt="Current"
+                              className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEditData({ ...editData, docpicture: null, removeImage: true })}
+                              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                              title="Remove Image"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Upload New Image or Restore */}
+                        {editData.removeImage ? (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditData({ ...editData, removeImage: false })}
+                              className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                            >
+                              Restore Image
+                            </button>
+                          </div>
+                        ) : (
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files[0]) {
+                                setEditData({ ...editData, docpicture: e.target.files[0], removeImage: false });
+                              }
+                            }}
+                            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                          />
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -812,13 +882,50 @@ export default function ProfileForm() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Steps (one per line)</label>
-                        <textarea
-                          rows="4"
-                          value={Array.isArray(editData.steps) ? editData.steps.join('\n') : editData.steps || ''}
-                          onChange={(e) => setEditData({ ...editData, steps: e.target.value.split('\n') })}
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
-                        ></textarea>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Steps</label>
+                        <div className="space-y-2">
+                          {(Array.isArray(editData.steps) ? editData.steps : []).map((step, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <div className="flex-shrink-0 w-6 h-10 flex items-center justify-center">
+                                <span className="text-xs font-bold text-gray-500">{index + 1}.</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={step}
+                                onChange={(e) => {
+                                  const newSteps = [...(Array.isArray(editData.steps) ? editData.steps : [])];
+                                  newSteps[index] = e.target.value;
+                                  setEditData({ ...editData, steps: newSteps });
+                                }}
+                                placeholder={`Step ${index + 1}`}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                              />
+                              {(Array.isArray(editData.steps) ? editData.steps : []).length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newSteps = (Array.isArray(editData.steps) ? editData.steps : []).filter((_, i) => i !== index);
+                                    setEditData({ ...editData, steps: newSteps });
+                                  }}
+                                  className="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Remove step"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentSteps = Array.isArray(editData.steps) ? editData.steps : [];
+                            setEditData({ ...editData, steps: [...currentSteps, ''] });
+                          }}
+                          className="mt-2 w-full px-3 py-2 border-2 border-dashed border-green-300 text-green-600 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                        >
+                          <span className="text-lg">+</span> Add Step
+                        </button>
                       </div>
                       <div>
                         <MultiSelectDropdown

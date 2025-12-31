@@ -51,19 +51,34 @@ class ProposalService {
     try {
       let data = documentData;
 
-      // Handle FormData if there's a file for the picture
-      if (documentData.docpicture && typeof documentData.docpicture !== 'string') {
+      // Handle FormData if docpicture is being modified (new file, removal, etc.)
+      if ('docpicture' in documentData) {
         data = new FormData();
 
         // Filter out non-DB fields and prepare FormData
         Object.keys(documentData).forEach(key => {
           const value = documentData[key];
+
+          // Special handling for docpicture: allow null to indicate removal
+          if (key === 'docpicture') {
+            if (value instanceof File) {
+              // New file upload
+              console.log('📤 Uploading new image file:', value.name);
+              data.append('docpicture', value, value.name);
+            } else if (value === null) {
+              // Explicitly remove the image by sending empty string
+              console.log('🗑️ Removing image - sending empty string');
+              data.append('docpicture', '');
+            } else {
+              console.log('🖼️ Keeping existing image:', value);
+            }
+            // If value is a string (existing image URL), don't append it - keep current image
+            return;
+          }
+
           if (value === undefined || value === null) return;
 
-          if (key === 'docpicture' && value instanceof File) {
-            // Explicitly append file with its name to ensure multer picks up 'originalname'
-            data.append('docpicture', value, value.name);
-          } else if (Array.isArray(value)) {
+          if (Array.isArray(value)) {
             // IMPORTANT: Append each item individually. 
             // Multer/Express will automatically group these into a real JS array 
             // without needing JSON.parse on the server.
