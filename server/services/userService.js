@@ -28,4 +28,9 @@ const updateProfile = async (newName,userId)=>{
     return data;
 }
 
-module.exports = { getProfileById ,updateProfile};
+async function getUsersCount(){
+    console.log("enter ")
+    return await supabase.from("users").select("*",{head:true, count:"exact"})
+}
+
+module.exports = { getProfileById ,updateProfile,getUsersCount};
