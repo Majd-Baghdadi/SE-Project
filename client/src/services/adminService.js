@@ -128,17 +128,17 @@ const adminService = {
       throw error;
     }
   },
-    // Users
-getUsersCount: async () => {
-  try {
-    const response = await api.get('/user'); // Changed from '/users/count' to '/users'
-    console.log('👥 getUsersCount response:', response);
-    return response;
-  } catch (error) {
-    console.error('Error fetching users count:', error);
-    throw error;
-  }
-},
+  // Users
+  getUsersCount: async () => {
+    try {
+      const response = await api.get('/user');
+      console.log('👥 API User Count Response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching users count:', error);
+      throw error;
+    }
+  },
 };
 
 export default adminService;

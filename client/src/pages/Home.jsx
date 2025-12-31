@@ -106,35 +106,37 @@ export default function Home() {
           setDocuments(mockDocuments);
           setUsingMockData(true);
         }
-        // Fetch stats for admin or calculate from documents
         // Fetch stats
+        // 1. Public stats (User Count) - Always fetch
         try {
-          const [proposals, fixes, usersCountResponse] = await Promise.all([
-            adminService.getAllProposals(),
-            adminService.getAllFixes(),
-            adminService.getUsersCount()
-          ]);
-
-          console.log('📊 Home stats:', {
-            proposals: proposals?.length,
-            fixes: fixes?.length,
-            usersCount: usersCountResponse
-          });
-
-          setStats({
-            totalDocuments: docsData?.length || mockDocuments.length,
-            activeUsers: usersCountResponse?.count || 0,
-            pendingProposals: proposals?.length || 0,
-            pendingFixes: fixes?.length || 0
-          });
+          const userCountRes = await adminService.getUsersCount();
+          if (userCountRes && typeof userCountRes.count !== 'undefined') {
+            setStats(prev => ({
+              ...prev,
+              totalDocuments: docsData?.length || mockDocuments.length,
+              activeUsers: userCountRes.count
+            }));
+          }
         } catch (error) {
-          console.error('❌ Error fetching stats:', error);
-          setStats({
-            totalDocuments: docsData?.length || mockDocuments.length,
-            activeUsers: 0,
-            pendingProposals: 0,
-            pendingFixes: 0
-          });
+          console.error('❌ Error fetching public user count:', error);
+        }
+
+        // 2. Private Admin stats - Only if isAdmin
+        if (isAdmin) {
+          try {
+            const [proposals, fixes] = await Promise.all([
+              adminService.getAllProposals().catch(() => []),
+              adminService.getAllFixes().catch(() => [])
+            ]);
+
+            setStats(prev => ({
+              ...prev,
+              pendingProposals: proposals?.length || 0,
+              pendingFixes: fixes?.length || 0
+            }));
+          } catch (error) {
+            console.error('❌ Error fetching admin dashboard numbers:', error);
+          }
         }
 
       } catch (error) {
@@ -180,7 +182,7 @@ export default function Home() {
     },
     {
       label: 'Community Members',
-      value: stats.activeUsers > 0 ? `${stats.activeUsers}+` : '25K+',
+      value: stats.activeUsers >= 0 ? `${stats.activeUsers}` : '25K+',
       color: 'text-blue-500'
     },
     {
@@ -268,7 +270,7 @@ export default function Home() {
       </section>
 
       {/* Review Pending Tasks Section (Admins Only) */}
-      {/* {isAdmin && (
+      {isAdmin && (
         <section className="max-w-7xl mx-auto my-16 px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
@@ -311,7 +313,7 @@ export default function Home() {
             </Link>
           </div>
         </section>
-      )} */}
+      )}
 
       {/* Popular Procedures Section */}
       <section className="bg-white py-16 border-t border-gray-100">
@@ -394,6 +396,26 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Floating Action Button (FAB) */}
+      <div className="fixed bottom-10 right-10 z-[100] group flex items-center">
+        <Link
+          to="/propose"
+          className="flex items-center no-underline"
+        >
+          {/* Label (Visible on Hover) */}
+          <div className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out">
+            <span className="bg-gray-900 text-white text-sm font-bold py-3 px-6 rounded-l-full shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {isAdmin ? 'Add New Document' : 'Propose New Document'}
+            </span>
+          </div>
+
+          {/* Circle Button */}
+          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center text-white shadow-2xl shadow-green-200 group-hover:shadow-green-400 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90 border-4 border-white">
+            <span className="text-4xl font-light">+</span>
+          </div>
+        </Link>
+      </div>
     </div>
   );
 }

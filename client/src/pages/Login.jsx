@@ -19,7 +19,11 @@ export default function Login() {
       const response = await authService.login(email, password)
 
       if (response.success) {
-        navigate('/')
+        if (response.user && response.user.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         setError(response.error || 'Login failed. Please try again.')
       }
