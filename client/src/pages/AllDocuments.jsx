@@ -21,15 +21,9 @@ export default function AllDocuments() {
   const [sortBy, setSortBy] = useState('name');
 
   const categories = [
-    'Visa',
-    'Passport',
-    'ID Card',
-    'Birth Certificate',
-    'Marriage Certificate',
-    'Driving License',
-    'Residence Permit',
-    'Work Permit',
-    'Other'
+    'Biometric Services',
+    'Civil Status Services',
+    'Administrative Services'
   ];
 
   useEffect(() => {

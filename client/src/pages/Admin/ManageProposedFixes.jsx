@@ -13,16 +13,18 @@ export default function ManageProposedFixes() {
   const [originalDoc, setOriginalDoc] = useState(null);
   const [fetchingDoc, setFetchingDoc] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
+  const [fixSelections, setFixSelections] = useState({}); // { [fixId]: { steps: bool, price: bool, duration: bool, relateddocs: bool } }
 
   const getModifiedDoc = () => {
     if (!originalDoc || !selectedFix) return null;
+    const selections = fixSelections[selectedFix.fixid || selectedFix.id] || {};
 
     return {
       ...originalDoc,
-      steps: selectedFix.stepsProblem ? (selectedFix.stepsDetails ? [selectedFix.stepsDetails] : originalDoc.steps) : originalDoc.steps,
-      docprice: selectedFix.priceProblem ? selectedFix.priceDetails : originalDoc.docprice,
-      duration: selectedFix.timeProblem ? selectedFix.timeDetails : originalDoc.duration,
-      relateddocs: selectedFix.relatedDocsProblem ? (selectedFix.relatedDocsDetails ? [selectedFix.relatedDocsDetails] : originalDoc.relateddocs) : originalDoc.relateddocs
+      steps: (selectedFix.stepsProblem && selections.steps) ? (selectedFix.stepsDetails ? [selectedFix.stepsDetails] : originalDoc.steps) : originalDoc.steps,
+      docprice: (selectedFix.priceProblem && selections.price) ? selectedFix.priceDetails : originalDoc.docprice,
+      duration: (selectedFix.timeProblem && selections.duration) ? selectedFix.timeDetails : originalDoc.duration,
+      relateddocs: (selectedFix.relatedDocsProblem && selections.relateddocs) ? (selectedFix.relatedDocsDetails ? [selectedFix.relatedDocsDetails] : originalDoc.relateddocs) : originalDoc.relateddocs
     };
   };
 
@@ -30,13 +32,37 @@ export default function ManageProposedFixes() {
     const isModified = type === 'modified';
     const highlight = (field) => {
       if (!isModified || !selectedFix) return '';
+      const selections = fixSelections[selectedFix.fixid || selectedFix.id] || {};
       const problems = {
-        steps: selectedFix.stepsProblem,
-        docprice: selectedFix.priceProblem,
-        duration: selectedFix.timeProblem,
-        relateddocs: selectedFix.relatedDocsProblem
+        steps: selectedFix.stepsProblem && selections.steps,
+        docprice: selectedFix.priceProblem && selections.price,
+        duration: selectedFix.timeProblem && selections.duration,
+        relateddocs: selectedFix.relatedDocsProblem && selections.relateddocs
       };
       return problems[field] ? 'bg-amber-50 border-amber-200 ring-2 ring-amber-400 ring-opacity-30' : '';
+    };
+
+    const toggleSelection = (e, field) => {
+      e.stopPropagation();
+      const fixId = selectedFix.fixid || selectedFix.id;
+      setFixSelections(prev => ({
+        ...prev,
+        [fixId]: {
+          ... (prev[fixId] || {}),
+          [field]: !prev[fixId]?.[field]
+        }
+      }));
+    };
+
+    const isSelectable = (field) => {
+      if (!isModified || !selectedFix) return false;
+      const mapped = {
+        docprice: 'priceProblem',
+        duration: 'timeProblem',
+        steps: 'stepsProblem',
+        relateddocs: 'relatedDocsProblem'
+      };
+      return !!selectedFix[mapped[field]];
     };
 
     return (
@@ -61,23 +87,62 @@ export default function ManageProposedFixes() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className={`p-3 rounded-xl border bg-white transition-all ${highlight('docprice')}`}>
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Price</p>
+            <div
+              className={`p-3 rounded-xl border bg-white transition-all ${highlight('docprice')} ${isSelectable('docprice') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+              onClick={(e) => isSelectable('docprice') && toggleSelection(e, 'price')}
+            >
+              <div className="flex justify-between items-start">
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Price</p>
+                {isSelectable('docprice') && (
+                  <input
+                    type="checkbox"
+                    checked={fixSelections[selectedFix.fixid || selectedFix.id]?.price}
+                    onChange={() => { }} // Handled by div onClick
+                    className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                  />
+                )}
+              </div>
               <p className="text-sm font-bold text-gray-900">{doc.docprice || '0'} DA</p>
             </div>
-            <div className={`p-3 rounded-xl border bg-white transition-all ${highlight('duration')}`}>
-              <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Duration</p>
+            <div
+              className={`p-3 rounded-xl border bg-white transition-all ${highlight('duration')} ${isSelectable('duration') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+              onClick={(e) => isSelectable('duration') && toggleSelection(e, 'duration')}
+            >
+              <div className="flex justify-between items-start">
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Duration</p>
+                {isSelectable('duration') && (
+                  <input
+                    type="checkbox"
+                    checked={fixSelections[selectedFix.fixid || selectedFix.id]?.duration}
+                    onChange={() => { }}
+                    className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                  />
+                )}
+              </div>
               <p className="text-sm font-bold text-gray-900">{doc.duration || 'N/A'}</p>
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border bg-white transition-all ${highlight('steps')}`}>
-            <p className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center justify-between">
-              Procedure Steps
-              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-bold">
-                {Array.isArray(doc.steps) ? doc.steps.length : '1'} Steps
-              </span>
-            </p>
+          <div
+            className={`p-4 rounded-xl border bg-white transition-all ${highlight('steps')} ${isSelectable('steps') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+            onClick={(e) => isSelectable('steps') && toggleSelection(e, 'steps')}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
+                Procedure Steps
+                <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-bold">
+                  {Array.isArray(doc.steps) ? doc.steps.length : '1'} Steps
+                </span>
+              </p>
+              {isSelectable('steps') && (
+                <input
+                  type="checkbox"
+                  checked={fixSelections[selectedFix.fixid || selectedFix.id]?.steps}
+                  onChange={() => { }}
+                  className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                />
+              )}
+            </div>
             <div className="space-y-3">
               {Array.isArray(doc.steps) ? doc.steps.map((step, idx) => (
                 <div key={idx} className="flex gap-3 text-sm">
@@ -90,8 +155,21 @@ export default function ManageProposedFixes() {
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border bg-white transition-all ${highlight('relateddocs')}`}>
-            <p className="text-xs font-bold text-gray-400 uppercase mb-2">Required Documents</p>
+          <div
+            className={`p-4 rounded-xl border bg-white transition-all ${highlight('relateddocs')} ${isSelectable('relateddocs') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+            onClick={(e) => isSelectable('relateddocs') && toggleSelection(e, 'relateddocs')}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-xs font-bold text-gray-400 uppercase">Required Documents</p>
+              {isSelectable('relateddocs') && (
+                <input
+                  type="checkbox"
+                  checked={fixSelections[selectedFix.fixid || selectedFix.id]?.relateddocs}
+                  onChange={() => { }}
+                  className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                />
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {Array.isArray(doc.relateddocs) ? doc.relateddocs.map((rd, i) => (
                 <span key={i} className="px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-lg text-[11px] text-gray-600 font-medium">
@@ -145,11 +223,97 @@ export default function ManageProposedFixes() {
       setLoading(false);
     }
   };
+  // Helper to validate UUID format
+  const isValidUUID = (uuid) => {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
+  };
 
-  const handleApprove = async (fixId, data) => {
+  // Helper to find the real fix object regardless of server wrapping
+  const extractFixData = (res) => {
+    if (!res) return null;
+    // Common patterns: res.fix, res.data.fix, res.data[0], or res itself
+    let current = res.fix || (res.data && res.data.fix ? res.data.fix : res.data) || res;
+    if (Array.isArray(current)) current = current[0];
+    if (current && current.data && !current.docid) current = current.data; // Handle double data wrapping
+    if (Array.isArray(current)) current = current[0];
+    return current;
+  };
+
+  const handleApprove = async (fixId, providedData = null) => {
+    let finalData = providedData;
+
+    // If no data provided (e.g. from table), we need to compute it from original doc and selections
+    if (!finalData) {
+      try {
+        // Step 1: Fetch full fix details to ensure we have docid
+        const fixRes = await proposalService.getProposedFixDetails(fixId);
+        const fix = extractFixData(fixRes);
+
+        if (!fix) {
+          throw new Error('Fix details could not be found in the server response.');
+        }
+
+        // Check for userid to prevent server-side crash in addContribution
+        if (!fix.userid && !fix.userId) {
+          console.warn('⚠️ Fix is missing a userid. Reward points will fail on server.');
+        }
+
+        // Deep discovery: Look everywhere for the document ID
+        const rawDocId = fix.docid || fix.docId || (fix.documents && (fix.documents.docid || fix.documents.id));
+
+        if (!rawDocId || !isValidUUID(rawDocId)) {
+          console.error('❌ Invalid DocID found:', rawDocId);
+          throw new Error('This fix is missing a valid link to a document. It cannot be applied.');
+        }
+
+        const actualDocId = rawDocId;
+
+        // Step 2: Fetch original doc
+        const docRes = await documentService.getDocumentById(actualDocId);
+        const originalData = docRes.data || docRes;
+
+        if (!originalData || !originalData.docname) {
+          throw new Error('The original document could not be loaded.');
+        }
+
+        // Use selections if they exist, otherwise default to all problems found in the fix
+        const selections = fixSelections[fixId] || {
+          steps: !!fix.stepsProblem,
+          price: !!fix.priceProblem,
+          duration: !!fix.timeProblem,
+          relateddocs: !!fix.relatedDocsProblem
+        };
+
+        const processSteps = (details, origSteps) => {
+          if (!details) return Array.isArray(origSteps) ? origSteps : [];
+          return typeof details === 'string' ? details.split('\n').filter(s => s.trim()) : (Array.isArray(details) ? details : [details]);
+        };
+
+        const processRelated = (details, origRelated) => {
+          if (!details) return Array.isArray(origRelated) ? origRelated : [];
+          return typeof details === 'string' ? details.split(',').map(s => s.trim()).filter(s => s) : (Array.isArray(details) ? details : [details]);
+        };
+
+        finalData = {
+          ...originalData,
+          steps: (fix.stepsProblem && selections.steps) ? processSteps(fix.stepsDetails, originalData.steps) : originalData.steps,
+          docprice: (fix.priceProblem && selections.price) ? fix.priceDetails : originalData.docprice,
+          duration: (fix.timeProblem && selections.duration) ? fix.timeDetails : originalData.duration,
+          relateddocs: (fix.relatedDocsProblem && selections.relateddocs) ? processRelated(fix.relatedDocsDetails, originalData.relateddocs) : originalData.relateddocs,
+          // Re-map mandatory fields to ensure they exist for the controller's validation
+          docname: originalData.docname || fix.documentName || '',
+          doctype: originalData.doctype || originalData.category || ''
+        };
+      } catch (err) {
+        console.error("Failed to prepare data for approval:", err);
+        Swal.fire('Error!', err.message || 'Could not load document to apply fixes.', 'error');
+        return;
+      }
+    }
+
     const result = await Swal.fire({
       title: 'Apply This Fix?',
-      text: "This will merge the suggested changes into the live document.",
+      text: "This will merge the selected changes into the live document.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
@@ -159,7 +323,65 @@ export default function ManageProposedFixes() {
 
     if (result.isConfirmed) {
       try {
-        await adminService.validateFix(fixId, data);
+        const parsePrice = (val) => {
+          if (val === undefined || val === null || val === '') return 0;
+          if (typeof val === 'number') return Math.round(val);
+          const matched = String(val).match(/\d+/);
+          return matched ? parseInt(matched[0]) : 0;
+        };
+
+        const parseDuration = (val) => {
+          if (val === undefined || val === null || val === '') return 0;
+          if (typeof val === 'number') return Math.round(val);
+          const matched = String(val).match(/\d+/);
+          return matched ? parseInt(matched[0]) : 0;
+        };
+
+        const processArrayField = (val, filterUUIDs = false) => {
+          if (!val) return [];
+          const initialArray = Array.isArray(val) ? val : [String(val)];
+          return initialArray.flatMap(item =>
+            typeof item === 'string'
+              ? item.split(/[\n,;]/).map(s => s.trim()).filter(s => {
+                if (!s) return false;
+                if (filterUUIDs) return isValidUUID(s);
+                return true;
+              })
+              : (typeof item === 'object' ? [] : item)
+          );
+        };
+
+        // Deeply sanitized payload - NO extra fields
+        const sanitizedPayload = {
+          docname: String(finalData.docname || '').trim(),
+          doctype: String(finalData.doctype || finalData.category || '').trim(),
+          docprice: parsePrice(finalData.docprice),
+          duration: parseDuration(finalData.duration),
+          steps: processArrayField(finalData.steps),
+          relateddocs: processArrayField(finalData.relateddocs, true) // ONLY send valid UUIDs
+        };
+
+        // Final check: ensure we didn't end up with 'undefined' as a string
+        if (sanitizedPayload.docname === 'undefined') sanitizedPayload.docname = '';
+        if (sanitizedPayload.doctype === 'undefined') sanitizedPayload.doctype = '';
+
+        // Valid image check
+        const pic = finalData.docpicture;
+        if (pic && typeof pic === 'string' && (pic.startsWith('http') || pic.startsWith('data:'))) {
+          sanitizedPayload.docpicture = pic;
+        }
+
+        console.log('🚀 Final validation check for:', sanitizedPayload.docname);
+
+        if (!sanitizedPayload.docname || !sanitizedPayload.doctype || sanitizedPayload.steps.length === 0) {
+          const missing = [];
+          if (!sanitizedPayload.docname) missing.push('Name');
+          if (!sanitizedPayload.doctype) missing.push('Category');
+          if (sanitizedPayload.steps.length === 0) missing.push('Steps');
+          throw new Error('Mandatory fields missing: ' + missing.join(', '));
+        }
+
+        await adminService.validateFix(fixId, sanitizedPayload);
         setFixes(prevFixes => prevFixes.filter(f => (f.fixid || f.id) !== fixId));
         Swal.fire({
           title: 'Applied!',
@@ -220,20 +442,49 @@ export default function ManageProposedFixes() {
       const fixRes = await proposalService.getProposedFixDetails(fixId);
       console.log('🟢 Fix details response:', fixRes);
 
-      if (!fixRes.success || !fixRes.data) {
-        console.error('🔴 Fix details fetch failed:', fixRes);
-        throw new Error('Fix details missing');
+      const fixData = extractFixData(fixRes);
+
+      if (!fixData) {
+        console.error('🔴 Fix details fetch failed. Structure:', fixRes);
+        throw new Error('Fix details could not be parsed from server response.');
       }
 
-      setSelectedFix(fixRes.data);
+      if (!fixData.userid && !fixData.userId) {
+        Swal.fire({
+          title: 'Warning',
+          text: 'This fix proposal has no associated User ID. Approving it might fail on the server.',
+          icon: 'warning',
+          confirmButtonColor: '#d33'
+        });
+      }
 
-      if (fixRes.data.docid) {
-        console.log('🟡 Fetching original document, docid:', fixRes.data.docid);
+      setSelectedFix(fixData);
 
-        const docRes = await documentService.getDocumentById(fixRes.data.docid);
-        console.log('🟢 Original document response:', docRes);
+      const fixIdActual = fixData.fixid || fixData.id;
+      if (!fixSelections[fixIdActual]) {
+        setFixSelections(prev => ({
+          ...prev,
+          [fixIdActual]: {
+            steps: !!fixData.stepsProblem,
+            price: !!fixData.priceProblem,
+            duration: !!fixData.timeProblem,
+            relateddocs: !!fixData.relatedDocsProblem
+          }
+        }));
+      }
 
-        setOriginalDoc(docRes.data || docRes);
+      if (fixData && (fixData.docid || fixData.docId)) {
+        console.log('🟡 Fetching original document, docid:', fixData.docid || fixData.docId);
+
+        const docRes = await documentService.getDocumentById(fixData.docid || fixData.docId);
+        const docData = docRes.data || docRes;
+
+        // Merge relateddocs IDs back into the docData if they are in sibling relatedDocuments
+        if (docRes.relatedDocuments && !docData.relateddocs) {
+          docData.relateddocs = docRes.relatedDocuments.map(rd => rd.docid || rd.id);
+        }
+
+        setOriginalDoc(docData);
       } else {
         console.warn('⚠️ Fix has no docid');
       }
@@ -452,7 +703,7 @@ export default function ManageProposedFixes() {
                   </button>
                   <button
                     onClick={() => {
-                      handleApprove(selectedFix.fixid || selectedFix.id, originalDoc);
+                      handleApprove(selectedFix.fixid || selectedFix.id, getModifiedDoc());
                       setSelectedFix(null);
                       setOriginalDoc(null);
                     }}

@@ -1,9 +1,16 @@
 import ProposeAndFixForm from '../components/ProposeAndFixForm';
+import Swal from 'sweetalert2';
 
 export default function ProposeAndFixPage() {
   const handleSubmit = (data) => {
     // TODO: Send to backend API
-    alert(`Submitted: ${JSON.stringify(data, null, 2)}`);
+    Swal.fire({
+      title: 'Submission Received',
+      text: 'Thank you for your contribution! (Note: API integration pending)',
+      icon: 'info',
+      confirmButtonColor: '#1976d2'
+    });
+    console.log('Submitted Data:', data);
   };
 
   return (

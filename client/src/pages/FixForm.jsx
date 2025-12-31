@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, List, DollarSign, Clock, Check, X } from 'lucide-react';
 import fixService from '../services/fixService';
+import Swal from 'sweetalert2';
 // Utility function to convert time strings to integer days
 const convertTimeToInteger = (timeString) => {
   if (!timeString) return undefined;
@@ -32,67 +33,6 @@ const convertTimeToInteger = (timeString) => {
 };
 
 
-// ---------------- Success Modal ----------------
-const SuccessModal = ({ onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scaleIn">
-      <div className="text-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounceIn">
-          <Check className="w-10 h-10 text-green-600" strokeWidth={3} />
-        </div>
-        <h3 className="mb-3" style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontFamily: 'Source Serif Pro', fontWeight: 700, color: '#273248' }}>
-          Report Submitted!
-        </h3>
-        <p className="mb-8" style={{ fontSize: 'clamp(15px, 1.8vw, 17px)', fontFamily: 'Lato', color: '#61646b', lineHeight: 1.6 }}>
-          Your issue has been reported successfully. Our team will review it shortly.
-        </p>
-        <button
-          onClick={onClose}
-          className="w-full py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
-          style={{ fontFamily: 'Lato', fontSize: 'clamp(16px, 1.8vw, 18px)' }}
-        >
-          Done
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-// ---------------- Cancel Modal ----------------
-const CancelModal = ({ onClose, onConfirm }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scaleIn">
-      <div className="text-center">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounceIn">
-          <X className="w-10 h-10 text-red-600" strokeWidth={3} />
-        </div>
-        <h3 className="mb-3" style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontFamily: 'Source Serif Pro', fontWeight: 700, color: '#273248' }}>
-          Cancel Report?
-        </h3>
-        <p className="mb-8" style={{ fontSize: 'clamp(15px, 1.8vw, 17px)', fontFamily: 'Lato', color: '#61646b', lineHeight: 1.6 }}>
-          Are you sure you want to cancel? All your entered data will be lost.
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all hover:border-gray-400"
-            style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 1.6vw, 17px)' }}
-          >
-            No, Keep It
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg"
-            style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 1.6vw, 17px)' }}
-          >
-            Yes, Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 // ---------------- ReportIssuePage ----------------
 const ReportIssuePage = () => {
   const navigate = useNavigate();
@@ -108,8 +48,6 @@ const ReportIssuePage = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
   const [showEmptyFieldError, setShowEmptyFieldError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -199,20 +137,43 @@ const ReportIssuePage = () => {
 
       if (response.success) {
         console.log('✅ Fix submitted successfully');
-        setShowSuccessModal(true);
+        Swal.fire({
+          title: 'Report Submitted!',
+          text: 'Your issue has been reported successfully. Our team will review it shortly.',
+          icon: 'success',
+          confirmButtonColor: '#37a331',
+          confirmButtonText: 'Done'
+        }).then(() => {
+          closeSuccessModal();
+        });
       } else {
         console.error('❌ Fix submission failed:', response.message);
-        alert(response.message || 'Failed to submit fix. Please try again.');
+        Swal.fire('Error!', response.message || 'Failed to submit fix. Please try again.', 'error');
       }
     } catch (error) {
       console.error('❌ Error submitting fix:', error);
-      alert('An error occurred. Please try again.');
+      Swal.fire('Error!', 'An unexpected error occurred. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => setShowCancelModal(true);
+  const handleCancel = () => {
+    Swal.fire({
+      title: 'Cancel Report?',
+      text: "Are you sure you want to cancel? All your entered data will be lost.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Cancel',
+      cancelButtonText: 'No, Keep It'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        confirmCancel();
+      }
+    });
+  };
 
   const confirmCancel = () => {
     setFormData({
@@ -223,12 +184,10 @@ const ReportIssuePage = () => {
     });
     setErrors({});
     setShowEmptyFieldError(false);
-    setShowCancelModal(false);
     navigate(-1);
   };
 
   const closeSuccessModal = () => {
-    setShowSuccessModal(false);
     setFormData({
       steps: '',
       documents: '',
@@ -390,9 +349,6 @@ const ReportIssuePage = () => {
             </div>
           </form>
         </div>
-
-        {showSuccessModal && <SuccessModal onClose={closeSuccessModal} />}
-        {showCancelModal && <CancelModal onClose={() => setShowCancelModal(false)} onConfirm={confirmCancel} />}
       </div>
 
       <style>{`
