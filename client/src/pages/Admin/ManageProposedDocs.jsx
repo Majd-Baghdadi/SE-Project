@@ -57,7 +57,7 @@ export default function ManageProposedDocs() {
         {
           id: '1',
           docName: 'Tax Declaration Guide',
-          category: 'Legal',
+          category: 'Administrative Services',
           submittedBy: 'user@example.com',
           submittedDate: '2025-12-01',
           status: 'pending',
@@ -67,7 +67,7 @@ export default function ManageProposedDocs() {
         {
           id: '2',
           docName: 'Housing Certificate',
-          category: 'Civil Status',
+          category: 'Civil Status Services',
           submittedBy: 'john@example.com',
           submittedDate: '2025-12-05',
           status: 'pending',

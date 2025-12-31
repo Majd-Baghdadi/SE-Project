@@ -54,11 +54,24 @@ class ProposalService {
       // Handle FormData if there's a file for the picture
       if (documentData.docpicture && typeof documentData.docpicture !== 'string') {
         data = new FormData();
+
+        // Filter out non-DB fields and prepare FormData
         Object.keys(documentData).forEach(key => {
-          if (key === 'steps' || key === 'relateddocs') {
-            data.append(key, JSON.stringify(documentData[key]));
+          const value = documentData[key];
+          if (value === undefined || value === null) return;
+
+          if (key === 'docpicture' && value instanceof File) {
+            // Explicitly append file with its name to ensure multer picks up 'originalname'
+            data.append('docpicture', value, value.name);
+          } else if (Array.isArray(value)) {
+            // IMPORTANT: Append each item individually. 
+            // Multer/Express will automatically group these into a real JS array 
+            // without needing JSON.parse on the server.
+            value.forEach(item => {
+              data.append(key, item);
+            });
           } else {
-            data.append(key, documentData[key]);
+            data.append(key, value);
           }
         });
       }

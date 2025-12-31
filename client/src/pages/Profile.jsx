@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { ChevronDown, Edit2, Check, LogOut, Eye, X } from 'lucide-react';
+import { ChevronDown, Edit2, Check, LogOut, Eye, X, Link as LinkIcon } from 'lucide-react';
+import { useRef } from 'react';
 import authService from '../services/authService';
 import userService from '../services/userService';
 import proposalService from '../services/proposalService';
@@ -9,6 +10,101 @@ import { useAuth } from '../context/AuthContext';
 import Notification from '../components/Notification';
 import standard from '../assets/images/standard2.png';
 import api from '../services/api';
+import documentService from '../services/documentService';
+
+// ---------------- MultiSelectDropdown Component ----------------
+const MultiSelectDropdown = ({ label, options, selected, onChange, error = false }) => {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef();
+
+  const toggleOption = (docId) => {
+    let updated = [...selected];
+    if (updated.includes(docId)) {
+      updated = updated.filter((id) => id !== docId);
+    }
+    else {
+      updated.push(docId);
+    }
+    onChange(updated);
+  };
+
+  const removeOption = (docId, e) => {
+    e.stopPropagation();
+    onChange(selected.filter((id) => id !== docId));
+  };
+
+  // Helper to get document name by ID
+  const getDocNameById = (docId) => {
+    const doc = options.find(opt => opt.id === docId);
+    return doc ? doc.name : docId;
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{label}</label>
+
+      <div
+        className={`w-full px-4 py-2 border-2 ${error ? 'border-red-500' : 'border-gray-200'} rounded-lg cursor-pointer bg-white hover:border-green-500 transition-colors min-h-[45px] flex justify-between items-center`}
+        onClick={() => setOpen(!open)}
+      >
+        <div className="flex flex-wrap gap-2 flex-1">
+          {selected.length === 0 && (
+            <span className="text-gray-400 text-sm">
+              Select related documents...
+            </span>
+          )}
+          {selected.map((docId) => (
+            <span
+              key={docId}
+              className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-semibold border border-green-100"
+            >
+              {getDocNameById(docId)}
+              <button
+                type="button"
+                onClick={(e) => removeOption(docId, e)}
+                className="text-green-600 hover:text-green-800 ml-1"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+        <ChevronDown className={`w-4 h-4 ${error ? 'text-red-500' : 'text-gray-500'} ml-2 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+
+      {open && (
+        <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-xl max-h-60 overflow-auto z-[70]">
+          {options.map((doc) => (
+            <div
+              key={doc.id}
+              className={`px-4 py-2.5 cursor-pointer transition-colors flex justify-between items-center text-sm ${selected.includes(doc.id)
+                ? 'bg-green-50 text-green-700'
+                : 'hover:bg-gray-50 text-gray-700'
+                }`}
+              onClick={() => toggleOption(doc.id)}
+            >
+              <span>{doc.name}</span>
+              {selected.includes(doc.id) && (
+                <Check className="w-4 h-4 text-green-600" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function ProfileForm() {
   const navigate = useNavigate();
@@ -35,6 +131,7 @@ export default function ProfileForm() {
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [viewModal, setViewModal] = useState({ isOpen: false, data: null, type: 'doc', loading: false, isEditing: false });
   const [editData, setEditData] = useState({});
+  const [allDocuments, setAllDocuments] = useState([]);
 
   const getImgSrc = (src) => {
     if (!src) return standard;
@@ -52,7 +149,12 @@ export default function ProfileForm() {
           return;
         }
 
-        const profileRes = await userService.getUserProfile();
+        const [profileRes, docsList] = await Promise.all([
+          userService.getUserProfile(),
+          documentService.getAllDocuments()
+        ]);
+
+        setAllDocuments(docsList);
 
         if (profileRes.success && profileRes.user) {
           setFormData(prev => ({
@@ -86,6 +188,12 @@ export default function ProfileForm() {
 
     fetchProfileData();
   }, [navigate]);
+
+  const getDocNameById = (id) => {
+    if (!id) return '';
+    const doc = allDocuments.find(d => (d.docid || d.id) === id);
+    return doc ? doc.docname : id;
+  };
 
   const handleDeleteDoc = async (id) => {
     const result = await Swal.fire({
@@ -137,25 +245,68 @@ export default function ProfileForm() {
     }
   };
 
-  const handleViewDoc = async (doc) => {
-    setViewModal({ isOpen: true, type: 'doc', data: doc, loading: true });
+  const handleViewDoc = async (doc, isEdit = false) => {
+    // Start with basic data from the list
+    setViewModal({ isOpen: true, type: 'doc', data: doc, loading: true, isEditing: isEdit, detailsLoaded: false });
+    setEditData({ ...doc });
+
     try {
       const id = doc.proposeddocid || doc.id;
-      const res = await proposalService.getProposedDocumentDetails(id);
-      if (res.success) {
-        setViewModal(prev => ({ ...prev, data: res.data, loading: false }));
+
+      // WORKAROUND: instead of calling the broken backend detail service, 
+      // we perform a direct raw fetch of the document fields to avoid the faulty 'users' join.
+      const res = await api.get(`/propose/proposedDocument/${id}`);
+
+      // The backend returns { document: ... } or { data: ... }
+      const rawData = res.document || res.data || res;
+      const actualData = Array.isArray(rawData) ? rawData[0] : rawData;
+
+      if (actualData && (actualData.proposeddocid || actualData.id)) {
+        // Success! We have the steps, price, and duration now.
+        const fullData = { ...doc, ...actualData };
+        setViewModal(prev => ({ ...prev, data: fullData, loading: false, detailsLoaded: true }));
+        if (isEdit) {
+          setEditData(fullData);
+        }
       } else {
-        setViewModal(prev => ({ ...prev, loading: false }));
+        throw new Error("No data returned");
       }
     } catch (err) {
-      console.error("Failed to fetch doc details", err);
-      setViewModal(prev => ({ ...prev, loading: false }));
+      console.warn("Detail fetch failed, but keeping basic info:", err);
+      // Fallback: stay on basic data but warn the user
+      setViewModal(prev => ({ ...prev, loading: false, detailsLoaded: false }));
+      if (isEdit) {
+        setNotification({
+          message: 'Some fields (Steps/Price) could not be loaded due to a server error. You can still edit the Name/Category.',
+          type: 'error'
+        });
+      }
     }
   };
 
-  const handleViewFix = (fix) => {
-    setViewModal({ isOpen: true, type: 'fix', data: fix, loading: false, isEditing: false });
+  const handleViewFix = async (fix, isEdit = false) => {
+    // Start with basic data 
+    setViewModal({ isOpen: true, type: 'fix', data: fix, loading: true, isEditing: isEdit, detailsLoaded: false });
     setEditData({ ...fix });
+
+    try {
+      const id = fix.fixid || fix.id;
+      const res = await proposalService.getProposedFixDetails(id);
+
+      if (res.success && res.data) {
+        const fullData = { ...fix, ...res.data };
+        setViewModal(prev => ({ ...prev, data: fullData, loading: false, detailsLoaded: true }));
+        if (isEdit) {
+          setEditData(fullData);
+        }
+      } else {
+        // Fallback to basic data 
+        setViewModal(prev => ({ ...prev, loading: false, detailsLoaded: false }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch fix details", err);
+      setViewModal(prev => ({ ...prev, loading: false, detailsLoaded: false }));
+    }
   };
 
   const handleEditProposition = () => {
@@ -170,10 +321,29 @@ export default function ProfileForm() {
         : (viewModal.data.fixid || viewModal.data.id);
 
       let res;
+      // Sanitize editData to remove non-updatable fields or join data that causes DB errors
+      const { users, created_at, id: _id, proposeddocid: _pdid, fixid: _fid, documents, ...restPayload } = editData;
+
+      // CRITICAL: Ensure mandatory fields are present to prevent backend crash (TypeError on steps.length)
+      // We use viewModal.data as a fallback to ensure we don't send empty values to the server
+      const sanitizedPayload = { ...restPayload };
+
       if (viewModal.type === 'doc') {
-        res = await proposalService.editProposedDocument(id, editData);
+        sanitizedPayload.docname = sanitizedPayload.docname || viewModal.data.docname || "";
+        sanitizedPayload.doctype = sanitizedPayload.doctype || viewModal.data.doctype || "Administrative Services";
+        sanitizedPayload.steps = sanitizedPayload.steps || viewModal.data.steps || [];
+        sanitizedPayload.relateddocs = sanitizedPayload.relateddocs || viewModal.data.relateddocs || [];
+
+        // Ensure price is a valid number, even if entered as a string
+        if (sanitizedPayload.docprice !== undefined) {
+          sanitizedPayload.docprice = parseInt(sanitizedPayload.docprice) || 0;
+        }
+      }
+
+      if (viewModal.type === 'doc') {
+        res = await proposalService.editProposedDocument(id, sanitizedPayload);
       } else {
-        res = await proposalService.editProposedFix(id, editData);
+        res = await proposalService.editProposedFix(id, sanitizedPayload);
       }
 
       if (res.success) {
@@ -427,10 +597,7 @@ export default function ProfileForm() {
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => {
-                                  handleViewDoc(doc);
-                                  setTimeout(() => setViewModal(prev => ({ ...prev, isEditing: true })), 100);
-                                }}
+                                onClick={() => handleViewDoc(doc, true)}
                                 className="text-gray-400 hover:text-green-500 p-1 rounded-full hover:bg-green-50 transition-all opacity-0 group-hover:opacity-100"
                                 title="Edit Proposal"
                               >
@@ -474,10 +641,7 @@ export default function ProfileForm() {
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => {
-                                  handleViewFix(fix);
-                                  setViewModal(prev => ({ ...prev, isEditing: true }));
-                                }}
+                                onClick={() => handleViewFix(fix, true)}
                                 className="text-gray-400 hover:text-green-500 p-1 rounded-full hover:bg-green-50 transition-all opacity-0 group-hover:opacity-100"
                                 title="Edit Fix"
                               >
@@ -576,15 +740,21 @@ export default function ProfileForm() {
                           <div className="flex flex-wrap gap-2">
                             {Array.isArray(viewModal.data.relateddocs) ? viewModal.data.relateddocs.map((rd, i) => (
                               <span key={i} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
-                                {rd}
+                                {getDocNameById(rd)}
                               </span>
-                            )) : <span className="text-sm text-gray-600">{viewModal.data.relateddocs}</span>}
+                            )) : <span className="text-sm text-gray-600">{getDocNameById(viewModal.data.relateddocs)}</span>}
                           </div>
                         </div>
                       )}
                     </>
                   ) : (
                     <div className="space-y-4">
+                      {viewModal.type === 'doc' && !viewModal.detailsLoaded && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium">
+                          ⚠️ The server could not load procedure details (Steps, Price, Duration).
+                          You can still update the Name/Category/Image, but other fields will be preserved as they are in the database.
+                        </div>
+                      )}
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Document Name</label>
                         <input
@@ -601,12 +771,9 @@ export default function ProfileForm() {
                           onChange={(e) => setEditData({ ...editData, doctype: e.target.value })}
                           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                         >
-                          <option value="Visa">Visa</option>
-                          <option value="Passport">Passport</option>
-                          <option value="ID Card">ID Card</option>
-                          <option value="Birth Certificate">Birth Certificate</option>
-                          <option value="Driving License">Driving License</option>
-                          <option value="Marriage Certificate">Marriage Certificate</option>
+                          <option value="Biometric Services">Biometric Services</option>
+                          <option value="Civil Status Services">Civil Status Services</option>
+                          <option value="Administrative Services">Administrative Services</option>
                           <option value="Other">Other</option>
                         </select>
                       </div>
@@ -654,13 +821,11 @@ export default function ProfileForm() {
                         ></textarea>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Related Documents (comma separated)</label>
-                        <input
-                          type="text"
-                          value={Array.isArray(editData.relateddocs) ? editData.relateddocs.join(', ') : editData.relateddocs || ''}
-                          onChange={(e) => setEditData({ ...editData, relateddocs: e.target.value.split(',').map(s => s.trim()) })}
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
-                          placeholder="Doc A, Doc B, Doc C"
+                        <MultiSelectDropdown
+                          label="Related Documents"
+                          options={allDocuments.map(d => ({ id: d.docid || d.id, name: d.docname }))}
+                          selected={Array.isArray(editData.relateddocs) ? editData.relateddocs : []}
+                          onChange={(updated) => setEditData({ ...editData, relateddocs: updated })}
                         />
                       </div>
                     </div>
@@ -670,17 +835,43 @@ export default function ProfileForm() {
                 <div className="space-y-6">
                   {!viewModal.isEditing ? (
                     <>
+                      {viewModal.data.documents && (
+                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                          <span className="text-xs text-blue-600 block uppercase font-bold tracking-wider mb-1">Target Document</span>
+                          <span className="font-semibold text-gray-900">{viewModal.data.documents.docname}</span>
+                        </div>
+                      )}
                       <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <h4 className="font-bold text-amber-800 mb-2">Description of the issue:</h4>
-                        <p className="text-amber-900 text-sm leading-relaxed">{viewModal.data.description}</p>
+                        <h4 className="font-bold text-amber-800 mb-2 underline underline-offset-4">Description of the fix:</h4>
+                        <p className="text-amber-900 text-sm leading-relaxed whitespace-pre-wrap">{viewModal.data.description}</p>
                       </div>
                       <div className="space-y-4">
-                        <h4 className="font-bold text-gray-900 border-b pb-2">Identified Problems:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {viewModal.data.stepsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Steps</span>}
-                          {viewModal.data.priceProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Price</span>}
-                          {viewModal.data.timeProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Duration</span>}
-                          {viewModal.data.relatedDocsProblem && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Files</span>}
+                        <h4 className="font-bold text-gray-900 border-b pb-2">Proposed Fixes:</h4>
+                        <div className="space-y-3">
+                          {viewModal.data.stepsProblem && (
+                            <div className="p-3 bg-gray-50 border rounded-lg">
+                              <span className="text-xs font-bold text-red-600 block uppercase mb-1">Corrected Steps:</span>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewModal.data.stepsDetails}</p>
+                            </div>
+                          )}
+                          {viewModal.data.priceProblem && (
+                            <div className="p-3 bg-gray-50 border rounded-lg">
+                              <span className="text-xs font-bold text-red-600 block uppercase mb-1">Corrected Price:</span>
+                              <p className="text-sm text-gray-700">{viewModal.data.priceDetails} DA</p>
+                            </div>
+                          )}
+                          {viewModal.data.timeProblem && (
+                            <div className="p-3 bg-gray-50 border rounded-lg">
+                              <span className="text-xs font-bold text-red-600 block uppercase mb-1">Corrected Duration:</span>
+                              <p className="text-sm text-gray-700">{viewModal.data.timeDetails} Days</p>
+                            </div>
+                          )}
+                          {viewModal.data.relatedDocsProblem && (
+                            <div className="p-3 bg-gray-50 border rounded-lg">
+                              <span className="text-xs font-bold text-red-600 block uppercase mb-1">Required Documents Fix:</span>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewModal.data.relatedDocsDetails}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </>
@@ -695,41 +886,50 @@ export default function ProfileForm() {
                           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                         ></textarea>
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Mark problems with:</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Corrected Steps (Optional)</label>
+                            <textarea
+                              rows="3"
+                              value={editData.stepsDetails || ''}
+                              onChange={(e) => setEditData({ ...editData, stepsDetails: e.target.value, stepsProblem: !!e.target.value })}
+                              placeholder="Describe the correct procedure steps..."
+                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                            ></textarea>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Corrected Price (Optional)</label>
                             <input
-                              type="checkbox"
-                              checked={editData.stepsProblem || false}
-                              onChange={(e) => setEditData({ ...editData, stepsProblem: e.target.checked })}
+                              type="text"
+                              value={editData.priceDetails || ''}
+                              onChange={(e) => setEditData({ ...editData, priceDetails: e.target.value, priceProblem: !!e.target.value })}
+                              placeholder="e.g., 500"
+                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                             />
-                            <span className="text-sm">Steps</span>
-                          </label>
-                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Duration Fix (Optional)</label>
                             <input
-                              type="checkbox"
-                              checked={editData.priceProblem || false}
-                              onChange={(e) => setEditData({ ...editData, priceProblem: e.target.checked })}
+                              type="text"
+                              value={editData.timeDetails || ''}
+                              onChange={(e) => setEditData({ ...editData, timeDetails: e.target.value, timeProblem: !!e.target.value })}
+                              placeholder="e.g., 5 days"
+                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                             />
-                            <span className="text-sm">Price</span>
-                          </label>
-                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={editData.timeProblem || false}
-                              onChange={(e) => setEditData({ ...editData, timeProblem: e.target.checked })}
-                            />
-                            <span className="text-sm">Duration</span>
-                          </label>
-                          <label className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={editData.relatedDocsProblem || false}
-                              onChange={(e) => setEditData({ ...editData, relatedDocsProblem: e.target.checked })}
-                            />
-                            <span className="text-sm">Documents</span>
-                          </label>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Required Docs Fix (Optional)</label>
+                            <textarea
+                              rows="3"
+                              value={editData.relatedDocsDetails || ''}
+                              onChange={(e) => setEditData({ ...editData, relatedDocsDetails: e.target.value, relatedDocsProblem: !!e.target.value })}
+                              placeholder="List missing or incorrect documents..."
+                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                            ></textarea>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -760,10 +960,14 @@ export default function ProfileForm() {
                 <>
                   <button
                     onClick={handleUpdateProposition}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
+                    disabled={viewModal.type === 'doc' && !viewModal.detailsLoaded}
+                    className={`px-6 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${(viewModal.type === 'doc' && !viewModal.detailsLoaded)
+                      ? 'bg-gray-400 cursor-not-allowed text-gray-200'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                      }`}
                   >
                     <Check className="w-4 h-4" />
-                    Save Changes
+                    {viewModal.type === 'doc' && !viewModal.detailsLoaded ? 'Incomplete Data' : 'Save Changes'}
                   </button>
                   <button
                     onClick={() => setViewModal(prev => ({ ...prev, isEditing: false }))}

@@ -40,42 +40,42 @@ export default function Home() {
     {
       docid: '1',
       docname: 'Passport Application',
-      doctype: 'Passport',
+      doctype: 'Biometric Services',
       duration: '15-20 days',
       created_at: '2025-11-20T10:00:00Z'
     },
     {
       docid: '2',
       docname: 'National ID Renewal',
-      doctype: 'ID Card',
+      doctype: 'Biometric Services',
       duration: '7-10 days',
       created_at: '2025-11-18T10:00:00Z'
     },
     {
       docid: '3',
       docname: 'Birth Certificate',
-      doctype: 'Birth Certificate',
+      doctype: 'Civil Status Services',
       duration: '3-5 days',
       created_at: '2025-11-15T10:00:00Z'
     },
     {
       docid: '4',
       docname: 'Visa Application',
-      doctype: 'Visa',
+      doctype: 'Administrative Services',
       duration: '10-15 days',
       created_at: '2025-11-12T10:00:00Z'
     },
     {
       docid: '5',
       docname: "Driver's License",
-      doctype: 'Driving License',
+      doctype: 'Administrative Services',
       duration: '30-45 days',
       created_at: '2025-11-10T10:00:00Z'
     },
     {
       docid: '6',
       docname: 'Work Permit',
-      doctype: 'Work Permit',
+      doctype: 'Administrative Services',
       duration: '20-30 days',
       created_at: '2025-11-08T10:00:00Z'
     },
@@ -138,12 +138,9 @@ export default function Home() {
 
   // Mock data for categories
   const categories = [
-    { id: 1, name: 'Civil Status Documents', icon: '👤', count: 25 },
-    { id: 2, name: 'ID Services', icon: '🆔', count: 18 },
-    { id: 3, name: 'Education Documents', icon: '🎓', count: 32 },
-    { id: 4, name: 'Legal Documents', icon: '⚖️', count: 15 },
-    { id: 5, name: 'Transport Documents', icon: '🚗', count: 20 },
-    { id: 6, name: 'Healthcare Documents', icon: '🏥', count: 28 },
+    { id: 1, name: 'Biometric Services', icon: '👤', count: 25 },
+    { id: 2, name: 'Civil Status Services', icon: '🆔', count: 18 },
+    { id: 3, name: 'Administrative Services', icon: '🏢', count: 32 }
   ];
 
 
