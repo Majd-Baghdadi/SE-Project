@@ -15,30 +15,43 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchStats();
   }, []);
+const fetchStats = async () => {
+  try {
+    const [docs, proposals, fixes, usersCountResponse] = await Promise.all([
+      documentService.getAllDocuments(),
+      adminService.getAllProposals(),
+      adminService.getAllFixes(),
+      adminService.getUsersCount()
+    ]);
 
-  const fetchStats = async () => {
-    try {
-      const [docs, proposals, fixes] = await Promise.all([
-        documentService.getAllDocuments(),
-        adminService.getAllProposals(),
-        adminService.getAllFixes()
-      ]);
+    console.log('📊 Dashboard stats:', {
+      docs: docs?.length,
+      proposals: proposals?.length,
+      fixes: fixes?.length,
+      usersCount: usersCountResponse
+    });
 
-      setStats({
-        totalDocuments: docs.length || 0,
-        pendingProposals: proposals.length || 0,
-        pendingFixes: fixes.length || 0,
-        totalUsers: (docs.length * 12) + 142 // Dynamic estimation based on content
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setStats({
+      totalDocuments: docs?.length || 0,
+      pendingProposals: proposals?.length || 0,
+      pendingFixes: fixes?.length || 0,
+      totalUsers: usersCountResponse?.count || 0
+    });
+  } catch (error) {
+    console.error('❌ Error fetching dashboard stats:', error);
+    setStats({
+      totalDocuments: 0,
+      pendingProposals: 0,
+      pendingFixes: 0,
+      totalUsers: 0
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 uppercase">
+    <div className="min-h-screen bg-gray-50">
       <div className="p-8">Loading...</div>
     </div>
   );
@@ -88,7 +101,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Users</p>
+                  <p className="text-sm font-medium text-gray-600">Contributing Users</p>
                   <p className="text-3xl font-bold text-blue-600 mt-2">{stats.totalUsers}</p>
                 </div>
                 <div className="text-4xl bg-indigo-50 w-12 h-12 flex items-center justify-center rounded-lg">👥</div>

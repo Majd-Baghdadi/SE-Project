@@ -15,6 +15,7 @@ export default function ManageProposedDocs() {
   const [fetchingDetails, setFetchingDetails] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [docLookup, setDocLookup] = useState({});
+  const [confirmReject, setConfirmReject] = useState(null);
   const getImgSrc = (src) => {
     if (!src) return standard;
     const cleanSrc = src.toString().trim();
@@ -49,146 +50,127 @@ export default function ManageProposedDocs() {
     try {
       setLoading(true);
       const data = await adminService.getAllProposals();
+      console.log('📦 Raw proposals data:', data);
+      console.log('📦 First proposal:', data[0]);
+      console.log('📦 First proposal keys:', data[0] ? Object.keys(data[0]) : 'No data');
       setProposals(data);
     } catch (error) {
       console.error('Error fetching proposals:', error);
-      // Fallback to mock data if API fails
-      setProposals([
-        {
-          id: '1',
-          docName: 'Tax Declaration Guide',
-          category: 'Legal',
-          submittedBy: 'user@example.com',
-          submittedDate: '2025-12-01',
-          status: 'pending',
-          difficulty: 'Medium',
-          duration: '10-15 days'
-        },
-        {
-          id: '2',
-          docName: 'Housing Certificate',
-          category: 'Civil Status',
-          submittedBy: 'john@example.com',
-          submittedDate: '2025-12-05',
-          status: 'pending',
-          difficulty: 'Easy',
-          duration: '5-7 days'
-        }
-      ]);
+      setNotification({ message: 'Failed to load proposals', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleApprove = async (proposalId) => {
-    const result = await Swal.fire({
-      title: 'Approve Proposal?',
-      text: "This document will be added to the live collection.",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#10b981',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, Approve it!'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await adminService.validateProposal(proposalId);
-        setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
-        Swal.fire({
-          title: 'Approved!',
-          text: 'The document is now live.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      } catch (error) {
-        console.error('Error approving proposal:', error);
-        Swal.fire('Error!', 'Failed to approve. Please try again.', 'error');
-      }
-    }
-  };
-
-  const handleReject = async (proposalId) => {
-    const result = await Swal.fire({
-      title: 'Reject Proposal?',
-      text: "This will permanently remove the suggestion from the queue.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, Reject it!'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await adminService.discardProposal(proposalId);
-        setProposals(prevProposals => prevProposals.filter(p => (p.proposeddocid || p.id) !== proposalId));
-        Swal.fire({
-          title: 'Rejected!',
-          text: 'Proposal has been removed.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      } catch (error) {
-        console.error('Error rejecting proposal:', error);
-        Swal.fire('Error!', 'Failed to reject. Please try again.', 'error');
-      }
-    }
-  };
-
-  const handleViewDetails = async (proposal) => {
-    setSelectedProposal(proposal);
-    setFetchingDetails(true);
     try {
-      const id = proposal.proposeddocid || proposal.id;
-      const response = await proposalService.getProposedDocumentDetails(id);
-      if (response.success) {
-        setSelectedProposal(prev => ({ ...prev, ...response.data }));
+      await adminService.validateProposal(proposalId);
+      setProposals(prevProposals => prevProposals.filter(p => p.proposeddocid !== proposalId));
+      setNotification({ message: 'Proposal approved successfully!', type: 'success' });
+      // ✅ FIX: Close modal if it's the approved proposal
+      if (selectedProposal?.proposeddocid === proposalId) {
+        setSelectedProposal(null);
       }
     } catch (error) {
-      console.error('Failed to fetch details:', error);
+      console.error('Error approving proposal:', error);
+      setNotification({ message: 'Failed to approve proposal. Please try again.', type: 'error' });
+    }
+  };
+
+const handleReject = async (proposalId) => {
+  // Modern confirmation - set state to show modal
+  setConfirmReject(proposalId);
+};
+
+const confirmRejectAction = async (proposalId) => {
+  try {
+    await adminService.discardProposal(proposalId);
+    setProposals(prevProposals => prevProposals.filter(p => p.proposeddocid !== proposalId));
+    setNotification({ message: 'Proposal rejected successfully!', type: 'success' });
+    if (selectedProposal?.proposeddocid === proposalId) {
+      setSelectedProposal(null);
+    }
+  } catch (error) {
+    console.error('Error rejecting proposal:', error);
+    setNotification({ message: 'Failed to reject proposal. Please try again.', type: 'error' });
+  } finally {
+    setConfirmReject(null);
+  }
+};
+
+  const handleViewDetails = async (proposal) => {
+    console.log('📋 [CLICK] Viewing proposal:', proposal);
+    
+    // ✅ FIX: Set the proposal data immediately so modal shows right away
+    setSelectedProposal(proposal);
+    setFetchingDetails(true);
+
+    try {
+      const id = proposal.proposeddocid;
+      console.log('🟡 Fetching proposal details for ID:', id);
+
+      const response = await proposalService.getProposedDocumentDetails(id);
+      console.log('🟢 Proposal details response:', response);
+
+      if (response.success && response.data) {
+        // ✅ FIX: Merge with existing data instead of replacing
+        setSelectedProposal(prev => ({ ...prev, ...response.data }));
+      } else {
+        console.error('🔴 Proposal details fetch failed:', response);
+      }
+    } catch (error) {
+      console.error('❌ handleViewDetails error:', error);
+      setNotification({ message: 'Failed to load proposal details', type: 'error' });
     } finally {
       setFetchingDetails(false);
     }
   };
 
-  const filteredProposals = proposals
-    .filter(p => {
-      const name = p.docname || p.docName || '';
-      return name.toLowerCase().includes(searchQuery.toLowerCase());
-    })
-    .sort((a, b) => {
-      const nameA = (a.docname || a.docName || '').toLowerCase();
-      const nameB = (b.docname || b.docName || '').toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  const filteredProposals = proposals.filter(p => {
+    const name = p.docname || '';
+    const category = p.doctype || '';
+    const userName = p.users?.name || '';
+    const query = searchQuery.toLowerCase();
+    return name.toLowerCase().includes(query) || 
+           category.toLowerCase().includes(query) ||
+           userName.toLowerCase().includes(query);
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading proposals...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Notification
         message={notification.message}
         type={notification.type}
-        onClose={() => setNotification({ ...notification, message: '' })}
+        onClose={() => setNotification({ message: '', type: '' })}
       />
+      
       <div className="p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-8 overflow-hidden">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 truncate">Manage Proposed Documents</h1>
             <p className="text-sm md:text-base text-gray-600">Review and approve user-submitted document proposals</p>
           </div>
 
-          {/* Filters */}
+          {/* Search Filter */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <input
                   type="text"
-                  placeholder="Search by name or category..."
+                  placeholder="Search by name, category, or submitter..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -219,7 +201,7 @@ export default function ManageProposedDocs() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProposals.map((proposal) => (
-                  <tr key={proposal.proposeddocid || proposal.id} className="hover:bg-gray-50">
+                  <tr key={proposal.proposeddocid} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {proposal.docpicture && (
@@ -229,18 +211,23 @@ export default function ManageProposedDocs() {
                             className="w-10 h-10 rounded object-cover border border-gray-200"
                           />
                         )}
-                        <div className="text-sm font-medium text-gray-900">{proposal.docname || proposal.docName}</div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{proposal.docname}</div>
+                          <div className="text-xs text-gray-500">{proposal.doctype || 'Uncategorized'}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div>
-                        <div className="font-medium text-gray-900">{proposal.users?.name || proposal.submittedBy || 'Unknown User'}</div>
+                        <div className="font-medium text-gray-900">{proposal.users?.name || 'Unknown User'}</div>
                         <div className="text-xs text-gray-500">{proposal.users?.email}</div>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      Pending
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        Pending
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
@@ -275,6 +262,7 @@ export default function ManageProposedDocs() {
 
             {filteredProposals.length === 0 && (
               <div className="text-center py-12 text-gray-500">
+                <div className="text-4xl mb-2">📭</div>
                 No proposals found matching your criteria.
               </div>
             )}
@@ -287,7 +275,7 @@ export default function ManageProposedDocs() {
                 {/* Modal Header */}
                 <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{selectedProposal.docname || selectedProposal.docName}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedProposal.docname}</h2>
                     <p className="text-sm text-gray-500 mt-1">Proposal Review</p>
                   </div>
                   <button
@@ -325,11 +313,11 @@ export default function ManageProposedDocs() {
                           <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Category</span>
-                              <span className="font-semibold text-gray-900">{selectedProposal.doctype || selectedProposal.category || 'Uncategorized'}</span>
+                              <span className="font-semibold text-gray-900">{selectedProposal.doctype || 'Uncategorized'}</span>
                             </div>
                             <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Submitted By</span>
-                              <span className="font-semibold text-gray-900">{selectedProposal.users?.name || selectedProposal.submittedBy || 'Unknown'}</span>
+                              <span className="font-semibold text-gray-900">{selectedProposal.users?.name || 'Unknown'}</span>
                             </div>
                             <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Price</span>
@@ -337,7 +325,11 @@ export default function ManageProposedDocs() {
                             </div>
                             <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Duration</span>
-                              <span className="font-semibold text-blue-700">{selectedProposal.duration ? `${selectedProposal.duration} days` : 'N/A'}</span>
+                              <span className="font-semibold text-blue-700">
+                                {selectedProposal.duration != null && selectedProposal.duration !== '' 
+                                  ? `${selectedProposal.duration} days` 
+                                  : 'N/A'}
+                              </span>
                             </div>
                           </div>
 
@@ -348,7 +340,7 @@ export default function ManageProposedDocs() {
                               {selectedProposal.relateddocs && Array.isArray(selectedProposal.relateddocs) && selectedProposal.relateddocs.length > 0 ? (
                                 selectedProposal.relateddocs.map((doc, idx) => (
                                   <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium border border-gray-200">
-                                    {docLookup[doc] || doc}
+                                    {docLookup[doc] || `Document ${doc}`}
                                   </span>
                                 ))
                               ) : (
@@ -395,7 +387,7 @@ export default function ManageProposedDocs() {
                   </button>
                   <button
                     onClick={() => {
-                      handleReject(selectedProposal.proposeddocid || selectedProposal.id);
+                      handleReject(selectedProposal.proposeddocid);
                       setSelectedProposal(null);
                     }}
                     className="px-6 py-2.5 bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 font-bold rounded-xl transition-colors"
@@ -404,7 +396,7 @@ export default function ManageProposedDocs() {
                   </button>
                   <button
                     onClick={() => {
-                      handleApprove(selectedProposal.proposeddocid || selectedProposal.id);
+                      handleApprove(selectedProposal.proposeddocid);
                       setSelectedProposal(null);
                     }}
                     className="px-10 py-2.5 bg-green-600 text-white hover:bg-green-700 font-bold rounded-xl transition-all shadow-lg shadow-green-200 transform hover:-translate-y-0.5"
@@ -415,6 +407,36 @@ export default function ManageProposedDocs() {
               </div>
             </div>
           )}
+          {/* Rejection Confirmation Modal */}
+{confirmReject && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
+    <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div className="p-6 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="text-4xl">⚠️</span>
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Rejection</h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to reject this proposal? This action cannot be undone.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => setConfirmReject(null)}
+            className="px-6 py-2.5 bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 rounded-xl transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => confirmRejectAction(confirmReject)}
+            className="px-6 py-2.5 bg-red-600 text-white font-bold hover:bg-red-700 rounded-xl transition-colors shadow-lg shadow-red-200"
+          >
+            Yes, Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         </div>
       </div>
     </div>
