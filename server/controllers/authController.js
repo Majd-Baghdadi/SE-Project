@@ -9,8 +9,8 @@ const bcrypt = require("bcryptjs/dist/bcrypt");
 const COOKIE_MAX_AGE = 10 * 24 * 60 * 60 * 1000; // 10 days
 const COOKIE_CONFIG = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure:true,
+    sameSite: "None" ,
     maxAge: COOKIE_MAX_AGE
 };
 
@@ -18,8 +18,8 @@ const COOKIE_CONFIG = {
 exports.logout = (req, res) => {
     res.clearCookie("auth_token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict"
+        secure: true,
+        sameSite: "None"
     });
 
     return res.status(200).json({

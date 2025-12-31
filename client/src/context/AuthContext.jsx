@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if user is already logged in on mount
+  // Check if user is aalready logged in on mount
   useEffect(() => {
     checkAuth();
   }, []);
@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       // Try to get current user from backend (validates session cookie)
       const user = await authService.fetchCurrentUser();
-
       if (user) {
         setUser(user);
         setIsAuthenticated(true);
