@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import { useAuth } from '../context/AuthContext';
 import { getAllDocuments } from '../services/documentService';
+import adminService from '../services/adminService';
 import banner2 from '../assets/images/banner2.jpg';
 import banner3 from '../assets/images/banner3.jpg';
 import banner4 from '../assets/images/banner4.jpg';
@@ -20,6 +21,12 @@ export default function Home() {
   const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [documents, setDocuments] = useState([]);
+  const [stats, setStats] = useState({
+    totalDocuments: 0,
+    activeUsers: 0,
+    pendingProposals: 0,
+    pendingFixes: 0
+  });
   const [loading, setLoading] = useState(true);
   const [usingMockData, setUsingMockData] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -32,8 +39,6 @@ export default function Home() {
     if (cleanSrc.startsWith('data:')) return cleanSrc;
     return `data:image/jpeg;base64,${cleanSrc}`;
   };
-
-
 
   // Mock data fallback (used if API fails)
   const mockDocuments = [
@@ -81,35 +86,74 @@ export default function Home() {
     },
   ];
 
-  // Fetch documents from API on component mount
+  // Fetch documents and stats from API on component mount
   useEffect(() => {
-    async function fetchDocuments() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const data = await getAllDocuments();
+
+        // Fetch documents
+        const docsData = await getAllDocuments();
 
         // If we got data, use it
-        if (data && data.length > 0) {
-          setDocuments(data);
+        if (docsData && docsData.length > 0) {
+          setDocuments(docsData);
           setUsingMockData(false);
-          console.log('✅ Successfully loaded documents from API:', data.length);
+          console.log('✅ Successfully loaded documents from API:', docsData.length);
         } else {
           // No documents returned, use mock data
           console.warn('⚠️ No documents from API, using mock data');
           setDocuments(mockDocuments);
           setUsingMockData(true);
         }
+        // Fetch stats for admin or calculate from documents
+        // Fetch stats
+        try {
+          const [proposals, fixes, usersCountResponse] = await Promise.all([
+            adminService.getAllProposals(),
+            adminService.getAllFixes(),
+            adminService.getUsersCount()
+          ]);
+
+          console.log('📊 Home stats:', {
+            proposals: proposals?.length,
+            fixes: fixes?.length,
+            usersCount: usersCountResponse
+          });
+
+          setStats({
+            totalDocuments: docsData?.length || mockDocuments.length,
+            activeUsers: usersCountResponse?.count || 0,
+            pendingProposals: proposals?.length || 0,
+            pendingFixes: fixes?.length || 0
+          });
+        } catch (error) {
+          console.error('❌ Error fetching stats:', error);
+          setStats({
+            totalDocuments: docsData?.length || mockDocuments.length,
+            activeUsers: 0,
+            pendingProposals: 0,
+            pendingFixes: 0
+          });
+        }
+
       } catch (error) {
         // API failed, use mock data as fallback
         console.error('❌ Failed to fetch documents from API, using mock data:', error);
         setDocuments(mockDocuments);
         setUsingMockData(true);
+        setStats({
+          totalDocuments: mockDocuments.length,
+          activeUsers: 0,
+          pendingProposals: 0,
+          pendingFixes: 0
+        });
       } finally {
         setLoading(false);
       }
     }
 
-    fetchDocuments();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -117,12 +161,10 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 5000); // Change image every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [banners.length]);
-
-
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -130,10 +172,22 @@ export default function Home() {
   };
 
   // Dynamic statistics
-  const stats = [
-    { label: 'Available Documents', value: documents.length > 0 ? `${documents.length}+` : '150+', color: 'text-emerald-500' },
-    { label: 'Active Users', value: documents.length > 0 ? `${(documents.length * 123) + 1200}+` : '25K+', color: 'text-blue-500' },
-    { label: 'Success Rate', value: '98%', color: 'text-amber-500' },
+  const displayStats = [
+    {
+      label: 'Verified Procedures',
+      value: stats.totalDocuments > 0 ? `${stats.totalDocuments}` : '150+',
+      color: 'text-emerald-500'
+    },
+    {
+      label: 'Community Members',
+      value: stats.activeUsers > 0 ? `${stats.activeUsers}+` : '25K+',
+      color: 'text-blue-500'
+    },
+    {
+      label: 'Success Rate',
+      value: '98%',
+      color: 'text-amber-500'
+    },
   ];
 
   // Mock data for categories
@@ -142,8 +196,6 @@ export default function Home() {
     { id: 2, name: 'Civil Status Services', icon: '🆔', count: 18 },
     { id: 3, name: 'Administrative Services', icon: '🏢', count: 32 }
   ];
-
-
   return (
     <div className="w-full bg-white min-h-screen">
       {/* Hero Section */}
@@ -194,14 +246,13 @@ export default function Home() {
       {/* Statistics Section */}
       <section className="max-w-7xl mx-auto -mt-20 px-8 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {stats.map((stat, index) => (
+          {displayStats.map((stat, index) => (
             <div key={index} className="bg-white rounded-lg p-6 text-center shadow-md border border-gray-100">
               <div className={`text-5xl font-extrabold mb-1 ${stat.color}`}>
                 {stat.value}
               </div>
               <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">
-                {stat.label === 'Available Documents' ? 'Verified Procedures' :
-                  stat.label === 'Active Users' ? 'Community Members' : stat.label}
+                {stat.label}
               </div>
             </div>
           ))}
@@ -230,7 +281,14 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Document Proposals</h3>
                   <p className="text-gray-600">Review new procedures suggested by the community.</p>
-                  <span className="inline-block mt-4 text-primary font-semibold">View Proposals →</span>
+                  {stats.pendingProposals > 0 && (
+                    <span className="inline-block mt-4 px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+                      {stats.pendingProposals} pending
+                    </span>
+                  )}
+                  {stats.pendingProposals === 0 && (
+                    <span className="inline-block mt-4 text-primary font-semibold">View Proposals →</span>
+                  )}
                 </div>
               </div>
             </Link>
@@ -240,14 +298,20 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Proposed Fixes</h3>
                   <p className="text-gray-600">Review edits and corrections submitted by users.</p>
-                  <span className="inline-block mt-4 text-orange-600 font-semibold">View Fixes →</span>
+                  {stats.pendingFixes > 0 && (
+                    <span className="inline-block mt-4 px-3 py-1 text-sm font-medium rounded-full bg-orange-100 text-orange-800">
+                      {stats.pendingFixes} pending
+                    </span>
+                  )}
+                  {stats.pendingFixes === 0 && (
+                    <span className="inline-block mt-4 text-orange-600 font-semibold">View Fixes →</span>
+                  )}
                 </div>
               </div>
             </Link>
           </div>
         </section>
       )} */}
-
 
       {/* Popular Procedures Section */}
       <section className="bg-white py-16 border-t border-gray-100">

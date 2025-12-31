@@ -562,14 +562,14 @@ const ProposeDocumentPage = () => {
     <>
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
-              Propose New Document
-            </h1>
-            <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
-              Fill in the form below to propose a new document
-            </p>
-          </div>
+       <div className="text-center mb-10">
+  <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
+    {user?.role === 'admin' ? 'Add New Document' : 'Propose New Document'}
+  </h1>
+  <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
+    Fill in the form below to {user?.role === 'admin' ? 'add a new document' : 'propose a new document'}
+  </p>
+</div>
 
           {submitError && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
