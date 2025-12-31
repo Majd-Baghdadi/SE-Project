@@ -77,8 +77,8 @@ export default function AllDocuments() {
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(doc => {
-        const docName = (doc.docname || '').toLowerCase();
-        const docType = (doc.doctype || doc.category || '').toLowerCase();
+        const docName = String(doc.docname || '').toLowerCase();
+        const docType = String(doc.doctype || doc.category || '').toLowerCase();
         const searchLower = searchQuery.toLowerCase();
         return docName.includes(searchLower) || docType.includes(searchLower);
       });
@@ -209,7 +209,7 @@ export default function AllDocuments() {
                 className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 no-underline border border-gray-100 hover:-translate-y-1 overflow-hidden flex flex-col h-full"
               >
                 {/* Image */}
-                <div className="h-48 w-full relative">
+                <div className="h-64 w-full relative">
                   <img
                     src={getImgSrc(doc.docpicture)}
                     alt={doc.docname}

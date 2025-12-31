@@ -36,14 +36,19 @@ export default function SearchBar({ documents = [] }) {
       return
     }
 
-    // Filter documents based on query
     const filtered = documents.filter(doc => {
       const searchTerm = query.toLowerCase()
+
+      const docName = String(doc.docname || '').toLowerCase()
+      const docType = String(doc.doctype || doc.category || '').toLowerCase()
+      const docDuration = String(doc.duration || '').toLowerCase()
+      const docDifficulty = String(doc.difficulty || '').toLowerCase()
+
       return (
-        doc.docname?.toLowerCase().includes(searchTerm) ||
-        doc.category?.toLowerCase().includes(searchTerm) ||
-        doc.difficulty?.toLowerCase().includes(searchTerm) ||
-        doc.duration?.toLowerCase().includes(searchTerm)
+        docName.includes(searchTerm) ||
+        docType.includes(searchTerm) ||
+        docDuration.includes(searchTerm) ||
+        docDifficulty.includes(searchTerm)
       )
     }).slice(0, 5) // Show max 5 results
 

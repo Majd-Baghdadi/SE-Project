@@ -270,7 +270,7 @@ export default function Home() {
       </section>
 
       {/* Review Pending Tasks Section (Admins Only) */}
-      {isAdmin && (
+      {/* {isAdmin && (
         <section className="max-w-7xl mx-auto my-16 px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
@@ -313,7 +313,7 @@ export default function Home() {
             </Link>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Popular Procedures Section */}
       <section className="bg-white py-16 border-t border-gray-100">
@@ -349,7 +349,7 @@ export default function Home() {
                 >
                   <div className="bg-white rounded-lg cursor-pointer transition-all border-l-4 border-l-green-600 shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full">
                     {/* Image */}
-                    <div className="h-48 w-full relative">
+                    <div className="h-64 w-full relative">
                       <img
                         src={getImgSrc(procedure.docpicture)}
                         alt={procedure.docname}
