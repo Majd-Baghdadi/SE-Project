@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { FileText, Users, Award, ChevronRight, Plus, Sparkles, Calendar } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import { useAuth } from '../context/AuthContext';
 import { getAllDocuments } from '../services/documentService';
@@ -198,10 +199,38 @@ export default function Home() {
     { id: 2, name: 'Civil Status Services', icon: '🆔', count: 18 },
     { id: 3, name: 'Administrative Services', icon: '🏢', count: 32 }
   ];
+
   return (
-    <div className="w-full bg-white min-h-screen">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 relative overflow-hidden">
+      
+      {/* Fixed background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-teal-500/15 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-3xl"></div>
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+      </div>
+
+      {/* Floating particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {[...Array(25)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-emerald-400/40 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${4 + Math.random() * 6}s`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Hero Section */}
-      <section className="relative h-[calc(100vh-73px)] min-h-[600px] flex items-center justify-center text-white overflow-hidden">
+      <section className="relative min-h-[85vh] flex items-center justify-center text-white overflow-hidden">
         {/* Sliding Background Images */}
         {banners.map((bannerImg, index) => (
           <div
@@ -214,46 +243,56 @@ export default function Home() {
           />
         ))}
 
-        {/* Static Overlay for Readability */}
-        <div className="absolute inset-0 z-[1] bg-black/40" />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-slate-900/70 via-emerald-900/50 to-slate-900" />
 
         {/* Content */}
         <div className="relative z-10 text-center max-w-5xl px-4 md:px-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white/80 border border-white/20 mb-8">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-medium">Community-Powered Platform</span>
+          </div>
+
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Get any government document in Algeria <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
+              step by step
+            </span>
+          </h1>
+          <p className="text-base md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Community-verified guides for passports, visas, national IDs, and all governmental procedures. Get accurate, up-to-date information from real experiences.
+          </p>
+
           {/* Slide Indicators */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+          <div className="flex justify-center gap-2 mt-8">
             {banners.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentBanner(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${currentBanner === index ? 'bg-white w-8' : 'bg-white/40 w-2'
+                className={`h-2 rounded-full transition-all duration-300 ${currentBanner === index ? 'bg-emerald-400 w-8' : 'bg-white/30 w-2 hover:bg-white/50'
                   }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
-
-          <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold mb-6 leading-tight drop-shadow-lg">
-            Get any government document in Algeria <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">
-              step by step
-            </span>
-          </h1>
-          <p className="text-base md:text-xl text-gray-100 mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-            Community-verified guides for passports, visas, national IDs, and all governmental procedures. Get accurate, up-to-date information from real experiences.
-          </p>
-
         </div>
       </section>
 
       {/* Statistics Section */}
-      <section className="max-w-7xl mx-auto -mt-20 px-8 relative z-20">
+      <section className="relative z-20 max-w-6xl mx-auto -mt-20 px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {displayStats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-lg p-6 text-center shadow-md border border-gray-100">
-              <div className={`text-5xl font-extrabold mb-1 ${stat.color}`}>
+            <div key={index} className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="w-12 h-12 mx-auto mb-4 bg-white/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                {index === 0 && <FileText className="w-6 h-6 text-emerald-400" />}
+                {index === 1 && <Users className="w-6 h-6 text-blue-400" />}
+                {index === 2 && <Award className="w-6 h-6 text-amber-400" />}
+              </div>
+              <div className={`text-4xl font-extrabold mb-1 ${index === 0 ? 'text-emerald-400' : index === 1 ? 'text-blue-400' : 'text-amber-400'}`}>
                 {stat.value}
               </div>
-              <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">
+              <div className="text-xs text-white/60 font-semibold uppercase tracking-wide">
                 {stat.label}
               </div>
             </div>
@@ -262,82 +301,40 @@ export default function Home() {
       </section>
 
       {/* Search Section */}
-      <section className="max-w-4xl mx-auto mt-8 px-8 relative z-20">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">Find a procedure</h3>
+      <section className="relative z-20 max-w-4xl mx-auto mt-12 px-6">
+        <div className="bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/20">
+          <h3 className="text-xl font-bold text-white mb-4 text-center flex items-center justify-center gap-2">
+            <Sparkles className="w-5 h-5 text-emerald-400" />
+            Find a procedure
+          </h3>
           <SearchBar documents={documents} />
         </div>
       </section>
 
-      {/* Review Pending Tasks Section (Admins Only) */}
-      {/* {isAdmin && (
-        <section className="max-w-7xl mx-auto my-16 px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-2 text-gray-900">Review Pending Tasks</h2>
-            <p className="text-gray-600">Review and moderate community contributions</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Link to="/admin/proposals" className="no-underline group">
-              <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-blue-50/30 flex items-center gap-6">
-                <div className="text-6xl group-hover:scale-110 transition-transform">📋</div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Document Proposals</h3>
-                  <p className="text-gray-600">Review new procedures suggested by the community.</p>
-                  {stats.pendingProposals > 0 && (
-                    <span className="inline-block mt-4 px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
-                      {stats.pendingProposals} pending
-                    </span>
-                  )}
-                  {stats.pendingProposals === 0 && (
-                    <span className="inline-block mt-4 text-primary font-semibold">View Proposals →</span>
-                  )}
-                </div>
-              </div>
-            </Link>
-            <Link to="/admin/fixes" className="no-underline group">
-              <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 transition-all hover:border-primary hover:bg-orange-50/30 flex items-center gap-6">
-                <div className="text-6xl group-hover:scale-110 transition-transform">🔧</div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Proposed Fixes</h3>
-                  <p className="text-gray-600">Review edits and corrections submitted by users.</p>
-                  {stats.pendingFixes > 0 && (
-                    <span className="inline-block mt-4 px-3 py-1 text-sm font-medium rounded-full bg-orange-100 text-orange-800">
-                      {stats.pendingFixes} pending
-                    </span>
-                  )}
-                  {stats.pendingFixes === 0 && (
-                    <span className="inline-block mt-4 text-orange-600 font-semibold">View Fixes →</span>
-                  )}
-                </div>
-              </div>
-            </Link>
-          </div>
-        </section>
-      )} */}
-
       {/* Popular Procedures Section */}
-      <section className="bg-white py-16 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="flex justify-between items-center mb-8">
+      <section className="relative z-10 py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2 text-gray-900">Popular Procedures</h2>
-              <p className="text-gray-600">
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-white">Popular Procedures</h2>
+              <p className="text-white/60">
                 {usingMockData && (
-                  <span className="text-amber-600 font-semibold">⚠️ Using sample data (API unavailable) | </span>
+                  <span className="text-amber-400 font-semibold">⚠️ Using sample data | </span>
                 )}
                 Most viewed and helpful document guides
               </p>
             </div>
-            <Link to="/documents" className="text-primary no-underline font-semibold flex items-center gap-2 hover:text-primary-dark">
-              View all <span>→</span>
+            <Link to="/documents" className="group inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white border border-white/20 transition-all">
+              View all 
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           {/* Loading State */}
           {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-600">Loading documents...</p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-white/60">Loading documents...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -345,37 +342,43 @@ export default function Home() {
                 <Link
                   key={procedure.docid}
                   to={`/document/${procedure.docid}`}
-                  className="block no-underline"
+                  className="group block no-underline"
                 >
-                  <div className="bg-white rounded-lg cursor-pointer transition-all border-l-4 border-l-green-600 shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden transition-all duration-300 hover:border-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 flex flex-col h-full">
                     {/* Image */}
-                    <div className="h-64 w-full relative">
+                    <div className="h-56 w-full relative overflow-hidden">
                       <img
                         src={getImgSrc(procedure.docpicture)}
                         alt={procedure.docname}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                      <div className="absolute top-4 right-4">
+                        <span className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/90 text-white shadow-lg">
+                          {procedure.doctype || 'General'}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="p-6 flex flex-col flex-grow">
                       {/* Header */}
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-base font-bold mb-2 text-gray-900 leading-tight">{procedure.docname}</h3>
-                          <span className="inline-block px-2.5 py-0.5 bg-green-50 text-green-700 rounded text-xs font-bold border border-green-100 uppercase tracking-wide">
-                            {procedure.doctype || 'General'}
-                          </span>
-                        </div>
-                      </div>
+                      <h3 className="text-lg font-bold mb-2 text-white group-hover:text-emerald-400 transition-colors leading-tight">
+                        {procedure.docname}
+                      </h3>
 
                       {/* Description */}
-                      <p className="text-sm text-gray-600 mb-4 leading-relaxed flex-grow">
+                      <p className="text-sm text-white/50 mb-4 leading-relaxed flex-grow">
                         Complete guide for obtaining {procedure.docname.toLowerCase()}.
                       </p>
 
                       {/* Meta Info */}
-                      <div className="grid grid-cols-1 gap-4 mb-4 text-sm">
-                        <div>
+                      <div className="flex items-center justify-between pt-4 border-t border-white/10 text-xs text-white/40">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">👤</div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>{procedure.created_at ? new Date(procedure.created_at).toLocaleDateString() : 'Recent'}</span>
                         </div>
                       </div>
                     </div>
@@ -389,9 +392,10 @@ export default function Home() {
           <div className="text-center mt-12">
             <Link
               to="/documents"
-              className="inline-block px-10 py-4 bg-green-600 text-white no-underline rounded-full font-bold transition-all hover:bg-green-700 hover:scale-105 shadow-lg"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-primary to-primary-dark text-white no-underline rounded-full font-bold transition-all hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-105"
             >
-              Show More →
+              Show More 
+              <ChevronRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
@@ -401,9 +405,9 @@ export default function Home() {
       <div className="fixed bottom-10 right-10 z-[100]">
         <Link
           to="/propose"
-          className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:bg-green-700 hover:scale-110 transition-all duration-300 border-4 border-white no-underline"
+          className="group w-16 h-16 bg-gradient-to-r from-primary to-primary-dark rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-110 transition-all duration-300 border-2 border-white/20 no-underline"
         >
-          <span className="text-4xl font-light pb-1">+</span>
+          <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
         </Link>
       </div>
     </div>

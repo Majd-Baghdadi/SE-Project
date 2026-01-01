@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { ChevronLeft, Home, Clock, DollarSign, FileText, CheckCircle, AlertCircle, HelpCircle, ChevronRight, Sparkles } from 'lucide-react';
 import SignInModal from '../components/SignInModal';
 import authService from '../services/authService';
 import documentService from '../services/documentService';
@@ -554,9 +555,10 @@ export default function DocumentDetails() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-5 py-6">
-        <div className="flex items-center justify-center py-20">
-          <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white/60">Loading document...</p>
         </div>
       </div>
     );
@@ -564,10 +566,13 @@ export default function DocumentDetails() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-        <div className="max-w-6xl mx-auto px-5 py-6 text-center py-20">
-          <p className="text-red-600 text-xl mb-4">{error}</p>
-          <Link to="/" className="text-primary hover:underline">← Back to Home</Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 flex items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <p className="text-red-400 text-xl mb-4">{error}</p>
+          <Link to="/" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors">
+            <ChevronLeft className="w-4 h-4" /> Back to Home
+          </Link>
         </div>
       </div>
     );
@@ -583,26 +588,63 @@ export default function DocumentDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
-      <div className="max-w-6xl mx-auto px-5 py-6 flex-1 w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 relative overflow-hidden">
+      
+      {/* Home button */}
+      <Link 
+        to="/" 
+        className="fixed top-6 left-6 z-50 group flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white/80 hover:text-white transition-all duration-300 border border-white/20"
+      >
+        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <Home className="w-4 h-4" />
+        <span className="text-sm font-medium">Home</span>
+      </Link>
+
+      {/* Animated background shapes */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-3xl"></div>
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+      </div>
+
+      {/* Floating particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-emerald-400/40 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${4 + Math.random() * 6}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 max-w-6xl mx-auto px-5 py-6 pt-20">
 
         {/* Breadcrumbs */}
-        <nav className="text-sm text-slate-500 mb-4">
-          <Link to="/" className="hover:underline hover:text-primary">Home</Link>
-          <span className="mx-2 text-slate-400">/</span>
-          <span className="hover:underline">{doc.doctype || doc.category}</span>
-          <span className="mx-2 text-slate-400">/</span>
-          <span className="text-primary font-medium">{doc.docname || doc.title}</span>
+        <nav className="text-sm text-white/50 mb-6 flex items-center gap-2">
+          <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+          <ChevronRight className="w-4 h-4" />
+          <span className="hover:text-emerald-400 transition-colors">{doc.doctype || doc.category}</span>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-emerald-400 font-medium">{doc.docname || doc.title}</span>
         </nav>
 
         {/* Hero Section with Document Image */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden mb-6">
           <div className="flex flex-col md:flex-row">
             {/* Document Image */}
             {doc.docimage && (
-              <div className="md:w-72 lg:w-80 flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-50 p-6 flex items-center justify-center">
+              <div className="md:w-72 lg:w-80 flex-shrink-0 bg-gradient-to-br from-emerald-900/50 to-slate-900/50 p-6 flex items-center justify-center">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-primary/5 rounded-xl transform rotate-3"></div>
+                  <div className="absolute inset-0 bg-emerald-500/10 rounded-xl transform rotate-3"></div>
                   <img 
                     src={doc.docimage} 
                     alt={doc.docname}
@@ -616,51 +658,45 @@ export default function DocumentDetails() {
             <div className="flex-1 p-6 md:p-8">
               {/* Document Type Badge */}
               <div className="mb-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   {doc.doctype || 'Document'}
                 </span>
               </div>
 
               {/* Title */}
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">
                 {doc.docname || doc.title}
               </h1>
 
               {/* Meta info cards */}
               <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-3 bg-slate-50 rounded-lg px-4 py-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Processing Time</p>
-                    <p className="font-semibold text-slate-800">{doc.docduration || doc.processingTime}</p>
+                    <p className="text-xs text-white/50">Processing Time</p>
+                    <p className="font-semibold text-white">{doc.docduration || doc.processingTime}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-50 rounded-lg px-4 py-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-green-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Application Cost</p>
-                    <p className="font-semibold text-slate-800">{formatPrice(doc.docprice) || doc.cost}</p>
+                    <p className="text-xs text-white/50">Application Cost</p>
+                    <p className="font-semibold text-white">{formatPrice(doc.docprice) || doc.cost}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-50 rounded-lg px-4 py-3">
-                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Documents Needed</p>
-                    <p className="font-semibold text-slate-800">{doc.docrequirements?.length || 0} items</p>
+                    <p className="text-xs text-white/50">Documents Needed</p>
+                    <p className="font-semibold text-white">{doc.docrequirements?.length || 0} items</p>
                   </div>
                 </div>
               </div>
@@ -673,18 +709,16 @@ export default function DocumentDetails() {
           {/* Left column - Main Content */}
           <main className="flex flex-col gap-6">
             
-            {/* Required Documents Section - Beautiful Card Grid */}
+            {/* Required Documents Section */}
             {doc.docrequirements && doc.docrequirements.length > 0 && (
-              <section className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <section className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">Required Documents</h2>
-                    <p className="text-sm text-slate-500">Prepare these documents before starting</p>
+                    <h2 className="text-lg font-semibold text-white">Required Documents</h2>
+                    <p className="text-sm text-white/50">Prepare these documents before starting</p>
                   </div>
                 </div>
 
@@ -692,30 +726,30 @@ export default function DocumentDetails() {
                   {doc.docrequirements.map((req, idx) => (
                     <div 
                       key={idx} 
-                      className="group relative bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-lg p-4 hover:border-primary/30 hover:shadow-md transition-all duration-200"
+                      className="group relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-emerald-500/30 hover:bg-white/10 transition-all duration-200"
                     >
                       <div className="flex items-start gap-4">
                         {/* Document Number Badge */}
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold shadow-sm">
+                        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-primary to-primary-dark text-white rounded-full flex items-center justify-center text-sm font-semibold shadow-lg">
                           {idx + 1}
                         </div>
                         
                         {/* Document Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-medium text-slate-800 group-hover:text-primary transition-colors">
+                            <h3 className="font-medium text-white group-hover:text-emerald-400 transition-colors">
                               {req.name}
                             </h3>
                             {/* Copy Count Badge */}
                             {req.copies && (
-                              <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                              <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
                                 {req.copies} {req.copies === 1 ? 'copy' : 'copies'}
                               </span>
                             )}
                           </div>
                           
                           {req.description && (
-                            <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+                            <p className="mt-1 text-sm text-white/50 leading-relaxed">
                               {req.description}
                             </p>
                           )}
@@ -725,10 +759,10 @@ export default function DocumentDetails() {
                             <div className="mt-2">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                                 req.type === 'original' 
-                                  ? 'bg-green-100 text-green-700' 
+                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                                   : req.type === 'certified_copy'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-slate-100 text-slate-600'
+                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : 'bg-white/10 text-white/60 border border-white/20'
                               }`}>
                                 {req.type === 'original' && '✓ Original Required'}
                                 {req.type === 'certified_copy' && '📋 Certified Copy'}
@@ -743,13 +777,13 @@ export default function DocumentDetails() {
                 </div>
 
                 {/* Total Documents Summary */}
-                <div className="mt-4 pt-4 border-t border-slate-200">
+                <div className="mt-4 pt-4 border-t border-white/10">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">
-                      <strong className="text-slate-800">{doc.docrequirements.length}</strong> documents required
+                    <span className="text-white/60">
+                      <strong className="text-white">{doc.docrequirements.length}</strong> documents required
                     </span>
-                    <span className="text-slate-500">
-                      Total copies needed: <strong className="text-slate-700">
+                    <span className="text-white/50">
+                      Total copies needed: <strong className="text-white">
                         {doc.docrequirements.reduce((sum, req) => sum + (req.copies || 1), 0)}
                       </strong>
                     </span>
@@ -759,16 +793,14 @@ export default function DocumentDetails() {
             )}
 
             {/* Steps Section */}
-            <section className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <section className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
+                <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Steps to Complete</h2>
-                  <p className="text-sm text-slate-500">Follow these steps in order</p>
+                  <h2 className="text-lg font-semibold text-white">Steps to Complete</h2>
+                  <p className="text-sm text-white/50">Follow these steps in order</p>
                 </div>
               </div>
 
@@ -777,17 +809,17 @@ export default function DocumentDetails() {
                   <div key={idx} className="flex gap-4">
                     {/* Step Number with Line */}
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-semibold shadow-sm">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark text-white rounded-full flex items-center justify-center text-sm font-semibold shadow-lg">
                         {idx + 1}
                       </div>
                       {idx < (doc.docsteps?.length || 0) - 1 && (
-                        <div className="w-0.5 h-full bg-emerald-200 mt-2 min-h-[20px]"></div>
+                        <div className="w-0.5 h-full bg-emerald-500/30 mt-2 min-h-[20px]"></div>
                       )}
                     </div>
                     
                     {/* Step Content */}
                     <div className="flex-1 pb-4">
-                      <p className="text-slate-700 leading-relaxed">{step}</p>
+                      <p className="text-white/80 leading-relaxed">{step}</p>
                     </div>
                   </div>
                 ))}
@@ -798,42 +830,45 @@ export default function DocumentDetails() {
           {/* Right column - Sidebar */}
           <aside className="flex flex-col gap-4 lg:order-none order-first">
             {/* Quick Information */}
-            <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-xl p-5">
-              <h3 className="text-base font-semibold mb-4">Quick Information</h3>
-              <div className="flex justify-between text-sm py-2 border-b border-white/20">
-                <span className="opacity-90">Processing Time</span>
+            <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-2xl p-5 border border-emerald-500/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5" />
+                <h3 className="text-base font-semibold">Quick Information</h3>
+              </div>
+              <div className="flex justify-between text-sm py-3 border-b border-white/20">
+                <span className="opacity-80">Processing Time</span>
                 <strong className="font-medium">{doc.docduration || doc.processingTime}</strong>
               </div>
-              <div className="flex justify-between text-sm py-2 border-b border-white/20">
-                <span className="opacity-90">Application Cost</span>
+              <div className="flex justify-between text-sm py-3">
+                <span className="opacity-80">Application Cost</span>
                 <strong className="font-medium">{formatPrice(doc.docprice) || doc.cost}</strong>
               </div>
             </div>
 
             {/* Report Issue (User) / Update Document (Admin) */}
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-5 border border-white/20">
               {isAdmin ? (
                 <>
-                  <h4 className="text-base font-semibold text-slate-900 mb-2">Update Document</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                  <h4 className="text-base font-semibold text-white mb-2">Update Document</h4>
+                  <p className="text-sm text-white/50 leading-relaxed mb-4">
                     Edit and update the information for this document.
                   </p>
                   <button
                     onClick={() => navigate(`/admin/document/${docId}/update`)}
-                    className="w-full py-2.5 px-4 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+                    className="w-full py-3 px-4 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
                   >
                     ✏️ Update Document
                   </button>
                 </>
               ) : (
                 <>
-                  <h4 className="text-base font-semibold text-slate-900 mb-2">Report an Issue</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                  <h4 className="text-base font-semibold text-white mb-2">Report an Issue</h4>
+                  <p className="text-sm text-white/50 leading-relaxed mb-4">
                     Please report any errors or unclear information found in this document, and we will ensure they are handled appropriately.
                   </p>
                   <button
                     onClick={handleReportIssue}
-                    className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                    className="w-full py-3 px-4 bg-white/10 text-white border border-white/20 rounded-xl text-sm font-medium hover:bg-white/20 transition-all"
                   >
                     ✏️ Report Issue
                   </button>
@@ -843,15 +878,16 @@ export default function DocumentDetails() {
 
             {/* Related Documents */}
             {relatedDocuments.length > 0 && (
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                <h4 className="text-base font-semibold text-slate-900 mb-3">Related Documents</h4>
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-5 border border-white/20">
+                <h4 className="text-base font-semibold text-white mb-3">Related Documents</h4>
                 <ul className="space-y-2">
                   {relatedDocuments.map((relDoc) => (
                     <li key={relDoc.docid}>
                       <Link
                         to={`/document/${relDoc.docid}`}
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-2"
                       >
+                        <ChevronRight className="w-4 h-4" />
                         {relDoc.docname}
                       </Link>
                     </li>
@@ -861,14 +897,17 @@ export default function DocumentDetails() {
             )}
 
             {/* Need Help */}
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-              <h4 className="text-base font-semibold text-slate-900 mb-2">Need Help?</h4>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-5 border border-white/20">
+              <div className="flex items-center gap-2 mb-2">
+                <HelpCircle className="w-5 h-5 text-emerald-400" />
+                <h4 className="text-base font-semibold text-white">Need Help?</h4>
+              </div>
+              <p className="text-sm text-white/50 leading-relaxed mb-4">
                 Contact our support team for assistance with your application.
               </p>
               <button
                 onClick={() => navigate('/contact')}
-                className="w-full py-3 px-4 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+                className="w-full py-3 px-4 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
               >
                 Contact Support
               </button>
@@ -876,47 +915,6 @@ export default function DocumentDetails() {
           </aside>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-slate-50 border-t border-slate-200 pt-12 pb-6 px-5 mt-auto">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div>
-            <h5 className="text-sm font-semibold text-slate-900 mb-4">About</h5>
-            <ul className="space-y-2.5">
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">About Us</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Our Mission</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Contact</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="text-sm font-semibold text-slate-900 mb-4">Services</h5>
-            <ul className="space-y-2.5">
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">All Services</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Documents</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Certificates</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="text-sm font-semibold text-slate-900 mb-4">Support</h5>
-            <ul className="space-y-2.5">
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Help Center</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">FAQ</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Guidelines</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="text-sm font-semibold text-slate-900 mb-4">Legal</h5>
-            <ul className="space-y-2.5">
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Privacy Policy</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Terms of Service</a></li>
-              <li><a href="#" className="text-sm text-slate-500 hover:text-primary">Accessibility</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-slate-200 text-center text-sm text-slate-500">
-          © 2024 Government Services Portal. All rights reserved.
-        </div>
-      </footer>
 
       {/* Sign In Modal */}
       <SignInModal

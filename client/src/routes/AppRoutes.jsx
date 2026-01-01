@@ -6,8 +6,7 @@ import AllDocuments from '../pages/AllDocuments'
 
 import ContactUs from '../pages/ContactUs'
 import AboutUs from '../pages/AboutUs'
-import SignIn from '../pages/SignIn'
-import SignUp from '../pages/SignUp'
+import AuthPage from '../pages/AuthPage'
 import RecoverPassword from '../pages/RecoverPassword'
 import VerifyEmail from '../pages/VerifyEmail'
 import ResetPassword from '../pages/ResetPassword'
@@ -29,11 +28,12 @@ import ProposeDocument from '../pages/ProposeDocument'
 export default function AppRoutes() {
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
 
   return (
     <div className="flex flex-col min-h-screen">
-      <NavBar />
-      <main className={`flex-1 ${!isHome ? 'pt-20' : ''}`}>
+      {!isAuthPage && <NavBar />}
+      <main className={`flex-1 ${!isHome && !isAuthPage ? 'pt-20' : ''}`}>
         <Routes>
           {/* Sprint 1 Routes - Public */}
           <Route path="/" element={<Home />} />
@@ -43,8 +43,8 @@ export default function AppRoutes() {
           <Route path="/conntact" element={<ContactUs />} />
 
           {/* Authentication Routes */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage />} />
           <Route path="/verify" element={<VerifyEmail />} />
           <Route path="/recover-password" element={<RecoverPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
