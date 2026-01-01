@@ -565,18 +565,27 @@ export default function ProfileForm() {
       />
 
       {loading ? (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${authUser?.role === 'admin' ? 'from-slate-900 via-slate-800 to-slate-900' : 'from-slate-900 via-emerald-900 to-slate-900'}`}>
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
             <p className="text-white/60">Loading profile...</p>
           </div>
         </div>
       ) : (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4 md:px-8 relative">
-          {/* Background decorations */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className={`min-h-screen bg-gradient-to-br ${authUser?.role === 'admin' ? 'from-slate-900 via-slate-800 to-slate-900' : 'from-slate-900 via-emerald-900 to-slate-900'} py-8 px-4 md:px-8 relative overflow-hidden`}>
+          {/* Animated background shapes */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-3xl"></div>
+            
+            {/* Geometric shapes */}
+            <div className="absolute top-20 right-20 w-32 h-32 border border-white/10 rounded-2xl rotate-12 animate-float"></div>
+            <div className="absolute bottom-32 left-20 w-24 h-24 border border-emerald-500/20 rounded-full animate-float delay-1000"></div>
+            <div className="absolute top-1/3 right-1/4 w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-lg rotate-45 animate-float delay-500"></div>
+            
+            {/* Grid pattern overlay */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
           </div>
 
           <div className="max-w-4xl mx-auto relative z-10">
