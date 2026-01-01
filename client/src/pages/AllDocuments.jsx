@@ -138,11 +138,11 @@ export default function AllDocuments() {
       {/* Home button */}
       <Link 
         to="/" 
-        className="fixed top-6 left-6 z-50 group flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white/80 hover:text-white transition-all duration-300 border border-white/20"
+        className="fixed top-24 left-4 md:top-6 md:left-6 z-30 group flex items-center gap-2 px-3 py-2 md:px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white/80 hover:text-white transition-all duration-300 border border-white/20"
       >
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <Home className="w-4 h-4" />
-        <span className="text-sm font-medium">Home</span>
+        <span className="text-sm font-medium hidden sm:inline">Home</span>
       </Link>
 
       {/* Animated background shapes */}
@@ -176,20 +176,20 @@ export default function AllDocuments() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 pt-20 pb-8">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 border border-white/20">
-            <FileText className="w-8 h-8 text-emerald-400" />
+      <div className="relative z-10 pt-28 md:pt-24 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4 md:mb-6 border border-white/20">
+            <FileText className="w-7 h-7 md:w-8 md:h-8 text-emerald-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">All Procedures</h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto">Browse and search all available administrative procedures</p>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">All Procedures</h1>
+          <p className="text-white/60 text-base md:text-lg max-w-2xl mx-auto">Browse and search all available administrative procedures</p>
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pb-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         {/* Filters Section */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-white/20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 md:p-6 mb-6 md:mb-8 border border-white/20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Search */}
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2 flex items-center gap-2">

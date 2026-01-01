@@ -572,7 +572,7 @@ export default function ProfileForm() {
           </div>
         </div>
       ) : (
-        <div className={`min-h-screen bg-gradient-to-br ${authUser?.role === 'admin' ? 'from-slate-900 via-slate-800 to-slate-900' : 'from-slate-900 via-emerald-900 to-slate-900'} py-8 px-4 md:px-8 relative overflow-hidden`}>
+        <div className={`min-h-screen bg-gradient-to-br ${authUser?.role === 'admin' ? 'from-slate-900 via-slate-800 to-slate-900' : 'from-slate-900 via-emerald-900 to-slate-900'} pt-24 pb-8 px-4 md:px-8 relative overflow-hidden`}>
           {/* Animated background shapes */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>

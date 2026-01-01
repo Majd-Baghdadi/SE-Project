@@ -549,11 +549,11 @@ export default function DocumentDetails() {
       {/* Home button */}
       <Link 
         to="/" 
-        className="fixed top-6 left-6 z-50 group flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white/80 hover:text-white transition-all duration-300 border border-white/20"
+        className="fixed top-24 left-4 md:top-6 md:left-6 z-30 group flex items-center gap-2 px-3 py-2 md:px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white/80 hover:text-white transition-all duration-300 border border-white/20"
       >
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <Home className="w-4 h-4" />
-        <span className="text-sm font-medium">Home</span>
+        <span className="text-sm font-medium hidden sm:inline">Home</span>
       </Link>
 
       {/* Animated background shapes */}
@@ -582,10 +582,10 @@ export default function DocumentDetails() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-5 py-6 pt-20">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-5 py-6 pt-28 md:pt-24">
 
         {/* Breadcrumbs */}
-        <nav className="text-sm text-white/50 mb-6 flex items-center gap-2">
+        <nav className="text-sm text-white/50 mb-6 flex items-center gap-2 flex-wrap overflow-hidden">
           <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
           <ChevronRight className="w-4 h-4" />
           <span className="hover:text-emerald-400 transition-colors">{doc.doctype || doc.category}</span>
@@ -595,10 +595,10 @@ export default function DocumentDetails() {
 
         {/* Hero Section with Document Image */}
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden mb-6">
-          <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col md:flex-row gap-0">
             {/* Document Image */}
             {doc.docimage && (
-              <div className="md:w-72 lg:w-80 flex-shrink-0 bg-gradient-to-br from-emerald-900/50 to-slate-900/50 p-6 flex items-center justify-center">
+              <div className="w-full md:w-72 lg:w-80 flex-shrink-0 bg-gradient-to-br from-emerald-900/50 to-slate-900/50 p-4 md:p-6 flex items-center justify-center">
                 <div className="relative">
                   <div className="absolute inset-0 bg-emerald-500/10 rounded-xl transform rotate-3"></div>
                   <img 
@@ -625,34 +625,34 @@ export default function DocumentDetails() {
               </h1>
 
               {/* Meta info cards */}
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-blue-400" />
+              <div className="flex flex-wrap gap-3 md:gap-4">
+                <div className="flex items-center gap-2 md:gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-3 md:px-4 py-2 md:py-3 border border-white/10 flex-1 min-w-[140px] sm:flex-none">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-white/50">Processing Time</p>
-                    <p className="font-semibold text-white">{doc.docduration || doc.processingTime}</p>
+                    <p className="font-semibold text-white text-sm md:text-base truncate">{doc.docduration || doc.processingTime}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-green-400" />
+                <div className="flex items-center gap-2 md:gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-3 md:px-4 py-2 md:py-3 border border-white/10 flex-1 min-w-[140px] sm:flex-none">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-white/50">Application Cost</p>
-                    <p className="font-semibold text-white">{formatPrice(doc.docprice) || doc.cost}</p>
+                    <p className="font-semibold text-white text-sm md:text-base truncate">{formatPrice(doc.docprice) || doc.cost}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-amber-400" />
+                <div className="flex items-center gap-2 md:gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-3 md:px-4 py-2 md:py-3 border border-white/10 flex-1 min-w-[140px] sm:flex-none">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-amber-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-white/50">Documents Needed</p>
-                    <p className="font-semibold text-white">{doc.docrequirements?.length || 0} items</p>
+                    <p className="font-semibold text-white text-sm md:text-base">{doc.docrequirements?.length || 0} items</p>
                   </div>
                 </div>
               </div>
@@ -661,7 +661,7 @@ export default function DocumentDetails() {
         </div>
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-4 md:gap-6">
           {/* Left column - Main Content */}
           <main className="flex flex-col gap-6">
             

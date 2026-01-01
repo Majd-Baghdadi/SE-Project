@@ -598,7 +598,7 @@ const ProposeDocumentPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Animated background shapes like ContactUs */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>

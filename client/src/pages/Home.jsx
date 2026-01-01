@@ -402,12 +402,12 @@ export default function Home() {
       </section>
 
       {/* Floating Action Button (FAB) */}
-      <div className="fixed bottom-10 right-10 z-[100]">
+      <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[50]">
         <Link
           to="/propose"
-          className="group w-16 h-16 bg-gradient-to-r from-primary to-primary-dark rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-110 transition-all duration-300 border-2 border-white/20 no-underline"
+          className="group w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-primary to-primary-dark rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-110 transition-all duration-300 border-2 border-white/20 no-underline"
         >
-          <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
+          <Plus className="w-7 h-7 md:w-8 md:h-8 group-hover:rotate-90 transition-transform duration-300" />
         </Link>
       </div>
     </div>

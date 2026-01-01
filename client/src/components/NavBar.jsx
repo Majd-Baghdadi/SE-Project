@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Menu, X, Sparkles } from 'lucide-react'
 import authService from '../services/authService'
 import { useAuth } from '../context/AuthContext'
@@ -25,6 +26,18 @@ export default function NavBar() {
     setIsMobileMenuOpen(false);
   }, [location]);
 
+  // Lock body scroll when sidebar is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   useEffect(() => {
     const handleAuthChange = () => {
       checkAuth();
@@ -47,7 +60,7 @@ export default function NavBar() {
     // ] : []),
     ...(isAuthenticated ? [{ title: isAdmin ? 'Add Document' : 'Propose Document', path: '/propose' }] : []),
     { title: 'About Us', path: '/about' },
-    { title: 'Contact Us', path: '/conntact' },
+    { title: 'Contact Us', path: '/contact' },
   ];
 
   // Update sliding indicator position
@@ -71,13 +84,13 @@ export default function NavBar() {
   const isTransparent = isHome && !isScrolled;
 
   return (
-    <nav className={`z-50 font-sans transition-all duration-300 fixed top-0 w-full ${isTransparent 
+    <nav className={`z-[100] font-sans transition-all duration-300 fixed top-0 w-full ${isTransparent 
       ? 'bg-transparent border-transparent' 
       : 'bg-slate-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/10'
       }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 no-underline group z-50 relative">
+        <Link to="/" className="flex items-center gap-3 no-underline group z-[100] relative">
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center text-white font-bold transform group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-emerald-500/30">
             DZ
           </div>
@@ -146,91 +159,95 @@ export default function NavBar() {
 
         {/* Mobile Menu Button */}
         <button
-          onClick={() => setIsMobileMenuOpen(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMobileMenuOpen(prev => !prev);
+          }}
           className="lg:hidden p-2 rounded-xl transition-colors text-white hover:bg-white/10"
+          aria-label="Toggle menu"
         >
           <Menu className="w-7 h-7" />
         </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      <div
-        className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${isMobileMenuOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
-          }`}
-      >
-        {/* Backdrop */}
-        <div
-          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0'
-            }`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
+      {/* Mobile Menu Overlay - Rendered via Portal to document.body */}
+      {isMobileMenuOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/90"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
 
-        {/* Sidebar */}
-        <div
-          className={`absolute right-0 top-0 bottom-0 w-[80%] max-w-sm bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-out flex flex-col border-l border-white/10 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
-        >
-          {/* Sidebar Header */}
-          <div className="p-6 border-b border-white/10 flex justify-between items-center">
-            <span className="text-lg font-bold text-white">Menu</span>
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="p-2 text-white/60 hover:bg-white/10 rounded-full transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+          {/* Sidebar */}
+          <div className="fixed top-0 right-0 h-dvh w-[75%] max-w-[320px] bg-slate-900 shadow-2xl flex flex-col border-l border-white/10 animate-slide-in-right overflow-hidden">
+            {/* Sidebar Header */}
+            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-slate-900 shrink-0">
+              <span className="text-lg font-bold text-white">Menu</span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-white/60 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-          {/* Sidebar Links */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-2">
-            {navLinks.map((link) => {
-              const active = isActive(link.path);
-              return (
+            {/* Sidebar Links */}
+            <div className="flex-1 p-4 space-y-1 bg-slate-900 overflow-y-auto">
+              {navLinks.map((link) => {
+                const active = isActive(link.path);
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-3 rounded-xl font-medium transition-all duration-200 no-underline ${active
+                      ? 'bg-emerald-500/20 text-emerald-400 border-l-4 border-emerald-500 flex items-center justify-between'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      }`}
+                  >
+                    {link.title}
+                    {active && <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block ml-auto" />}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Sidebar Footer (Actions) */}
+            <div className="p-4 border-t border-white/10 bg-slate-800/50 space-y-3 shrink-0">
+              {isAdmin && (
                 <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`block px-4 py-3.5 rounded-xl font-medium transition-all duration-200 no-underline flex items-center justify-between ${active
-                    ? 'bg-emerald-500/20 text-emerald-400 border-l-[6px] border-emerald-500'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white hover:pl-6'
+                  to="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold shadow-md hover:shadow-purple-500/30 transition-all no-underline"
+                >
+                  Admin Dashboard
+                </Link>
+              )}
+              {isAuthenticated ? (
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl font-bold border-2 transition-colors no-underline ${isActive('/profile') ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-white/5 border-white/20 text-white hover:border-white/30'
                     }`}
                 >
-                  {link.title}
-                  {active && <span className="w-2 h-2 rounded-full bg-emerald-400" />}
+                  <span>My Profile</span>
+                  <span>👤</span>
                 </Link>
-              );
-            })}
+              ) : (
+                <Link
+                  to="/signin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all no-underline"
+                >
+                  Get Started
+                </Link>
+              )}
+            </div>
           </div>
-
-          {/* Sidebar Footer (Actions) */}
-          <div className="p-6 border-t border-white/10 bg-slate-800/50 space-y-3">
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="block w-full text-center px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold shadow-md hover:shadow-purple-500/30 transition-all no-underline"
-              >
-                Admin Dashboard
-              </Link>
-            )}
-            {isAuthenticated ? (
-              <Link
-                to="/profile"
-                className={`flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl font-bold border-2 transition-colors no-underline ${isActive('/profile') ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-white/5 border-white/20 text-white hover:border-white/30'
-                  }`}
-              >
-                <span>My Profile</span>
-                <span>👤</span>
-              </Link>
-            ) : (
-              <Link
-                to="/signin"
-                className="block w-full text-center px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all no-underline"
-              >
-                Get Started
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+        </div>,
+        document.body
+      )}
     </nav>
   )
 }

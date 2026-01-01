@@ -92,3 +92,17 @@ body {
   width: 100%;
   overflow-x: hidden;
 }
+
+/* Mobile sidebar slide-in animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
