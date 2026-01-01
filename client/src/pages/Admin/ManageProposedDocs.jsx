@@ -354,11 +354,16 @@ export default function ManageProposedDocs() {
                             <span className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-3">Required Documents</span>
                             <div className="flex flex-wrap gap-2">
                               {selectedProposal.relateddocs && Array.isArray(selectedProposal.relateddocs) && selectedProposal.relateddocs.length > 0 ? (
-                                selectedProposal.relateddocs.map((doc, idx) => (
-                                  <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
-                                    {docLookup[doc] || `Document ${doc}`}
-                                  </span>
-                                ))
+                                selectedProposal.relateddocs.map((doc, idx) => {
+                                  // Handle both object and string ID formats
+                                  const docId = typeof doc === 'object' ? (doc.docid || doc.id) : doc;
+                                  const docName = typeof doc === 'object' ? doc.docname : docLookup[docId];
+                                  return (
+                                    <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
+                                      {docName || `Unknown Document`}
+                                    </span>
+                                  );
+                                })
                               ) : (
                                 <span className="text-sm text-white/40 italic">No related documents specified</span>
                               )}
