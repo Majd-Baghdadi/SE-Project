@@ -94,9 +94,7 @@ const AboutUsPage = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-emerald-900/50 to-slate-900"></div>
           <div className="relative z-10 text-center px-4 sm:px-6 lg:px-[56px] max-w-[1440px] mx-auto">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 border border-white/20">
-              <Users className="w-8 h-8 text-emerald-400" />
-            </div>
+            
             <h1 className="text-white text-center mb-4 sm:mb-6 text-4xl sm:text-5xl md:text-6xl font-bold">
               About Us
             </h1>
@@ -113,9 +111,7 @@ const AboutUsPage = () => {
               <div className="flex flex-col items-center gap-6">
                 {/* Section Header */}
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
-                    <Target className="w-7 h-7 text-white" />
-                  </div>
+                 
                   <h2 className="text-white text-center text-3xl sm:text-4xl font-bold">
                     Our Service
                   </h2>
@@ -144,9 +140,7 @@ const AboutUsPage = () => {
               <div className="flex flex-col items-center gap-6">
                 {/* Section Header */}
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
-                    <Eye className="w-7 h-7 text-white" />
-                  </div>
+                 
                   <h2 className="text-white text-center text-3xl sm:text-4xl font-bold">
                     Our Vision
                   </h2>
@@ -175,9 +169,7 @@ const AboutUsPage = () => {
               <div className="flex flex-col items-center">
                 {/* Section Header */}
                 <div className="flex flex-col items-center gap-4 mb-10">
-                  <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
-                    <HelpCircle className="w-7 h-7 text-white" />
-                  </div>
+                  
                   <h2 className="text-white text-center text-3xl sm:text-4xl font-bold">
                     Frequently Asked Questions
                   </h2>
@@ -231,9 +223,7 @@ const AboutUsPage = () => {
               <div className="flex flex-col items-center">
                 {/* Section Header */}
                 <div className="flex flex-col items-center gap-4 mb-10 sm:mb-12">
-                  <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-7 h-7 text-white" />
-                  </div>
+                 
                   <h2 className="text-white text-center text-3xl sm:text-4xl font-bold">
                     Our Team
                   </h2>

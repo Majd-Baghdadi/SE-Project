@@ -598,7 +598,7 @@ const ProposeDocumentPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 pt-24 pb-32 px-4 sm:px-6 lg:px-8 relative">
         {/* Animated background shapes like ContactUs */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>
@@ -797,31 +797,31 @@ const ProposeDocumentPage = () => {
             </div>
 
             {/* Category */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all overflow-visible">
-              <CustomDropdown
-                label="Category"
-                icon={Tag}
-                options={categories}
-                value={formData.category}
-                onChange={handleCategoryChange}
-                placeholder="Select category"
-                error={errors.category}
-              />
-            </div>
+             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all relative z-20">
+            <CustomDropdown
+              label="Category"
+              icon={Tag}
+              options={categories}
+              value={formData.category}
+              onChange={(value) => setFormData({ ...formData, category: value })}
+              placeholder="Select category"
+              error={errors.category}
+            />
+          </div>
 
             {/* Related Documents */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all overflow-visible">
-              <MultiSelectDropdown
-                label="Related Documents"
-                options={availableDocuments}
-                selected={formData.relatedDocuments}
-                onChange={handleRelatedDocumentsChange}
-                error={errors.relatedDocuments}
-              />
-              <p className="text-white/40 text-sm mt-2">
-                Optional - Select documents that are related to this one
-              </p>
-            </div>
+             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all relative z-10">
+            <MultiSelectDropdown
+              label="Related Documents"
+              options={availableDocuments}
+              selected={formData.relatedDocuments}
+              onChange={(updated) => setFormData({ ...formData, relatedDocuments: updated })}
+              error={errors.relatedDocuments}
+            />
+            <p className="text-white/40 text-sm mt-3">
+              Optional - Select documents that are related to this one
+            </p>
+          </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">

@@ -178,9 +178,6 @@ export default function AllDocuments() {
       {/* Header */}
       <div className="relative z-10 pt-28 md:pt-24 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4 md:mb-6 border border-white/20">
-            <FileText className="w-7 h-7 md:w-8 md:h-8 text-emerald-400" />
-          </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">All Procedures</h1>
           <p className="text-white/60 text-base md:text-lg max-w-2xl mx-auto">Browse and search all available administrative procedures</p>
         </div>
