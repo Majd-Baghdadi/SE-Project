@@ -25,7 +25,7 @@ async function getDocumentDetails(req,res) {
     try {
         const {data,error}= await Document.getDocumentDetails(id);
         if (error) {
-            res.status(404).json({
+            return res.status(404).json({
                 error:error.message,
             })
         }

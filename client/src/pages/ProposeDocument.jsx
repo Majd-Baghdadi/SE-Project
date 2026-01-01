@@ -122,7 +122,7 @@ const CustomDropdown = ({ label, icon: Icon, options, value, onChange, placehold
       {error && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {error}</p>}
 
       {open && (
-        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-50">
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-[9999]">
           {options.map((option) => (
             <div
               key={option}
@@ -218,7 +218,7 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
       {error && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {error}</p>}
 
       {open && (
-        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-50">
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-[9999]">
           {options.map((doc) => (
             <div
               key={doc.id}
@@ -646,7 +646,7 @@ const ProposeDocumentPage = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 relative">
             {/* Picture Upload */}
             <div className={`bg-white/10 backdrop-blur-xl border ${errors.picture ? 'border-red-500/50' : 'border-white/20'} rounded-2xl p-6 hover:bg-white/[0.12] transition-all`}>
               <div className="flex items-center gap-3 mb-4">
@@ -797,7 +797,7 @@ const ProposeDocumentPage = () => {
             </div>
 
             {/* Category */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all overflow-visible">
               <CustomDropdown
                 label="Category"
                 icon={Tag}
@@ -810,7 +810,7 @@ const ProposeDocumentPage = () => {
             </div>
 
             {/* Related Documents */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all overflow-visible">
               <MultiSelectDropdown
                 label="Related Documents"
                 options={availableDocuments}

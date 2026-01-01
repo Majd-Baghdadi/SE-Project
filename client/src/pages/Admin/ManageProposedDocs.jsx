@@ -37,7 +37,7 @@ export default function ManageProposedDocs() {
         const lookup = {};
         docs.forEach(d => {
           if (d.docid && d.docname) {
-            lookup[d.docid] = d.docname;
+            lookup[String(d.docid).trim()] = d.docname;
           }
         });
         setDocLookup(lookup);
@@ -93,11 +93,14 @@ export default function ManageProposedDocs() {
   };
 
   const handleReject = async (proposalId) => {
+    console.log('handleReject called with proposalId:', proposalId);
+    console.log('Type of proposalId:', typeof proposalId);
     setConfirmReject(proposalId);
   };
 
   const confirmRejectAction = async (proposalId) => {
     try {
+      console.log('Attempting to reject proposal with ID:', proposalId);
       await adminService.discardProposal(proposalId);
       setProposals(prevProposals => prevProposals.filter(p => p.proposeddocid !== proposalId));
       setNotification({ message: 'Proposal rejected successfully!', type: 'success' });
@@ -106,7 +109,8 @@ export default function ManageProposedDocs() {
       }
     } catch (error) {
       console.error('Error rejecting proposal:', error);
-      setNotification({ message: 'Failed to reject proposal. Please try again.', type: 'error' });
+      const errorMessage = error.message || 'Failed to reject proposal. Please try again.';
+      setNotification({ message: errorMessage, type: 'error' });
     } finally {
       setConfirmReject(null);
     }
@@ -122,27 +126,46 @@ export default function ManageProposedDocs() {
 
       if (response.success && response.data) {
         const proposalData = response.data;
-        
-        // Fetch related document names if there are relateddocs
-        if (proposalData.relateddocs && Array.isArray(proposalData.relateddocs) && proposalData.relateddocs.length > 0) {
-          // Fetch all documents to get names
-          const allDocs = await documentService.getAllDocuments();
-          const lookup = {};
-          if (Array.isArray(allDocs)) {
-            allDocs.forEach(d => {
-              if (d.docid && d.docname) {
-                lookup[d.docid] = d.docname;
-              }
-            });
+
+        // Parse relateddocs if it's a string
+        let parsedRelatedDocs = proposalData.relateddocs;
+        if (typeof parsedRelatedDocs === 'string') {
+          try {
+            parsedRelatedDocs = JSON.parse(parsedRelatedDocs);
+          } catch (e) {
+            console.warn("Failed to parse relateddocs", e);
+            parsedRelatedDocs = parsedRelatedDocs.replace(/^\{|\}$/g, '').split(',').map(s => s.trim().replace(/^"|"$/g, ''));
           }
-          
-          // Map IDs to names
-          const relatedDocsWithNames = proposalData.relateddocs.map(docId => ({
-            docid: docId,
-            docname: lookup[docId] || null
-          }));
-          proposalData.relateddocsWithNames = relatedDocsWithNames;
         }
+        
+        // Ensure it's an array
+        if (!Array.isArray(parsedRelatedDocs)) {
+          parsedRelatedDocs = [];
+        }
+        
+        console.log('Parsed related docs:', parsedRelatedDocs);
+        console.log('DocLookup object:', docLookup);
+        
+        // Map IDs to names using the docLookup that was populated on mount
+        // Filter out deleted documents (those not found in lookup)
+        const relatedDocuments = parsedRelatedDocs
+          .map(docId => {
+            const cleanId = String(docId).trim();
+            const docName = docLookup[cleanId];
+            
+            console.log(`Mapping ${cleanId} -> ${docName || 'DELETED'}`);
+            
+            return docName ? {
+              docid: cleanId,
+              docname: docName
+            } : null;
+          })
+          .filter(doc => doc !== null); // Remove deleted documents
+        
+        proposalData.relateddocs = parsedRelatedDocs;
+        proposalData.relatedDocuments = relatedDocuments;
+        
+        console.log('Final relatedDocuments:', relatedDocuments);
         
         setSelectedProposal(prev => ({ ...prev, ...proposalData }));
       }
@@ -376,16 +399,16 @@ export default function ManageProposedDocs() {
                           <div className="p-5 bg-white/10 rounded-xl border border-white/20">
                             <span className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-3">Required Documents</span>
                             <div className="flex flex-wrap gap-2">
-                              {selectedProposal.relateddocsWithNames && Array.isArray(selectedProposal.relateddocsWithNames) && selectedProposal.relateddocsWithNames.length > 0 ? (
-                                selectedProposal.relateddocsWithNames.map((doc, idx) => (
-                                  <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
-                                    {doc.docname || doc.docid}
+                              {selectedProposal.relatedDocuments && Array.isArray(selectedProposal.relatedDocuments) && selectedProposal.relatedDocuments.length > 0 ? (
+                                selectedProposal.relatedDocuments.map((doc) => (
+                                  <span key={doc.docid} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
+                                    {doc.docname}
                                   </span>
                                 ))
                               ) : selectedProposal.relateddocs && Array.isArray(selectedProposal.relateddocs) && selectedProposal.relateddocs.length > 0 ? (
-                                selectedProposal.relateddocs.map((docId, idx) => (
-                                  <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
-                                    {docLookup[docId] || docId}
+                                selectedProposal.relateddocs.map((docId) => (
+                                  <span key={docId} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
+                                    {docLookup[String(docId).trim()] || docId}
                                   </span>
                                 ))
                               ) : (
