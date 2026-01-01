@@ -148,6 +148,14 @@ const ReportIssuePage = () => {
     price: '',
     processingTime: ''
   });
+  
+  // Store original data to detect changes
+  const [originalData, setOriginalData] = useState({
+    steps: [''],
+    documents: [],
+    price: '',
+    processingTime: ''
+  });
 
   const [availableDocuments, setAvailableDocuments] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(true);
@@ -178,10 +186,9 @@ const ReportIssuePage = () => {
           const docResponse = await fetch(`http://localhost:8000/api/documents/${docid}`);
           const docData = await docResponse.json();
 
-          if (docData.document) { // Assuming structure is { document: { ... } }
-            const doc = docData.document;
-            // Only pre-fill if the user hasn't typed anything yet (though on mount they haven't)
-            // We use functional updates or just set it directly since it's mount.
+          if (docData.data) { 
+            const doc = docData.data;
+            const relatedDocs = docData.relatedDocuments || [];
 
             // Parse steps if they are a string, or use as is if array
             let parsedSteps = [''];
@@ -196,23 +203,17 @@ const ReportIssuePage = () => {
                 parsedSteps = [doc.steps];
               }
             }
-
-            setFormData(prev => ({
-              ...prev,
+            
+            const initialData = {
               steps: parsedSteps.length > 0 ? parsedSteps : [''],
               price: doc.docprice ? doc.docprice.toString() : '',
-              processingTime: doc.duration ? doc.duration.toString() : '',
-              // We probably don't pre-fill "documents" (related docs) unless we want to, 
-              // but typically 'documents' in fix form means "documents required that are WRONG".
-              // If the user wants to say "You missed the Birth Certificate", they add it.
-              // Pre-filling related docs might be confusing if the field is for "What is wrong".
-              // However, if the field is "Related Documents List", then pre-filling is good.
-              // Let's assume for now we leave Documents empty so they can add the MISSING ones,
-              // OR we pre-fill it so they can remove WRONG ones. 
-              // Given the prompt "correct step 2", pre-filling seems to be the mental model of "Editing".
-              // Let's pre-fill related docs too if available.
-              documents: Array.isArray(doc.relateddocs) ? doc.relateddocs : []
-            }));
+              // Append 'days' if it's just a number to satisfy validation
+              processingTime: doc.duration ? `${doc.duration} days` : '',
+              documents: relatedDocs.map(d => d.docid)
+            };
+
+            setFormData(initialData);
+            setOriginalData(initialData);
           }
         }
 
@@ -298,26 +299,46 @@ const ReportIssuePage = () => {
     console.log('📤 Submitting fix for document:', docid);
     console.log('📤 Form data:', formData);
 
-    // Convert processing time to integer (days) before sending
-    // Filter out empty steps and stringify
+    // Calculate changes
+    const changes = {};
+
+    // Check Price
+    if (formData.price !== originalData.price) {
+      changes.price = formData.price;
+    }
+
+    // Check Processing Time
+    if (formData.processingTime !== originalData.processingTime) {
+      changes.processingTime = convertTimeToInteger(formData.processingTime);
+    }
+
+    // Check Steps
     const validSteps = formData.steps.filter(s => s.trim() !== '');
+    const originalValidSteps = originalData.steps.filter(s => s.trim() !== '');
+    
+    if (JSON.stringify(validSteps) !== JSON.stringify(originalValidSteps)) {
+      changes.steps = validSteps.length > 0 ? JSON.stringify(validSteps) : '';
+    }
 
-    const processedFormData = {
-      ...formData,
-      processingTime: formData.processingTime
-        ? convertTimeToInteger(formData.processingTime)
-        : formData.processingTime,
-      documents: JSON.stringify(formData.documents), // Convert array to string
-      steps: validSteps.length > 0 ? JSON.stringify(validSteps) : '' // Only send if valid steps exist
-    };
+    // Check Documents
+    const sortedCurrentDocs = [...formData.documents].sort();
+    const sortedOriginalDocs = [...originalData.documents].sort();
+    
+    if (JSON.stringify(sortedCurrentDocs) !== JSON.stringify(sortedOriginalDocs)) {
+      changes.documents = JSON.stringify(formData.documents);
+    }
 
-    // If no valid steps but steps was intended (touched), maybe send empty string or null? 
-    // The previous logic for hasAtLeastOneFieldFilled ensures we have *something* to send.
+    // If no changes, alert user
+    if (Object.keys(changes).length === 0) {
+      Swal.fire('No Changes', 'You haven\'t made any changes to the document.', 'info');
+      setIsSubmitting(false);
+      return;
+    }
 
-    console.log('📤 Processed form data (time converted to days):', processedFormData);
+    console.log('📤 Processed form data (changes only):', changes);
 
     try {
-      const response = await fixService.submitFix(docid, processedFormData);
+      const response = await fixService.submitFix(docid, changes);
 
       if (response.success) {
         console.log('✅ Fix submitted successfully');

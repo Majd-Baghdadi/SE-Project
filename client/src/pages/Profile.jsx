@@ -310,6 +310,30 @@ export default function ProfileForm() {
 
       if (res.success && res.data) {
         const fullData = { ...fix, ...res.data };
+        
+        // Parse stepsDetails if it's a string
+        if (typeof fullData.stepsDetails === 'string') {
+            try {
+                fullData.stepsDetails = JSON.parse(fullData.stepsDetails);
+            } catch (e) {
+                // If not JSON, treat as single string in array
+                fullData.stepsDetails = [fullData.stepsDetails];
+            }
+        } else if (!fullData.stepsDetails) {
+             fullData.stepsDetails = [''];
+        }
+
+        // Parse relatedDocsDetails if it's a string (IDs)
+        if (typeof fullData.relatedDocsDetails === 'string') {
+            try {
+                fullData.relatedDocsDetails = JSON.parse(fullData.relatedDocsDetails);
+            } catch (e) {
+                 fullData.relatedDocsDetails = [];
+            }
+        } else if (!fullData.relatedDocsDetails) {
+            fullData.relatedDocsDetails = [];
+        }
+
         setViewModal(prev => ({ ...prev, data: fullData, loading: false, detailsLoaded: true }));
         if (isEdit) {
           setEditData(fullData);
@@ -369,6 +393,13 @@ export default function ProfileForm() {
       if (viewModal.type === 'doc') {
         res = await proposalService.editProposedDocument(id, sanitizedPayload);
       } else {
+        // For fix, stringify array fields
+        if (Array.isArray(sanitizedPayload.stepsDetails)) {
+             sanitizedPayload.stepsDetails = JSON.stringify(sanitizedPayload.stepsDetails);
+        }
+        if (Array.isArray(sanitizedPayload.relatedDocsDetails)) {
+             sanitizedPayload.relatedDocsDetails = JSON.stringify(sanitizedPayload.relatedDocsDetails);
+        }
         res = await proposalService.editProposedFix(id, sanitizedPayload);
       }
 
@@ -948,17 +979,24 @@ export default function ProfileForm() {
                           <span className="font-semibold text-gray-900">{viewModal.data.documents.docname}</span>
                         </div>
                       )}
-                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <h4 className="font-bold text-amber-800 mb-2 underline underline-offset-4">Description of the fix:</h4>
-                        <p className="text-amber-900 text-sm leading-relaxed whitespace-pre-wrap">{viewModal.data.description}</p>
-                      </div>
                       <div className="space-y-4">
                         <h4 className="font-bold text-gray-900 border-b pb-2">Proposed Fixes:</h4>
                         <div className="space-y-3">
                           {viewModal.data.stepsProblem && (
                             <div className="p-3 bg-gray-50 border rounded-lg">
                               <span className="text-xs font-bold text-red-600 block uppercase mb-1">Corrected Steps:</span>
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewModal.data.stepsDetails}</p>
+                              {Array.isArray(viewModal.data.stepsDetails) ? (
+                                <div className="space-y-1">
+                                  {viewModal.data.stepsDetails.map((step, i) => (
+                                    <div key={i} className="text-sm text-gray-700 flex gap-2">
+                                      <span className="font-bold">{i + 1}.</span>
+                                      <span>{step}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewModal.data.stepsDetails}</p>
+                              )}
                             </div>
                           )}
                           {viewModal.data.priceProblem && (
@@ -976,7 +1014,17 @@ export default function ProfileForm() {
                           {viewModal.data.relatedDocsProblem && (
                             <div className="p-3 bg-gray-50 border rounded-lg">
                               <span className="text-xs font-bold text-red-600 block uppercase mb-1">Required Documents Fix:</span>
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewModal.data.relatedDocsDetails}</p>
+                              {Array.isArray(viewModal.data.relatedDocsDetails) ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {viewModal.data.relatedDocsDetails.map((docId, i) => (
+                                    <span key={i} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded-full border border-red-100">
+                                      {getDocNameById(docId)}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewModal.data.relatedDocsDetails}</p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -984,26 +1032,53 @@ export default function ProfileForm() {
                     </>
                   ) : (
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Issue Description</label>
-                        <textarea
-                          rows="4"
-                          value={editData.description || ''}
-                          onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                        ></textarea>
-                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div className="space-y-4">
                           <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Corrected Steps (Optional)</label>
-                            <textarea
-                              rows="3"
-                              value={editData.stepsDetails || ''}
-                              onChange={(e) => setEditData({ ...editData, stepsDetails: e.target.value, stepsProblem: !!e.target.value })}
-                              placeholder="Describe the correct procedure steps..."
-                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                            ></textarea>
+                            <div className="space-y-2">
+                              {(Array.isArray(editData.stepsDetails) ? editData.stepsDetails : []).map((step, index) => (
+                                <div key={index} className="flex items-start gap-2">
+                                  <div className="flex-shrink-0 w-6 h-10 flex items-center justify-center">
+                                    <span className="text-xs font-bold text-gray-500">{index + 1}.</span>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={step}
+                                    onChange={(e) => {
+                                      const newSteps = [...(Array.isArray(editData.stepsDetails) ? editData.stepsDetails : [])];
+                                      newSteps[index] = e.target.value;
+                                      setEditData({ ...editData, stepsDetails: newSteps, stepsProblem: true });
+                                    }}
+                                    placeholder={`Step ${index + 1}`}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                  />
+                                  {(Array.isArray(editData.stepsDetails) ? editData.stepsDetails : []).length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newSteps = (Array.isArray(editData.stepsDetails) ? editData.stepsDetails : []).filter((_, i) => i !== index);
+                                        setEditData({ ...editData, stepsDetails: newSteps });
+                                      }}
+                                      className="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                      title="Remove step"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentSteps = Array.isArray(editData.stepsDetails) ? editData.stepsDetails : [];
+                                setEditData({ ...editData, stepsDetails: [...currentSteps, ''], stepsProblem: true });
+                              }}
+                              className="mt-2 w-full px-3 py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                            >
+                              <span className="text-lg">+</span> Add Step
+                            </button>
                           </div>
                           <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Corrected Price (Optional)</label>
@@ -1029,13 +1104,12 @@ export default function ProfileForm() {
                           </div>
                           <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Required Docs Fix (Optional)</label>
-                            <textarea
-                              rows="3"
-                              value={editData.relatedDocsDetails || ''}
-                              onChange={(e) => setEditData({ ...editData, relatedDocsDetails: e.target.value, relatedDocsProblem: !!e.target.value })}
-                              placeholder="List missing or incorrect documents..."
-                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                            ></textarea>
+                            <MultiSelectDropdown
+                              label=""
+                              options={allDocuments.map(d => ({ id: d.docid || d.id, name: d.docname }))}
+                              selected={Array.isArray(editData.relatedDocsDetails) ? editData.relatedDocsDetails : []}
+                              onChange={(updated) => setEditData({ ...editData, relatedDocsDetails: updated, relatedDocsProblem: updated.length > 0 })}
+                            />
                           </div>
                         </div>
                       </div>
