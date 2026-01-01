@@ -38,43 +38,36 @@ const mockDocuments = {
       {
         name: 'National ID Card (Carte Nationale d\'Identité)',
         description: 'Valid biometric national ID card',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Birth Certificate (Extrait de Naissance)',
         description: 'Recent extract less than 3 months old - "Extrait de naissance spécial n°12"',
-        copies: 2,
         type: 'original'
       },
       {
         name: 'Residence Certificate (Certificat de Résidence)',
         description: 'Proof of residence less than 3 months old from your APC',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Biometric Photos',
         description: 'Recent passport-size photos (4x3.5 cm) with white background',
-        copies: 4,
         type: 'original'
       },
       {
         name: 'Military Service Document (for males 19-30)',
         description: 'Military service certificate or exemption document',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Previous Passport (if renewal)',
         description: 'Your old passport if this is a renewal',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Payment Receipt',
         description: 'Proof of payment of 6,000 DA passport fee (fiscal stamp)',
-        copies: 1,
         type: 'original'
       }
     ],
@@ -107,37 +100,31 @@ const mockDocuments = {
       {
         name: 'Birth Certificate (Extrait de Naissance)',
         description: 'Special extract n°12 less than 3 months old',
-        copies: 2,
         type: 'original'
       },
       {
         name: 'Residence Certificate (Certificat de Résidence)',
         description: 'Recent proof of residence from your APC',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Biometric Photos',
         description: 'Recent passport-size photos (3.5x4.5 cm) with white background',
-        copies: 2,
         type: 'original'
       },
       {
         name: 'Blood Type Certificate',
         description: 'Official blood group certificate from a hospital or clinic',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Old National ID (if renewal)',
         description: 'Previous ID card for renewal applications',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Fiscal Stamp (Timbre Fiscal)',
         description: '500 DA fiscal stamp available at post offices',
-        copies: 1,
         type: 'original'
       }
     ],
@@ -169,19 +156,16 @@ const mockDocuments = {
       {
         name: 'National ID Card',
         description: 'Valid ID of the person requesting (for adults)',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Family Book (Livret de Famille)',
         description: 'If requesting for a minor child',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Authorization Letter',
         description: 'If someone else is requesting on your behalf',
-        copies: 1,
         type: 'original'
       }
     ],
@@ -211,55 +195,46 @@ const mockDocuments = {
       {
         name: 'Baccalaureate Certificate (Original)',
         description: 'Original BAC certificate with transcripts',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Baccalaureate Certificate (Copies)',
         description: 'Certified copies of BAC certificate',
-        copies: 4,
         type: 'certified_copy'
       },
       {
         name: 'Birth Certificate (Extrait de Naissance)',
         description: 'Recent extract less than 3 months old',
-        copies: 4,
         type: 'original'
       },
       {
         name: 'National ID Card',
         description: 'Valid biometric national ID',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'National ID Card (Copies)',
         description: 'Photocopies of both sides of ID',
-        copies: 4,
         type: 'photocopy'
       },
       {
         name: 'Biometric Photos',
         description: 'Recent passport-size photos',
-        copies: 6,
         type: 'original'
       },
       {
         name: 'Medical Certificate',
         description: 'General health certificate from approved doctor',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Pre-registration Confirmation',
         description: 'Printed confirmation from orientation platform',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Residence Certificate',
         description: 'For students requesting university housing',
-        copies: 1,
         type: 'original'
       }
     ],
@@ -292,55 +267,46 @@ const mockDocuments = {
       {
         name: 'National ID Card',
         description: 'Valid biometric national ID (must be 18+ years old)',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'National ID Card (Copies)',
         description: 'Photocopies of both sides',
-        copies: 2,
         type: 'photocopy'
       },
       {
         name: 'Birth Certificate (Extrait de Naissance)',
         description: 'Recent extract less than 3 months old',
-        copies: 2,
         type: 'original'
       },
       {
         name: 'Medical Certificate',
         description: 'Medical fitness certificate from approved doctor',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Blood Type Certificate',
         description: 'Official blood group certificate',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Biometric Photos',
         description: 'Recent passport-size photos',
-        copies: 4,
         type: 'original'
       },
       {
         name: 'Driving School Certificate',
         description: 'Certificate of completion from auto-école',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Theory Exam Pass Certificate',
         description: 'Proof of passing the code exam',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Fiscal Stamps',
         description: 'Required fiscal stamps for application',
-        copies: 2,
         type: 'original'
       }
     ],
@@ -374,61 +340,51 @@ const mockDocuments = {
       {
         name: 'National ID Card',
         description: 'Valid biometric national ID',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'National ID Card (Copies)',
         description: 'Certified copies of ID card',
-        copies: 2,
         type: 'certified_copy'
       },
       {
         name: 'Birth Certificate (Extrait de Naissance)',
         description: 'Recent extract less than 3 months old',
-        copies: 2,
         type: 'original'
       },
       {
         name: 'Residence Certificate',
         description: 'Proof of residence less than 3 months old',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Criminal Record Certificate (Casier Judiciaire)',
         description: 'Bulletin n°3 less than 3 months old',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Business Premises Lease or Title',
         description: 'Lease contract or property deed for business location',
-        copies: 1,
         type: 'certified_copy'
       },
       {
         name: 'Company Statutes (for SARL/SPA)',
         description: 'Notarized company formation documents',
-        copies: 2,
         type: 'original'
       },
       {
         name: 'Capital Deposit Certificate',
         description: 'Bank certificate showing deposited capital (for companies)',
-        copies: 1,
         type: 'original'
       },
       {
         name: 'Biometric Photos',
         description: 'Recent passport-size photos',
-        copies: 4,
         type: 'original'
       },
       {
         name: 'CNRC Application Form',
         description: 'Completed registration form from CNRC',
-        copies: 1,
         type: 'original'
       }
     ],
@@ -740,12 +696,6 @@ export default function DocumentDetails() {
                             <h3 className="font-medium text-white group-hover:text-emerald-400 transition-colors">
                               {req.name}
                             </h3>
-                            {/* Copy Count Badge */}
-                            {req.copies && (
-                              <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                                {req.copies} {req.copies === 1 ? 'copy' : 'copies'}
-                              </span>
-                            )}
                           </div>
                           
                           {req.description && (
@@ -778,14 +728,9 @@ export default function DocumentDetails() {
 
                 {/* Total Documents Summary */}
                 <div className="mt-4 pt-4 border-t border-white/10">
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center text-sm">
                     <span className="text-white/60">
                       <strong className="text-white">{doc.docrequirements.length}</strong> documents required
-                    </span>
-                    <span className="text-white/50">
-                      Total copies needed: <strong className="text-white">
-                        {doc.docrequirements.reduce((sum, req) => sum + (req.copies || 1), 0)}
-                      </strong>
                     </span>
                   </div>
                 </div>
