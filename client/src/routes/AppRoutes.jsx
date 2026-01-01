@@ -40,7 +40,7 @@ export default function AppRoutes() {
           <Route path="/documents" element={<AllDocuments />} />
           <Route path="/document/:docId" element={<DocumentDetails />} />
           <Route path="/about" element={<AboutUs />} />
-          <Route path="/conntact" element={<ContactUs />} />
+          <Route path="/contact" element={<ContactUs />} />
 
           {/* Authentication Routes */}
           <Route path="/signin" element={<AuthPage />} />
