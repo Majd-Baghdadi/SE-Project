@@ -121,7 +121,30 @@ export default function ManageProposedDocs() {
       const response = await proposalService.getProposedDocumentDetails(id);
 
       if (response.success && response.data) {
-        setSelectedProposal(prev => ({ ...prev, ...response.data }));
+        const proposalData = response.data;
+        
+        // Fetch related document names if there are relateddocs
+        if (proposalData.relateddocs && Array.isArray(proposalData.relateddocs) && proposalData.relateddocs.length > 0) {
+          // Fetch all documents to get names
+          const allDocs = await documentService.getAllDocuments();
+          const lookup = {};
+          if (Array.isArray(allDocs)) {
+            allDocs.forEach(d => {
+              if (d.docid && d.docname) {
+                lookup[d.docid] = d.docname;
+              }
+            });
+          }
+          
+          // Map IDs to names
+          const relatedDocsWithNames = proposalData.relateddocs.map(docId => ({
+            docid: docId,
+            docname: lookup[docId] || null
+          }));
+          proposalData.relateddocsWithNames = relatedDocsWithNames;
+        }
+        
+        setSelectedProposal(prev => ({ ...prev, ...proposalData }));
       }
     } catch (error) {
       console.error('handleViewDetails error:', error);
@@ -353,17 +376,18 @@ export default function ManageProposedDocs() {
                           <div className="p-5 bg-white/10 rounded-xl border border-white/20">
                             <span className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-3">Required Documents</span>
                             <div className="flex flex-wrap gap-2">
-                              {selectedProposal.relateddocs && Array.isArray(selectedProposal.relateddocs) && selectedProposal.relateddocs.length > 0 ? (
-                                selectedProposal.relateddocs.map((doc, idx) => {
-                                  // Handle both object and string ID formats
-                                  const docId = typeof doc === 'object' ? (doc.docid || doc.id) : doc;
-                                  const docName = typeof doc === 'object' ? doc.docname : docLookup[docId];
-                                  return (
-                                    <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
-                                      {docName || `Unknown Document`}
-                                    </span>
-                                  );
-                                })
+                              {selectedProposal.relateddocsWithNames && Array.isArray(selectedProposal.relateddocsWithNames) && selectedProposal.relateddocsWithNames.length > 0 ? (
+                                selectedProposal.relateddocsWithNames.map((doc, idx) => (
+                                  <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
+                                    {doc.docname || doc.docid}
+                                  </span>
+                                ))
+                              ) : selectedProposal.relateddocs && Array.isArray(selectedProposal.relateddocs) && selectedProposal.relateddocs.length > 0 ? (
+                                selectedProposal.relateddocs.map((docId, idx) => (
+                                  <span key={idx} className="px-3 py-1.5 bg-white/10 text-white/80 rounded-lg text-sm font-medium border border-white/20">
+                                    {docLookup[docId] || docId}
+                                  </span>
+                                ))
                               ) : (
                                 <span className="text-sm text-white/40 italic">No related documents specified</span>
                               )}
