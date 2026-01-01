@@ -100,7 +100,7 @@ const adminService = {
   // Documents
   editDocument: async (docId, data) => {
     try {
-      const response = await api.put(`/admin/documents/${docId}`, data);
+      const response = await api.patch(`/admin/updateDocument/${docId}`, data);
       return response.data || response;
     } catch (error) {
       console.error('Error editing document:', error);

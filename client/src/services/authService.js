@@ -151,6 +151,10 @@ const authService = {
   isAuthenticated: () => {
     return localStorage.getItem('isAuthenticated') === 'true';
   },
+
+  getUserRole: () => {
+    return localStorage.getItem('userRole') || 'user';
+  },
 };
 
 export default authService;

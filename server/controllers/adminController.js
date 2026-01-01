@@ -65,8 +65,69 @@ const updateDocument = async (req, res) => {
         }
 
         const { docpicture, ...bodyWithoutPicture } = req.body;
-        var payload = {
-            ...bodyWithoutPicture,
+        
+        // Only include known database columns to avoid errors
+        var payload = {};
+        
+        // Copy only valid fields
+        if (bodyWithoutPicture.docname) payload.docname = bodyWithoutPicture.docname;
+        if (bodyWithoutPicture.doctype) payload.doctype = bodyWithoutPicture.doctype;
+        if (bodyWithoutPicture.duration) payload.duration = bodyWithoutPicture.duration;
+        if (bodyWithoutPicture.docprice !== undefined) payload.docprice = parseInt(bodyWithoutPicture.docprice) || 0;
+        
+        // Handle steps
+        if (bodyWithoutPicture.steps) {
+            if (typeof bodyWithoutPicture.steps === 'string') {
+                try {
+                    payload.steps = JSON.parse(bodyWithoutPicture.steps);
+                } catch (e) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'steps must be a valid JSON array'
+                    });
+                }
+            } else {
+                payload.steps = bodyWithoutPicture.steps;
+            }
+        }
+        
+        // Handle relateddocs
+        if (bodyWithoutPicture.relateddocs) {
+            if (typeof bodyWithoutPicture.relateddocs === 'string') {
+                try {
+                    payload.relateddocs = JSON.parse(bodyWithoutPicture.relateddocs);
+                } catch (e) {
+                    payload.relateddocs = [];
+                }
+            } else {
+                payload.relateddocs = bodyWithoutPicture.relateddocs;
+            }
+        }
+        
+        // Handle requirements (if column exists in DB)
+        if (bodyWithoutPicture.requirements) {
+            if (typeof bodyWithoutPicture.requirements === 'string') {
+                try {
+                    payload.requirements = JSON.parse(bodyWithoutPicture.requirements);
+                } catch (e) {
+                    payload.requirements = [];
+                }
+            } else {
+                payload.requirements = bodyWithoutPicture.requirements;
+            }
+        }
+        
+        // Handle tips (if column exists in DB)
+        if (bodyWithoutPicture.tips) {
+            if (typeof bodyWithoutPicture.tips === 'string') {
+                try {
+                    payload.tips = JSON.parse(bodyWithoutPicture.tips);
+                } catch (e) {
+                    payload.tips = [];
+                }
+            } else {
+                payload.tips = bodyWithoutPicture.tips;
+            }
         }
 
         if (!payload.docname || !payload.doctype || !payload.steps || payload.steps.length == 0) {
@@ -76,31 +137,14 @@ const updateDocument = async (req, res) => {
             });
         }
 
-        if (typeof payload.steps === 'string') {
-            try {
-                payload.steps = JSON.parse(payload.steps);
-            } catch (e) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'steps must be a valid JSON array'
-                });
-            }
-        }
-
-        // Parse relateddocs if it's a string
-        if (typeof payload.relateddocs === 'string') {
-            try {
-                payload.relateddocs = JSON.parse(payload.relateddocs);
-            } catch (e) {
-                payload.relateddocs = [];
-            }
-        }
-
         if (req.file) {
             console.log("uploading the image");
             const url = await storageService.uploadImage(req.file);
             payload.docpicture = url;
         }
+
+        console.log('📝 Update document payload:', JSON.stringify(payload, null, 2));
+        console.log('📝 Document ID:', docid);
 
         const document = await admin.updateDocument(payload, docid)
 
@@ -112,11 +156,12 @@ const updateDocument = async (req, res) => {
         })
 
     } catch (error) {
-        console.error('error in updating document ', error);
+        console.error('❌ Error in updating document:', error.message);
+        console.error('❌ Full error:', error);
         res.status(500).json(
             {
                 success: false,
-                error: "failed to update the document"
+                error: error.message || "failed to update the document"
             }
         )
 

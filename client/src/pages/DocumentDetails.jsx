@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import SignInModal from '../components/SignInModal';
 import authService from '../services/authService';
+import documentService from '../services/documentService';
 
 // Import document images
 import passportImg from '../assets/images/docs_images/Algerian-Passport.png';
@@ -460,9 +461,10 @@ const mockRelatedDocs = {
   '6': { docid: '6', docname: 'Business Registration' }
 };
 
-export default function DocumentDetail() {
+export default function DocumentDetails() {
   const { docId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [data, setData] = useState(null);
   const [relatedDocuments, setRelatedDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -470,12 +472,52 @@ export default function DocumentDetail() {
   const [usingMockData, setUsingMockData] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
 
+  // Check if user is admin (by role, not by route)
+  const isAdmin = authService.isAuthenticated() && authService.getUserRole() === 'admin';
+
   useEffect(() => {
     async function fetchDocument() {
       setLoading(true);
       setError(null);
 
-      // Use mock data directly
+      // First try to fetch from API (for real documents with UUIDs)
+      try {
+        const response = await documentService.getDocumentById(docId);
+        console.log('🟢 API Response:', response);
+        
+        if (response && response.data) {
+          // Normalize API data to match expected field names
+          const apiData = response.data;
+          const normalizedData = {
+            docid: apiData.docid || apiData.id,
+            docname: apiData.docname || apiData.name || apiData.title,
+            doctype: apiData.doctype || apiData.type || apiData.category,
+            docprice: apiData.docprice ?? apiData.price ?? 0,
+            docduration: apiData.docduration || apiData.duration || apiData.processing_time || 'N/A',
+            docimage: apiData.docimage || apiData.docpicture || apiData.image,
+            docrequirements: apiData.docrequirements || apiData.requirements || [],
+            docsteps: apiData.docsteps || apiData.steps || [],
+            relateddocs: apiData.relateddocs || apiData.related_docs || [],
+            tips: apiData.tips || [],
+            // Keep original data as well
+            ...apiData
+          };
+          
+          // Accept API data if it has at least a name (show whatever data is available)
+          if (normalizedData.docname) {
+            setData(normalizedData);
+            setRelatedDocuments(response.relatedDocuments || []);
+            setUsingMockData(false);
+            console.log('✅ Loaded document from API:', normalizedData.docname);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (apiError) {
+        console.log('🟡 API fetch failed, trying mock data:', apiError.message);
+      }
+
+      // Fall back to mock data for numeric IDs
       const mockDoc = mockDocuments[docId];
       if (mockDoc) {
         setData(mockDoc);
@@ -768,18 +810,35 @@ export default function DocumentDetail() {
               </div>
             </div>
 
-            {/* Report Issue */}
+            {/* Report Issue (User) / Update Document (Admin) */}
             <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-              <h4 className="text-base font-semibold text-slate-900 mb-2">Report an Issue</h4>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">
-                Please report any errors or unclear information found in this document, and we will ensure they are handled appropriately.
-              </p>
-              <button
-                onClick={handleReportIssue}
-                className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
-              >
-                ✏️ Report Issue
-              </button>
+              {isAdmin ? (
+                <>
+                  <h4 className="text-base font-semibold text-slate-900 mb-2">Update Document</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                    Edit and update the information for this document.
+                  </p>
+                  <button
+                    onClick={() => navigate(`/admin/document/${docId}/update`)}
+                    className="w-full py-2.5 px-4 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+                  >
+                    ✏️ Update Document
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h4 className="text-base font-semibold text-slate-900 mb-2">Report an Issue</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                    Please report any errors or unclear information found in this document, and we will ensure they are handled appropriately.
+                  </p>
+                  <button
+                    onClick={handleReportIssue}
+                    className="w-full py-2.5 px-4 bg-white text-slate-800 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                  >
+                    ✏️ Report Issue
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Related Documents */}

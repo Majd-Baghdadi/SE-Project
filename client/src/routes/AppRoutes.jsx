@@ -20,6 +20,7 @@ import Profile from '../pages/Profile'
 import AdminDashboard from '../pages/Admin/AdminDashboard'
 import ManageProposedDocs from '../pages/Admin/ManageProposedDocs'
 import ManageProposedFixes from '../pages/Admin/ManageProposedFixes'
+import UpdateDocument from '../pages/Admin/UpdateDocument'
 
 // Protected Route
 import ProtectedRoute from '../components/ProtectedRoute'
@@ -54,12 +55,29 @@ export default function AppRoutes() {
           <Route path="/fixform/:docid" element={<FixFormPage />} />
           <Route path="/propose" element={<ProposeDocument />} />
 
+
           {/* Admin Routes */}
           <Route
             path="/admin/proposals"
             element={
               <ProtectedRoute requiredRole="admin">
                 <ManageProposedDocs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/document/:docId"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <DocumentDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/document/:docId/update"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <UpdateDocument />
               </ProtectedRoute>
             }
           />

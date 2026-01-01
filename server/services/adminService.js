@@ -22,11 +22,16 @@ async function fetchProposedFixes(user) {
 
 
 async function updateDocument(payload, docid) {
+    console.log('🔄 Updating document in DB:', docid);
+    console.log('🔄 Payload keys:', Object.keys(payload));
+    
     const { data, error } = await supabase.from('documents').update(payload).eq('docid', docid).select().maybeSingle();
 
     if (error) {
-        console.error('Failed to update document:', error);
-        throw new Error("Failed to update document");
+        console.error('❌ Supabase error:', error.message);
+        console.error('❌ Supabase error details:', error.details);
+        console.error('❌ Supabase error hint:', error.hint);
+        throw new Error(error.message || "Failed to update document");
     }
 
     if (!data) {
