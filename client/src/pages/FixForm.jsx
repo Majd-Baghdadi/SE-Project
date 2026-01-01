@@ -37,6 +37,8 @@ const convertTimeToInteger = (timeString) => {
 const MultiSelectDropdown = ({ label, options, selected, onChange, error = false }) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef();
+  const searchInputRef = useRef();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const toggleOption = (docId) => {
     let updated = [...selected];
@@ -60,15 +62,28 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
     return doc ? doc.name : docId;
   };
 
+  // Filter options based on search query
+  const filteredOptions = options.filter(doc => 
+    doc.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpen(false);
+        setSearchQuery('');
       }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    // Focus search input when dropdown opens
+    if (open && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
+  }, [open]);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -112,22 +127,44 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
       {error && <p className="text-red-400 text-xs mt-2 ml-1">{error}</p>}
 
       {open && (
-        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-50">
-          {options.map((doc) => (
-            <div
-              key={doc.id}
-              className={`px-4 py-3 cursor-pointer transition-all duration-200 flex justify-between items-center border-b border-white/10 last:border-b-0 ${selected.includes(doc.id)
-                ? 'bg-primary/20 text-emerald-300'
-                : 'text-white/80 hover:bg-white/10'
-                }`}
-              onClick={() => toggleOption(doc.id)}
-            >
-              <span>{doc.name}</span>
-              {selected.includes(doc.id) && (
-                <Check className="w-4 h-4 text-emerald-400" />
-              )}
-            </div>
-          ))}
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-80 overflow-hidden z-50">
+          {/* Search Input */}
+          <div className="p-3 border-b border-white/10 sticky top-0 bg-slate-800/95 backdrop-blur-xl">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Search documents..."
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-emerald-500/50 transition-all"
+            />
+          </div>
+          
+          {/* Options List */}
+          <div className="max-h-60 overflow-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((doc) => (
+                <div
+                  key={doc.id}
+                  className={`px-4 py-3 cursor-pointer transition-all duration-200 flex justify-between items-center border-b border-white/10 last:border-b-0 ${selected.includes(doc.id)
+                    ? 'bg-primary/20 text-emerald-300'
+                    : 'text-white/80 hover:bg-white/10'
+                  }`}
+                  onClick={() => toggleOption(doc.id)}
+                >
+                  <span>{doc.name}</span>
+                  {selected.includes(doc.id) && (
+                    <Check className="w-4 h-4 text-emerald-400" />
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center text-white/40">
+                No documents found matching "{searchQuery}"
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
