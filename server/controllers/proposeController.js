@@ -106,6 +106,7 @@ async function editProposedDocument(req, res) {
     try {
         const { id } = req.params
         const { docpicture, ...bodyWithoutPicture } = req.body;
+        
         var payload = {
             ...bodyWithoutPicture,
         }
@@ -121,6 +122,12 @@ async function editProposedDocument(req, res) {
         if (req.file) {
             const url = await storageService.uploadImage(req.file);
             payload.docpicture = url;
+        }
+
+        else if (docpicture==='' || docpicture=== null){
+            
+            payload.docpicture= null  ;
+
         }
 
         const { data, error } = await propose.updateProposedDocument(id, payload, req.user)
