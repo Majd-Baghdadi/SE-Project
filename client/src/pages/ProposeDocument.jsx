@@ -1,5 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image, FileText, List, DollarSign, Clock, Tag, Link, Check, AlertTriangle, X, ChevronDown } from 'lucide-react';
+import { 
+  Image, 
+  FileText, 
+  List, 
+  DollarSign, 
+  Clock, 
+  Tag, 
+  Link, 
+  Check, 
+  X, 
+  ChevronDown,
+  Upload,
+  Plus,
+  Sparkles,
+  ArrowLeft,
+  AlertCircle
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SignInModal from '../components/SignInModal';
 import proposalService from '../services/proposalService';
@@ -41,6 +57,7 @@ const resizeImage = (base64Str, maxWidth = 200, maxHeight = 200) => {
     };
   });
 };
+
 // Helper function to convert time string to integer (days)
 const convertTimeToInteger = (timeString) => {
   if (!timeString) return undefined;
@@ -51,12 +68,11 @@ const convertTimeToInteger = (timeString) => {
   const value = parseInt(match[1]);
   const unit = match[2].toLowerCase();
 
-  // Convert everything to days
   switch (unit) {
     case 'minute':
-      return Math.ceil(value / (24 * 60)); // minutes to days
+      return Math.ceil(value / (24 * 60));
     case 'hour':
-      return Math.ceil(value / 24); // hours to days
+      return Math.ceil(value / 24);
     case 'day':
       return value;
     case 'week':
@@ -88,38 +104,37 @@ const CustomDropdown = ({ label, icon: Icon, options, value, onChange, placehold
   return (
     <div className="relative" ref={dropdownRef}>
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-green-600" />
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-emerald-400" />
         </div>
-        <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
-          {label}
-        </h3>
+        <h3 className="text-lg font-semibold text-white">{label}</h3>
       </div>
 
       <div
-        className={`w-full px-4 py-3 border-2 ${error ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer bg-white hover:border-green-500 transition-colors flex justify-between items-center`}
+        className={`w-full px-4 py-3 border ${error ? 'border-red-500/50' : 'border-white/20'} rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 hover:border-emerald-500/50 transition-all flex justify-between items-center`}
         onClick={() => setOpen(!open)}
-        style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
       >
-        <span className={value ? 'text-gray-800' : 'text-gray-400'}>
+        <span className={value ? 'text-white' : 'text-white/50'}>
           {value || placeholder}
         </span>
-        <ChevronDown className={`w-4 h-4 ${error ? 'text-red-500' : 'text-gray-500'} transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-5 h-5 ${error ? 'text-red-400' : 'text-white/50'} transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {error}</p>}
 
       {open && (
-        <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-auto z-50">
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-50">
           {options.map((option) => (
             <div
               key={option}
-              className={`px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${value === option ? 'bg-green-50 text-green-700' : ''
-                }`}
+              className={`px-4 py-3 cursor-pointer transition-all ${
+                value === option 
+                  ? 'bg-emerald-500/20 text-emerald-400' 
+                  : 'hover:bg-white/10 text-white/80 hover:text-white'
+              }`}
               onClick={() => {
                 onChange(option);
                 setOpen(false);
               }}
-              style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
             >
               {option}
             </div>
@@ -139,8 +154,7 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
     let updated = [...selected];
     if (updated.includes(docId)) {
       updated = updated.filter((id) => id !== docId);
-    }
-    else {
+    } else {
       updated.push(docId);
     }
     onChange(updated);
@@ -151,7 +165,6 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
     onChange(selected.filter((id) => id !== docId));
   };
 
-  // Helper to get document name by ID
   const getDocNameById = (docId) => {
     const doc = options.find(opt => opt.id === docId);
     return doc ? doc.name : docId;
@@ -170,59 +183,55 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
   return (
     <div className="relative" ref={dropdownRef}>
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-          <Link className="w-5 h-5 text-green-600" />
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+          <Link className="w-5 h-5 text-emerald-400" />
         </div>
-        <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
-          {label}
-        </h3>
+        <h3 className="text-lg font-semibold text-white">{label}</h3>
       </div>
 
       <div
-        className={`w-full px-4 py-3 border-2 ${error ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer bg-white hover:border-green-500 transition-colors min-h-[50px] flex justify-between items-center`}
+        className={`w-full px-4 py-3 border ${error ? 'border-red-500/50' : 'border-white/20'} rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 hover:border-emerald-500/50 transition-all min-h-[50px] flex justify-between items-center`}
         onClick={() => setOpen(!open)}
       >
         <div className="flex flex-wrap gap-2 flex-1">
           {selected.length === 0 && (
-            <span className="text-gray-400" style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}>
-              Select related documents...
-            </span>
+            <span className="text-white/50">Select related documents...</span>
           )}
           {selected.map((docId) => (
             <span
               key={docId}
-              className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-medium"
+              className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-full text-sm font-medium border border-emerald-500/30"
             >
               {getDocNameById(docId)}
               <button
                 type="button"
                 onClick={(e) => removeOption(docId, e)}
-                className="text-green-700 hover:text-green-900 ml-1"
+                className="text-emerald-400 hover:text-emerald-300 ml-1"
               >
                 <X size={14} />
               </button>
             </span>
           ))}
         </div>
-        <ChevronDown className={`w-4 h-4 ${error ? 'text-red-500' : 'text-gray-500'} ml-2 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-5 h-5 ${error ? 'text-red-400' : 'text-white/50'} ml-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {error}</p>}
 
       {open && (
-        <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-auto z-50">
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-50">
           {options.map((doc) => (
             <div
               key={doc.id}
-              className={`px-4 py-3 cursor-pointer transition-colors flex justify-between items-center ${selected.includes(doc.id)
-                ? 'bg-green-50 text-green-700'
-                : 'hover:bg-gray-50'
-                }`}
+              className={`px-4 py-3 cursor-pointer transition-all flex justify-between items-center ${
+                selected.includes(doc.id)
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'hover:bg-white/10 text-white/80 hover:text-white'
+              }`}
               onClick={() => toggleOption(doc.id)}
-              style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
             >
               <span>{doc.name}</span>
               {selected.includes(doc.id) && (
-                <Check className="w-4 h-4 text-green-600" />
+                <Check className="w-5 h-5 text-emerald-400" />
               )}
             </div>
           ))}
@@ -239,7 +248,7 @@ const ProposeDocumentPage = () => {
   const [formData, setFormData] = useState({
     pictureFile: null,
     name: '',
-    steps: [''], // Changed from string to array with one empty step
+    steps: [''],
     price: '',
     expectedTime: '',
     category: '',
@@ -258,12 +267,8 @@ const ProposeDocumentPage = () => {
     'Biometric Services',
     'Civil Status Services',
     'Administrative Services',
-
   ];
 
-
-
-  // Check authentication on any form interaction
   const checkAuthAndProceed = (callback) => {
     if (!proposalService.isAuthenticated()) {
       setShowSignInModal(true);
@@ -273,7 +278,6 @@ const ProposeDocumentPage = () => {
     return true;
   };
 
-  // Fetch available documents on component mount
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
@@ -282,7 +286,6 @@ const ProposeDocumentPage = () => {
         const data = await response.json();
 
         if (data.documents && Array.isArray(data.documents)) {
-
           setAvailableDocuments(data.documents.map(doc => ({
             id: doc.docid,
             name: doc.docname
@@ -298,6 +301,7 @@ const ProposeDocumentPage = () => {
 
     fetchDocuments();
   }, []);
+
   // Validation functions
   const validateName = (name) => {
     if (!name.trim()) return 'Document name is required';
@@ -354,7 +358,6 @@ const ProposeDocumentPage = () => {
           return;
         }
 
-        // Just store the file
         setFormData({ ...formData, pictureFile: file });
         setErrors({ ...errors, picture: '' });
         console.log('✅ File stored:', file.name);
@@ -436,11 +439,11 @@ const ProposeDocumentPage = () => {
     if (!hasInteracted) setHasInteracted(true);
 
     checkAuthAndProceed(() => {
-
       setFormData({ ...formData, relatedDocuments: updated });
       setErrors({ ...errors, relatedDocuments: validateRelatedDocuments(updated) });
     });
   };
+
   const validateAll = () => {
     const newErrors = {
       name: validateName(formData.name),
@@ -454,6 +457,7 @@ const ProposeDocumentPage = () => {
     setErrors(newErrors);
     return Object.values(newErrors).every(error => error === '');
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
@@ -470,7 +474,6 @@ const ProposeDocumentPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Create FormData
       const submitData = new FormData();
 
       submitData.append('docname', formData.name);
@@ -493,13 +496,11 @@ const ProposeDocumentPage = () => {
         submitData.append('relateddocs', JSON.stringify(formData.relatedDocuments));
       }
 
-      // Add file
       if (formData.pictureFile) {
         submitData.append('docpicture', formData.pictureFile);
         console.log('📸 File attached:', formData.pictureFile.name);
       }
 
-      // Debug: Log FormData contents
       console.log('📤 FormData contents:');
       for (let [key, value] of submitData.entries()) {
         if (key === 'docpicture') {
@@ -516,14 +517,23 @@ const ProposeDocumentPage = () => {
           title: 'Success!',
           text: 'Your document proposal has been submitted successfully. Our team will review it shortly.',
           icon: 'success',
-          confirmButtonColor: '#37a331',
-          confirmButtonText: 'Done'
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'Done',
+          background: '#1e293b',
+          color: '#fff'
         }).then(() => {
           closeSuccessModal();
         });
       } else {
         setSubmitError(response.error || 'Failed to submit proposal. Please try again.');
-        Swal.fire('Error!', response.error || 'Failed to submit proposal.', 'error');
+        Swal.fire({
+          title: 'Error!',
+          text: response.error || 'Failed to submit proposal.',
+          icon: 'error',
+          background: '#1e293b',
+          color: '#fff',
+          confirmButtonColor: '#10b981'
+        });
       }
     } catch (error) {
       console.error('Submit error:', error);
@@ -532,6 +542,7 @@ const ProposeDocumentPage = () => {
       setIsSubmitting(false);
     }
   };
+
   const handleCancel = () => {
     Swal.fire({
       title: 'Cancel Proposal?',
@@ -539,9 +550,11 @@ const ProposeDocumentPage = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3085d6',
+      cancelButtonColor: '#64748b',
       confirmButtonText: 'Yes, Cancel',
-      cancelButtonText: 'No, Keep It'
+      cancelButtonText: 'No, Keep It',
+      background: '#1e293b',
+      color: '#fff'
     }).then((result) => {
       if (result.isConfirmed) {
         confirmCancel();
@@ -585,57 +598,85 @@ const ProposeDocumentPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-white/60 hover:text-white mb-8 transition-colors group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span>Back</span>
+          </button>
+
+          {/* Header */}
           <div className="text-center mb-10">
-            <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <Sparkles className="w-4 h-4" />
+              {user?.role === 'admin' ? 'Admin Panel' : 'Community Contribution'}
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               {user?.role === 'admin' ? 'Add New Document' : 'Propose New Document'}
             </h1>
-            <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
-              Fill in the form below to {user?.role === 'admin' ? 'add a new document' : 'propose a new document'}
+            <p className="text-lg text-white/60 max-w-2xl mx-auto">
+              Fill in the form below to {user?.role === 'admin' ? 'add a new document to the system' : 'propose a new document for our community'}
             </p>
           </div>
 
+          {/* Error Alert */}
           {submitError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
               {submitError}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className={`bg-white border ${errors.picture ? 'border-red-200' : 'border-gray-200'} rounded-xl shadow-sm p-6`}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <Image className="w-5 h-5 text-green-600" />
+            {/* Picture Upload */}
+            <div className={`bg-white/10 backdrop-blur-xl border ${errors.picture ? 'border-red-500/50' : 'border-white/20'} rounded-2xl p-6 hover:bg-white/[0.12] transition-all`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <Image className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>Picture</h3>
+                <h3 className="text-lg font-semibold text-white">Document Image</h3>
               </div>
-              <label className="cursor-pointer">
+              <label className="cursor-pointer block">
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                <div className={`w-full p-3 border-2 ${errors.picture ? 'border-red-500' : 'border-gray-300'} rounded-lg hover:border-green-500 transition-colors flex items-center justify-center bg-gray-50 hover:bg-gray-100`}>
-                  <span style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)', color: '#61646b' }}>
-                    {formData.pictureFile ? 'Change image' : 'Click to upload image'}
+                <div className={`w-full p-8 border-2 border-dashed ${errors.picture ? 'border-red-500/50' : 'border-white/20'} rounded-xl hover:border-emerald-500/50 transition-all flex flex-col items-center justify-center bg-white/5 hover:bg-white/10`}>
+                  <Upload className="w-10 h-10 text-white/40 mb-3" />
+                  <span className="text-white/60">
+                    {formData.pictureFile ? 'Click to change image' : 'Click to upload image'}
                   </span>
+                  <span className="text-white/40 text-sm mt-1">JPEG, PNG, GIF up to 5MB</span>
                 </div>
               </label>
-              {errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture}</p>}
+              {errors.picture && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.picture}</p>}
               {formData.pictureFile && (
-                <div className="mt-3">
-                  <p className="text-sm text-green-600">
-                    ✓ Selected: {formData.pictureFile.name} ({(formData.pictureFile.size / 1024).toFixed(2)} KB)
+                <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                  <p className="text-emerald-400 text-sm flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    Selected: {formData.pictureFile.name} ({(formData.pictureFile.size / 1024).toFixed(2)} KB)
                   </p>
                 </div>
               )}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            {/* Document Name */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
               <label className="block">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
-                    Name <span className="text-red-500">*</span>
+                  <h3 className="text-lg font-semibold text-white">
+                    Name <span className="text-red-400">*</span>
                   </h3>
                 </div>
                 <input
@@ -643,40 +684,39 @@ const ProposeDocumentPage = () => {
                   value={formData.name}
                   onChange={handleNameChange}
                   placeholder="Enter document name"
-                  className={`w-full px-4 py-2 border-b-2 ${errors.name ? 'border-red-500' : 'border-gray-300'} focus:border-green-600 outline-none transition-colors`}
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                  className={`w-full px-4 py-3 bg-white/5 border ${errors.name ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all`}
                 />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.name}</p>}
               </label>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            {/* Steps */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <List className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <List className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>Steps</h3>
+                <h3 className="text-lg font-semibold text-white">Steps</h3>
               </div>
 
               <div className="space-y-3">
                 {formData.steps.map((step, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <div className="flex-shrink-0 w-8 h-10 flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-500">{index + 1}.</span>
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <span className="text-sm font-bold text-emerald-400">{index + 1}</span>
                     </div>
                     <input
                       type="text"
                       value={step}
                       onChange={(e) => handleStepChange(index, e.target.value)}
                       placeholder={`Step ${index + 1}`}
-                      className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all"
-                      style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                      className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all"
                     />
                     {formData.steps.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveStep(index)}
-                        className="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         title="Remove step"
                       >
                         <X className="w-5 h-5" />
@@ -689,65 +729,67 @@ const ProposeDocumentPage = () => {
               <button
                 type="button"
                 onClick={handleAddStep}
-                className="mt-4 w-full px-4 py-3 border-2 border-dashed border-green-300 text-green-600 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 font-medium"
-                style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                className="mt-4 w-full px-4 py-3 border-2 border-dashed border-emerald-500/30 text-emerald-400 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all flex items-center justify-center gap-2 font-medium"
               >
-                <span className="text-xl">+</span> Add Step
+                <Plus className="w-5 h-5" /> Add Step
               </button>
 
-              {errors.steps && <p className="text-red-500 text-xs mt-2">{errors.steps}</p>}
-              <p className="text-xs text-gray-500 mt-2">
+              {errors.steps && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.steps}</p>}
+              <p className="text-white/40 text-sm mt-2">
                 {formData.steps.filter(s => s.trim()).length} step(s) added
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            {/* Price */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
               <label className="block">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>Price</h3>
+                  <h3 className="text-lg font-semibold text-white">Price</h3>
+                  <span className="text-white/40 text-sm">(Optional)</span>
                 </div>
                 <input
                   type="text"
                   value={formData.price}
                   onChange={handlePriceChange}
                   placeholder="Enter price"
-                  className={`w-full px-4 py-2 border-b-2 ${errors.price ? 'border-red-500' : 'border-gray-300'} focus:border-green-600 outline-none transition-colors`}
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                  className={`w-full px-4 py-3 bg-white/5 border ${errors.price ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all`}
                 />
-                {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                <p className="text-xs text-gray-500 mt-1">
-                  Optional - Enter amount in local currency
+                {errors.price && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.price}</p>}
+                <p className="text-white/40 text-sm mt-2">
+                  Enter amount in local currency (DZD)
                 </p>
               </label>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            {/* Expected Time */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
               <label className="block">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>Expected Time</h3>
+                  <h3 className="text-lg font-semibold text-white">Expected Time</h3>
+                  <span className="text-white/40 text-sm">(Optional)</span>
                 </div>
                 <input
                   type="text"
                   value={formData.expectedTime}
                   onChange={handleTimeChange}
                   placeholder="Enter expected time (e.g., '2 days', '1 week')"
-                  className={`w-full px-4 py-2 border-b-2 ${errors.expectedTime ? 'border-red-500' : 'border-gray-300'} focus:border-green-600 outline-none transition-colors`}
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                  className={`w-full px-4 py-3 bg-white/5 border ${errors.expectedTime ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all`}
                 />
-                {errors.expectedTime && <p className="text-red-500 text-xs mt-1">{errors.expectedTime}</p>}
-                <p className="text-xs text-gray-500 mt-1">
-                  Optional - Use days, weeks, months, or years
+                {errors.expectedTime && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.expectedTime}</p>}
+                <p className="text-white/40 text-sm mt-2">
+                  Use days, weeks, months, or years
                 </p>
               </label>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            {/* Category */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
               <CustomDropdown
                 label="Category"
                 icon={Tag}
@@ -759,7 +801,8 @@ const ProposeDocumentPage = () => {
               />
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            {/* Related Documents */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all">
               <MultiSelectDropdown
                 label="Related Documents"
                 options={availableDocuments}
@@ -767,27 +810,37 @@ const ProposeDocumentPage = () => {
                 onChange={handleRelatedDocumentsChange}
                 error={errors.relatedDocuments}
               />
+              <p className="text-white/40 text-sm mt-2">
+                Optional - Select documents that are related to this one
+              </p>
             </div>
 
+            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
               <button
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="px-8 py-3.5 rounded-full border-2 border-green-600 text-green-600 font-semibold hover:bg-green-50 transition-all hover:border-green-700 hover:text-green-700 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
+                className="px-8 py-4 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
+                className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold hover:from-emerald-600 hover:to-emerald-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
               >
-                {isSubmitting
-                  ? (user?.role === 'admin' ? 'Adding...' : 'Submitting...')
-                  : (user?.role === 'admin' ? 'Add Document' : 'Submit Proposal')}
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    {user?.role === 'admin' ? 'Adding...' : 'Submitting...'}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    {user?.role === 'admin' ? 'Add Document' : 'Submit Proposal'}
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -801,56 +854,6 @@ const ProposeDocumentPage = () => {
           />
         )}
       </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes scaleIn {
-          from { 
-            transform: scale(0.9);
-            opacity: 0;
-          }
-          to { 
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        
-        @keyframes bounceIn {
-          0% {
-            transform: scale(0);
-            opacity: 0;
-          }
-          50% {
-            transform: scale(1.1);
-          }
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        
-        .animate-scaleIn {
-          animation: scaleIn 0.3s ease-out;
-        }
-        
-        .animate-bounceIn {
-          animation: bounceIn 0.5s ease-out;
-        }
-        
-        select[multiple] {
-          background-image: none;
-        }
-        
-        .appearance-none {
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          appearance: none;
-        }
-      `}</style>
     </>
   );
 };

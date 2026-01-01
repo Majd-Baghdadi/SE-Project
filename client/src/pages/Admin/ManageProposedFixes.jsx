@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Search, Eye, Check, X, Wrench, User, Clock, FileText, AlertTriangle, DollarSign } from 'lucide-react';
 import adminService from '../../services/adminService';
 import proposalService from '../../services/proposalService';
 import documentService from '../../services/documentService';
@@ -13,14 +14,12 @@ export default function ManageProposedFixes() {
   const [originalDoc, setOriginalDoc] = useState(null);
   const [fetchingDoc, setFetchingDoc] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const [fixSelections, setFixSelections] = useState({}); // { [fixId]: { steps: bool, price: bool, duration: bool, relateddocs: bool } }
+  const [fixSelections, setFixSelections] = useState({});
 
   const getModifiedDoc = () => {
     if (!originalDoc || !selectedFix) return null;
     const selections = fixSelections[selectedFix.fixid || selectedFix.id] || {};
 
-    // Use resolved names if available for display, otherwise fall back to raw details
-    // Note: selectedFix.stepsDetails is now already parsed as an array by handleViewDetails
     const stepsToUse = (selectedFix.stepsProblem && selections.steps)
       ? (selectedFix.stepsDetails ? selectedFix.stepsDetails : originalDoc.steps)
       : originalDoc.steps;
@@ -49,7 +48,7 @@ export default function ManageProposedFixes() {
         duration: selectedFix.timeProblem && selections.duration,
         relateddocs: selectedFix.relatedDocsProblem && selections.relateddocs
       };
-      return problems[field] ? 'bg-amber-50 border-amber-200 ring-2 ring-amber-400 ring-opacity-30' : '';
+      return problems[field] ? 'ring-2 ring-amber-400/50 bg-amber-500/10' : '';
     };
 
     const toggleSelection = (e, field) => {
@@ -58,7 +57,7 @@ export default function ManageProposedFixes() {
       setFixSelections(prev => ({
         ...prev,
         [fixId]: {
-          ... (prev[fixId] || {}),
+          ...(prev[fixId] || {}),
           [field]: !prev[fixId]?.[field]
         }
       }));
@@ -76,10 +75,10 @@ export default function ManageProposedFixes() {
     };
 
     return (
-      <div className={`flex flex-col h-full rounded-2xl border ${isModified ? 'bg-green-50/20 border-green-200' : 'bg-gray-50 border-gray-200'} overflow-hidden shadow-sm`}>
-        <div className={`px-6 py-4 border-b flex items-center justify-between ${isModified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-          <h3 className="font-bold uppercase tracking-wider text-xs">{title}</h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/50">
+      <div className={`flex flex-col h-full rounded-2xl border ${isModified ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-white/5 border-white/20'} overflow-hidden`}>
+        <div className={`px-6 py-4 border-b flex items-center justify-between ${isModified ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/5 border-white/10'}`}>
+          <h3 className={`font-bold uppercase tracking-wider text-xs ${isModified ? 'text-emerald-400' : 'text-white/60'}`}>{title}</h3>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isModified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/50'}`}>
             {isModified ? 'Merged View' : 'Live Data'}
           </span>
         </div>
@@ -87,60 +86,60 @@ export default function ManageProposedFixes() {
         <div className="flex-1 p-6 space-y-6 overflow-y-auto">
           {/* Header Info */}
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-3xl border border-gray-100 flex-shrink-0">
-              📄
+            <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 flex-shrink-0">
+              <FileText className="w-7 h-7 text-white/60" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-lg font-bold text-gray-900 truncate">{doc.docname}</h4>
-              <p className="text-xs text-gray-500 font-medium">{doc.category || 'Official Document'}</p>
+              <h4 className="text-lg font-bold text-white truncate">{doc.docname}</h4>
+              <p className="text-xs text-white/50 font-medium">{doc.category || 'Official Document'}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div
-              className={`p-3 rounded-xl border bg-white transition-all ${highlight('docprice')} ${isSelectable('docprice') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+              className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('docprice')} ${isSelectable('docprice') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
               onClick={(e) => isSelectable('docprice') && toggleSelection(e, 'price')}
             >
               <div className="flex justify-between items-start">
-                <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Price</p>
+                <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Price</p>
                 {isSelectable('docprice') && (
                   <input
                     type="checkbox"
                     checked={fixSelections[selectedFix.fixid || selectedFix.id]?.price}
-                    onChange={() => { }} // Handled by div onClick
-                    className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                    onChange={() => {}}
+                    className="w-4 h-4 accent-amber-500 rounded"
                   />
                 )}
               </div>
-              <p className="text-sm font-bold text-gray-900">{doc.docprice || '0'} DA</p>
+              <p className="text-sm font-bold text-emerald-400">{doc.docprice || '0'} DA</p>
             </div>
             <div
-              className={`p-3 rounded-xl border bg-white transition-all ${highlight('duration')} ${isSelectable('duration') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+              className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('duration')} ${isSelectable('duration') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
               onClick={(e) => isSelectable('duration') && toggleSelection(e, 'duration')}
             >
               <div className="flex justify-between items-start">
-                <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Duration</p>
+                <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Duration</p>
                 {isSelectable('duration') && (
                   <input
                     type="checkbox"
                     checked={fixSelections[selectedFix.fixid || selectedFix.id]?.duration}
-                    onChange={() => { }}
-                    className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                    onChange={() => {}}
+                    className="w-4 h-4 accent-amber-500 rounded"
                   />
                 )}
               </div>
-              <p className="text-sm font-bold text-gray-900">{doc.duration || 'N/A'}</p>
+              <p className="text-sm font-bold text-blue-400">{doc.duration || 'N/A'}</p>
             </div>
           </div>
 
           <div
-            className={`p-4 rounded-xl border bg-white transition-all ${highlight('steps')} ${isSelectable('steps') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+            className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('steps')} ${isSelectable('steps') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
             onClick={(e) => isSelectable('steps') && toggleSelection(e, 'steps')}
           >
             <div className="flex justify-between items-center mb-3">
-              <p className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
+              <p className="text-xs font-bold text-white/40 uppercase flex items-center gap-2">
                 Procedure Steps
-                <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-bold">
+                <span className="bg-white/10 text-white/50 px-2 py-0.5 rounded-full text-[9px] font-bold">
                   {Array.isArray(doc.steps) ? doc.steps.length : '1'} Steps
                 </span>
               </p>
@@ -148,44 +147,44 @@ export default function ManageProposedFixes() {
                 <input
                   type="checkbox"
                   checked={fixSelections[selectedFix.fixid || selectedFix.id]?.steps}
-                  onChange={() => { }}
-                  className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                  onChange={() => {}}
+                  className="w-4 h-4 accent-amber-500 rounded"
                 />
               )}
             </div>
             <div className="space-y-3">
               {Array.isArray(doc.steps) ? doc.steps.map((step, idx) => (
                 <div key={idx} className="flex gap-3 text-sm">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">
                     {idx + 1}
                   </span>
-                  <p className="text-gray-600 leading-relaxed text-xs">{step}</p>
+                  <p className="text-white/70 leading-relaxed text-xs">{step}</p>
                 </div>
-              )) : <p className="text-gray-600 text-xs">{doc.steps || 'No steps defined'}</p>}
+              )) : <p className="text-white/50 text-xs">{doc.steps || 'No steps defined'}</p>}
             </div>
           </div>
 
           <div
-            className={`p-4 rounded-xl border bg-white transition-all ${highlight('relateddocs')} ${isSelectable('relateddocs') ? 'cursor-pointer hover:border-amber-300' : ''}`}
+            className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('relateddocs')} ${isSelectable('relateddocs') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
             onClick={(e) => isSelectable('relateddocs') && toggleSelection(e, 'relateddocs')}
           >
             <div className="flex justify-between items-center mb-2">
-              <p className="text-xs font-bold text-gray-400 uppercase">Required Documents</p>
+              <p className="text-xs font-bold text-white/40 uppercase">Required Documents</p>
               {isSelectable('relateddocs') && (
                 <input
                   type="checkbox"
                   checked={fixSelections[selectedFix.fixid || selectedFix.id]?.relateddocs}
-                  onChange={() => { }}
-                  className="w-3 h-3 text-amber-500 rounded focus:ring-amber-400"
+                  onChange={() => {}}
+                  className="w-4 h-4 accent-amber-500 rounded"
                 />
               )}
             </div>
             <div className="flex flex-wrap gap-2">
               {Array.isArray(doc.relateddocs) ? doc.relateddocs.map((rd, i) => (
-                <span key={i} className="px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-lg text-[11px] text-gray-600 font-medium">
+                <span key={i} className="px-2.5 py-1 bg-white/10 border border-white/20 rounded-lg text-[11px] text-white/70 font-medium">
                   {rd}
                 </span>
-              )) : <span className="text-xs text-gray-500 italic">None specified</span>}
+              )) : <span className="text-xs text-white/40 italic">None specified</span>}
             </div>
           </div>
         </div>
@@ -204,7 +203,6 @@ export default function ManageProposedFixes() {
       setFixes(data);
     } catch (error) {
       console.error('Error fetching fixes:', error);
-      // Fallback to mock data if API fails
       setFixes([
         {
           id: '1',
@@ -215,36 +213,23 @@ export default function ManageProposedFixes() {
           submittedDate: '2025-12-03',
           status: 'pending',
           problemTypes: ['steps', 'documents'],
-          description: 'Step 3 mentions wrong office location. The required photos should be 4x6, not 3x4.'
-        },
-        {
-          id: '2',
-          docid: '3',
-          title: 'Wrong price for Birth Certificate',
-          documentName: 'Birth Certificate',
-          submittedBy: 'jane@example.com',
-          submittedDate: '2025-12-06',
-          status: 'pending',
-          problemTypes: ['price'],
-          description: 'Listed price is outdated, should be 500 DA instead of the previous 200 DA.'
+          description: 'Step 3 mentions wrong office location.'
         }
       ]);
     } finally {
       setLoading(false);
     }
   };
-  // Helper to validate UUID format
+
   const isValidUUID = (uuid) => {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
   };
 
-  // Helper to find the real fix object regardless of server wrapping
   const extractFixData = (res) => {
     if (!res) return null;
-    // Common patterns: res.fix, res.data.fix, res.data[0], or res itself
     let current = res.fix || (res.data && res.data.fix ? res.data.fix : res.data) || res;
     if (Array.isArray(current)) current = current[0];
-    if (current && current.data && !current.docid) current = current.data; // Handle double data wrapping
+    if (current && current.data && !current.docid) current = current.data;
     if (Array.isArray(current)) current = current[0];
     return current;
   };
@@ -252,41 +237,28 @@ export default function ManageProposedFixes() {
   const handleApprove = async (fixId, providedData = null) => {
     let finalData = providedData;
 
-    // If no data provided (e.g. from table), we need to compute it from original doc and selections
     if (!finalData) {
       try {
-        // Step 1: Fetch full fix details to ensure we have docid
         const fixRes = await proposalService.getProposedFixDetails(fixId);
         const fix = extractFixData(fixRes);
 
         if (!fix) {
-          throw new Error('Fix details could not be found in the server response.');
+          throw new Error('Fix details could not be found.');
         }
 
-        // Check for userid to prevent server-side crash in addContribution
-        if (!fix.userid && !fix.userId) {
-          console.warn('⚠️ Fix is missing a userid. Reward points will fail on server.');
-        }
-
-        // Deep discovery: Look everywhere for the document ID
         const rawDocId = fix.docid || fix.docId || (fix.documents && (fix.documents.docid || fix.documents.id));
 
         if (!rawDocId || !isValidUUID(rawDocId)) {
-          console.error('❌ Invalid DocID found:', rawDocId);
-          throw new Error('This fix is missing a valid link to a document. It cannot be applied.');
+          throw new Error('This fix is missing a valid link to a document.');
         }
 
-        const actualDocId = rawDocId;
-
-        // Step 2: Fetch original doc
-        const docRes = await documentService.getDocumentById(actualDocId);
+        const docRes = await documentService.getDocumentById(rawDocId);
         const originalData = docRes.data || docRes;
 
         if (!originalData || !originalData.docname) {
           throw new Error('The original document could not be loaded.');
         }
 
-        // Use selections if they exist, otherwise default to all problems found in the fix
         const selections = fixSelections[fixId] || {
           steps: !!fix.stepsProblem,
           price: !!fix.priceProblem,
@@ -310,13 +282,12 @@ export default function ManageProposedFixes() {
           docprice: (fix.priceProblem && selections.price) ? fix.priceDetails : originalData.docprice,
           duration: (fix.timeProblem && selections.duration) ? fix.timeDetails : originalData.duration,
           relateddocs: (fix.relatedDocsProblem && selections.relateddocs) ? processRelated(fix.relatedDocsDetails, originalData.relateddocs) : originalData.relateddocs,
-          // Re-map mandatory fields to ensure they exist for the controller's validation
           docname: originalData.docname || fix.documentName || '',
           doctype: originalData.doctype || originalData.category || ''
         };
       } catch (err) {
-        console.error("Failed to prepare data for approval:", err);
-        Swal.fire('Error!', err.message || 'Could not load document to apply fixes.', 'error');
+        console.error("Failed to prepare data:", err);
+        Swal.fire('Error!', err.message || 'Could not load document.', 'error');
         return;
       }
     }
@@ -327,8 +298,10 @@ export default function ManageProposedFixes() {
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, Apply Fix'
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Apply Fix',
+      background: '#1e293b',
+      color: '#fff'
     });
 
     if (result.isConfirmed) {
@@ -361,34 +334,29 @@ export default function ManageProposedFixes() {
           );
         };
 
-        // Deeply sanitized payload - NO extra fields
         const sanitizedPayload = {
           docname: String(finalData.docname || '').trim(),
           doctype: String(finalData.doctype || finalData.category || '').trim(),
           docprice: parsePrice(finalData.docprice),
           duration: parseDuration(finalData.duration),
           steps: processArrayField(finalData.steps),
-          relateddocs: processArrayField(finalData.relateddocs, true) // ONLY send valid UUIDs
+          relateddocs: processArrayField(finalData.relateddocs, true)
         };
 
-        // Final check: ensure we didn't end up with 'undefined' as a string
         if (sanitizedPayload.docname === 'undefined') sanitizedPayload.docname = '';
         if (sanitizedPayload.doctype === 'undefined') sanitizedPayload.doctype = '';
 
-        // Valid image check
         const pic = finalData.docpicture;
         if (pic && typeof pic === 'string' && (pic.startsWith('http') || pic.startsWith('data:'))) {
           sanitizedPayload.docpicture = pic;
         }
-
-        console.log('🚀 Final validation check for:', sanitizedPayload.docname);
 
         if (!sanitizedPayload.docname || !sanitizedPayload.doctype || sanitizedPayload.steps.length === 0) {
           const missing = [];
           if (!sanitizedPayload.docname) missing.push('Name');
           if (!sanitizedPayload.doctype) missing.push('Category');
           if (sanitizedPayload.steps.length === 0) missing.push('Steps');
-          throw new Error('Mandatory fields missing: ' + missing.join(', '));
+          throw new Error('Missing: ' + missing.join(', '));
         }
 
         await adminService.validateFix(fixId, sanitizedPayload);
@@ -398,11 +366,19 @@ export default function ManageProposedFixes() {
           text: 'The document has been updated successfully.',
           icon: 'success',
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
+          background: '#1e293b',
+          color: '#fff'
         });
       } catch (error) {
         console.error('Error approving fix:', error);
-        Swal.fire('Error!', 'Failed to apply fix. Please try again.', 'error');
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to apply fix. Please try again.',
+          icon: 'error',
+          background: '#1e293b',
+          color: '#fff'
+        });
       }
     }
   };
@@ -414,8 +390,10 @@ export default function ManageProposedFixes() {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, Discard it'
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Discard it',
+      background: '#1e293b',
+      color: '#fff'
     });
 
     if (result.isConfirmed) {
@@ -427,83 +405,52 @@ export default function ManageProposedFixes() {
           text: 'The suggestion has been removed.',
           icon: 'success',
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
+          background: '#1e293b',
+          color: '#fff'
         });
       } catch (error) {
         console.error('Error rejecting fix:', error);
-        Swal.fire('Error!', 'Failed to discard. Please try again.', 'error');
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to discard. Please try again.',
+          icon: 'error',
+          background: '#1e293b',
+          color: '#fff'
+        });
       }
     }
   };
 
   const handleViewDetails = async (fix) => {
-    console.log("🧪 [CLICK] Fix object:", fix);
-    console.log("🧪 [CLICK] Document ID from fix:", fix.docid || fix.docId);
-
-
     setFetchingDoc(true);
     setSelectedFix(null);
     setOriginalDoc(null);
 
     try {
       const fixId = fix.fixid || fix.id;
-      console.log('🟡 Fetching fix details for ID:', fixId);
-
       const fixRes = await proposalService.getProposedFixDetails(fixId);
-      console.log('🟢 Fix details response:', fixRes);
-
       const fixData = extractFixData(fixRes);
 
       if (!fixData) {
-        console.error('🔴 Fix details fetch failed. Structure:', fixRes);
-        throw new Error('Fix details could not be parsed from server response.');
+        throw new Error('Fix details could not be parsed.');
       }
 
-      if (!fixData.userid && !fixData.userId) {
-        Swal.fire({
-          title: 'Warning',
-          text: 'This fix proposal has no associated User ID. Approving it might fail on the server.',
-          icon: 'warning',
-          confirmButtonColor: '#d33'
-        });
-      }
-
-      // -----------------------------------------------------
-      // FIX 1 & 2: Parse Steps & Handle Empty First Step
-      // -----------------------------------------------------
       if (fixData.stepsDetails) {
         try {
           let parsed = fixData.stepsDetails;
-          // If it's a JSON string, parse it
           if (typeof parsed === 'string' && (parsed.startsWith('[') || parsed.startsWith('{'))) {
             parsed = JSON.parse(parsed);
           }
-
-          // Ensure it's an array
           if (!Array.isArray(parsed)) {
-            // If it's a simple string (legacy), wrap in array
             parsed = [String(parsed)];
           }
-
-          // Filter out empty strings if desired, OR keep them if index matters.
-          // User asked: "leaves the first step blank and the second step fills it , it is received as an empty first stepp and a normal 2nd step"
-          // This implies the user wants to *see* that index 0 is empty.
-          // However, typically we want to CLEAN UP for the final doc.
-          // But if the user INTENTIONALLY sent an empty step to say "delete this", we should handle logic.
-          // The current prompt says: "ensure ... it is received as an empty first stepp"
-          // So we should respect the array as sent.
           fixData.stepsDetails = parsed;
-
         } catch (e) {
-          console.error("Failed to parse stepsDetails:", e);
-          // If parse fails, treat as single text line
           fixData.stepsDetails = [String(fixData.stepsDetails)];
         }
       }
 
-      // -----------------------------------------------------
-      // FIX 3: Resolve Related Doc Names
-      // -----------------------------------------------------
       if (fixData.relatedDocsDetails) {
         try {
           let parsedDocs = fixData.relatedDocsDetails;
@@ -512,45 +459,25 @@ export default function ManageProposedFixes() {
           }
           if (!Array.isArray(parsedDocs)) parsedDocs = [String(parsedDocs)];
 
-          // Now these are UUIDs. We need to fetch their names to display them nicely.
-          // We can't easily fetch names one by one efficiently here without a "getDocumentsByIds" endpoint,
-          // but we can fetch ALL docs (since we likely have them cached or it's fast) or just display ID for now 
-          // and let the render function handle name lookup if we had a map.
-          // BETTER APPROACH: Fetch the names right here.
           const resolvedNames = [];
           for (const relatedId of parsedDocs) {
-            // Skip empty or invalid
             if (!relatedId || relatedId.length < 5) continue;
             try {
-              // Try to find it in our known 'fixes' list? No.
-              // Fetch individual doc name?
               const rDoc = await documentService.getDocumentById(relatedId);
               if (rDoc && (rDoc.docname || rDoc.data?.docname)) {
                 resolvedNames.push(rDoc.docname || rDoc.data.docname);
               } else {
-                resolvedNames.push(relatedId); // Fallback to ID
+                resolvedNames.push(relatedId);
               }
             } catch (e) {
               resolvedNames.push(relatedId);
             }
           }
-          // Use the RESOLVED names for display in the "Modified" view
-          // CAUTION: The 'value' we pass to the final approval must be IDs, but for *preview* we want names.
-          // We'll store a separate 'relatedDocsDisplay' property or just overwrite if we don't need IDs after this.
-          // Wait, 'getModifiedDoc' merges this into 'relateddocs'. 
-          // If we overwrite with names, the final 'Apply' logic needs to map names back to IDs? 
-          // 'Apply Fix' uses 'finalData' which comes from 'getModifiedDoc'.
-          // 'sanitizedPayload.relateddocs' expects valid UUIDs (filterUUIDs=true). 
-          // So if we convert to names here, Apply will FAIL to validate UUIDs.
-
-          // SOLUTION: Keep actual IDs in 'fixData.relatedDocsDetails' but add 'fixData.relatedDocsNames' for display.
           fixData.relatedDocsNames = resolvedNames;
-
         } catch (e) {
-          console.error("Failed to parse/resolve related docs:", e);
+          console.error("Failed to parse related docs:", e);
         }
       }
-
 
       setSelectedFix(fixData);
 
@@ -568,24 +495,14 @@ export default function ManageProposedFixes() {
       }
 
       if (fixData && (fixData.docid || fixData.docId)) {
-        console.log('🟡 Fetching original document, docid:', fixData.docid || fixData.docId);
-
         const docRes = await documentService.getDocumentById(fixData.docid || fixData.docId);
         const docData = docRes.data || docRes;
 
-        // Merge relateddocs IDs back into the docData if they are in sibling relatedDocuments
-        // And convert original doc IDs to names too? The original doc usually has 'relateddocs' as array of strings (names or IDs?)
-        // In 'ManageProposedFixes', line 174: it just maps 'doc.relateddocs'. 
-        // If the backend sends names, great. If IDs, we have same issue.
-        // Let's assume original doc has names properly populated or we might need to resolve them too.
         if (docRes.relatedDocuments && !docData.relateddocs) {
-          // If relatedDocuments contains objects with 'docname', map to names!
           docData.relateddocs = docRes.relatedDocuments.map(rd => rd.docname || rd.docid || rd.id);
         } else if (docData.relateddocs && Array.isArray(docData.relateddocs)) {
-          // Check if they look like IDs
           const samples = docData.relateddocs;
           if (samples.length > 0 && isValidUUID(samples[0])) {
-            // Resolve original doc IDs to names too
             const originalNames = [];
             for (const rid of samples) {
               try {
@@ -598,11 +515,9 @@ export default function ManageProposedFixes() {
         }
 
         setOriginalDoc(docData);
-      } else {
-        console.warn('⚠️ Fix has no docid');
       }
     } catch (error) {
-      console.error('❌ handleViewDetails error:', error);
+      console.error('handleViewDetails error:', error);
     } finally {
       setFetchingDoc(false);
     }
@@ -621,170 +536,195 @@ export default function ManageProposedFixes() {
       return docA.localeCompare(docB);
     });
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/60">Loading fixes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+      </div>
+
       <Notification
         message={notification.message}
         type={notification.type}
         onClose={() => setNotification({ ...notification, message: '' })}
       />
-      <div className="p-4 md:p-8">
+
+      <div className="relative z-10 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 overflow-hidden">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 truncate">Manage Proposed Fixes</h1>
-            <p className="text-sm md:text-base text-gray-600">Review and approve user-submitted document fixes</p>
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/30">
+                <Wrench className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Manage Proposed Fixes</h1>
+            </div>
+            <p className="text-white/60 ml-14">Review and approve user-submitted document fixes</p>
           </div>
 
-          {/* Filters */}
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Search by title or document..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+          {/* Search Filter */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 mb-6 border border-white/20">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <input
+                type="text"
+                placeholder="Search by title or document..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              />
             </div>
           </div>
 
           {/* Fixes Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Document
-                  </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Submitted By
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredFixes.map((fix) => (
-                  <tr key={fix.fixid || fix.id} className="hover:bg-gray-50">
-
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {fix.documents?.docname || 'Unknown Document'}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div>
-                        <div className="font-medium text-gray-900">{fix.users?.name || 'Anonymous'}</div>
-                        <div className="text-xs text-gray-500">{fix.users?.email}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {fix.creation_date ? new Date(fix.creation_date).toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      Pending
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleViewDetails(fix)}
-                          className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium transition-colors border border-blue-200"
-                        >
-                          👁️ View
-                        </button>
-                        <div className="flex gap-1">
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
+                <thead className="bg-white/5 border-b border-white/10">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-white/60 uppercase tracking-wider">
+                      Document
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-white/60 uppercase tracking-wider">
+                      Submitted By
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-white/60 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-white/60 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-white/60 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {filteredFixes.map((fix) => (
+                    <tr key={fix.fixid || fix.id} className="hover:bg-white/5 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-white/60" />
+                          </div>
+                          <span className="text-sm font-medium text-white">{fix.documents?.docname || 'Unknown Document'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div>
+                          <div className="text-sm font-medium text-white">{fix.users?.name || 'Anonymous'}</div>
+                          <div className="text-xs text-white/50">{fix.users?.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/60">
+                        {fix.creation_date ? new Date(fix.creation_date).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          <Clock className="w-3 h-3" />
+                          Pending
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleViewDetails(fix)}
+                            className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 font-medium transition-colors border border-blue-500/30 flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </button>
                           <button
                             onClick={() => handleApprove(fix.fixid || fix.id)}
-                            className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 font-medium transition-colors border border-green-200"
+                            className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-colors border border-emerald-500/30"
                             title="Approve"
                           >
-                            ✅
+                            <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleReject(fix.fixid || fix.id)}
-                            className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors border border-red-200"
+                            className="p-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors border border-red-500/30"
                             title="Reject"
                           >
-                            ❌
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {filteredFixes.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                No fixes found matching your criteria.
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Wrench className="w-8 h-8 text-white/40" />
+                </div>
+                <p className="text-white/60">No fixes found matching your criteria.</p>
               </div>
             )}
           </div>
 
           {/* Details Modal */}
           {selectedFix && (
-            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-              <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20 shadow-2xl">
                 {/* Modal Header */}
-                <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="px-8 py-5 border-b border-white/10 flex justify-between items-center bg-white/5">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{selectedFix.title || 'Fix Proposal'}</h2>
-                    <p className="text-sm text-gray-500 mt-1">Comparing proposed changes with live document</p>
+                    <h2 className="text-2xl font-bold text-white">{selectedFix.title || 'Fix Proposal'}</h2>
+                    <p className="text-white/50 mt-1">Comparing proposed changes with live document</p>
                   </div>
                   <button
                     onClick={() => {
                       setSelectedFix(null);
                       setOriginalDoc(null);
                     }}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/40 hover:text-white"
                   >
-                    <span className="text-3xl leading-none">×</span>
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
 
-                {/* Modal Body - Full Comparison */}
-                <div className="flex-1 overflow-y-auto p-8 bg-gray-100/30">
+                {/* Modal Body */}
+                <div className="flex-1 overflow-y-auto p-8">
                   {fetchingDoc ? (
-                    <div className="h-full flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                      <p className="text-gray-500">Loading document comparison...</p>
+                    <div className="h-full flex flex-col items-center justify-center py-12">
+                      <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <p className="text-white/50">Loading document comparison...</p>
                     </div>
                   ) : originalDoc ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-full">
-                      {/* Original Copy */}
                       {renderDocPreview(originalDoc, 'Existing Live Document', 'original')}
-
-                      {/* Merged Modified Copy */}
                       {renderDocPreview(getModifiedDoc(), 'Proposed Resulting Document', 'modified')}
                     </div>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-500 italic">
-                      <span className="text-4xl mb-4">⚠️</span>
+                    <div className="h-full flex flex-col items-center justify-center text-white/50">
+                      <AlertTriangle className="w-12 h-12 mb-4 text-amber-400" />
                       <p>Original document could not be loaded for comparison.</p>
-                      <button onClick={() => fetchFixes()} className="mt-4 text-primary font-bold underline">Try Refreshing List</button>
+                      <button onClick={() => fetchFixes()} className="mt-4 text-emerald-400 font-bold hover:underline">Try Refreshing List</button>
                     </div>
                   )}
                 </div>
 
-                {/* Additional Context Bar */}
-                <div className="px-8 py-3 bg-white border-t border-gray-100 flex items-center justify-between">
+                {/* Context Bar */}
+                <div className="px-8 py-3 bg-white/5 border-t border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">User's Feedback</span>
-                    <p className="text-sm text-gray-600 italic">"{selectedFix.description || 'No detailed explanation provided'}"</p>
+                    <span className="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-amber-500/30">User's Feedback</span>
+                    <p className="text-sm text-white/60 italic">"{selectedFix.description || 'No explanation provided'}"</p>
                   </div>
                   <div className="flex gap-2">
                     {selectedFix.stepsProblem && <span className="w-2 h-2 rounded-full bg-amber-400" title="Steps Changed"></span>}
@@ -794,13 +734,13 @@ export default function ManageProposedFixes() {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="px-8 py-5 border-t border-gray-100 bg-gray-50 flex justify-end items-center gap-3">
+                <div className="px-8 py-5 border-t border-white/10 bg-white/5 flex justify-end items-center gap-3">
                   <button
                     onClick={() => {
                       setSelectedFix(null);
                       setOriginalDoc(null);
                     }}
-                    className="px-6 py-2.5 text-gray-700 font-semibold hover:bg-gray-200 rounded-xl transition-colors"
+                    className="px-6 py-2.5 text-white/70 font-semibold hover:bg-white/10 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>
@@ -810,7 +750,7 @@ export default function ManageProposedFixes() {
                       setSelectedFix(null);
                       setOriginalDoc(null);
                     }}
-                    className="px-6 py-2.5 bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 font-bold rounded-xl transition-colors"
+                    className="px-6 py-2.5 bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-bold rounded-xl transition-colors"
                   >
                     Discard Fix
                   </button>
@@ -820,7 +760,7 @@ export default function ManageProposedFixes() {
                       setSelectedFix(null);
                       setOriginalDoc(null);
                     }}
-                    className="px-10 py-2.5 bg-green-600 text-white hover:bg-green-700 font-bold rounded-xl transition-all shadow-lg shadow-green-200 transform hover:-translate-y-0.5"
+                    className="px-10 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 font-bold rounded-xl transition-all"
                   >
                     Apply Fix
                   </button>

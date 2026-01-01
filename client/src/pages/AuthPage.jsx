@@ -53,21 +53,29 @@ export default function AuthPage() {
       </div>
 
       {/* Card Container */}
-      <div className="relative w-full max-w-4xl h-[620px] perspective-1000 z-10">
+      <div className="relative w-full max-w-4xl h-[620px] z-10">
+        {/* Sign In Card */}
         <div
-          className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
-            isFlipped ? 'rotate-y-180' : ''
+          className={`absolute inset-0 transition-all duration-500 ${
+            isFlipped 
+              ? 'opacity-0 pointer-events-none scale-95 rotate-y-12' 
+              : 'opacity-100 pointer-events-auto scale-100 rotate-y-0'
           }`}
+          style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
         >
-          {/* Front - Sign In */}
-          <div className="absolute inset-0 backface-hidden">
-            <SignInCard onFlip={handleFlip} isFlipping={isFlipping} />
-          </div>
+          <SignInCard onFlip={handleFlip} isFlipping={isFlipping} />
+        </div>
 
-          {/* Back - Sign Up */}
-          <div className="absolute inset-0 backface-hidden rotate-y-180">
-            <SignUpCard onFlip={handleFlip} isFlipping={isFlipping} />
-          </div>
+        {/* Sign Up Card */}
+        <div
+          className={`absolute inset-0 transition-all duration-500 ${
+            isFlipped 
+              ? 'opacity-100 pointer-events-auto scale-100 rotate-y-0' 
+              : 'opacity-0 pointer-events-none scale-95 -rotate-y-12'
+          }`}
+          style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+        >
+          <SignUpCard onFlip={handleFlip} isFlipping={isFlipping} />
         </div>
       </div>
 

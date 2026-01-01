@@ -25,6 +25,18 @@ input::-ms-clear {
   transform: rotateY(180deg);
 }
 
+.rotate-y-12 {
+  transform: rotateY(12deg);
+}
+
+.-rotate-y-12 {
+  transform: rotateY(-12deg);
+}
+
+.rotate-y-0 {
+  transform: rotateY(0deg);
+}
+
 /* Floating animation for particles */
 @keyframes float {
   0%, 100% {
