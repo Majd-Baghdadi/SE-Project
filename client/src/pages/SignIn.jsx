@@ -75,7 +75,29 @@ export default function SignIn() {
           icon: 'success',
           title: 'Signed in successfully'
         });
-        navigate('/');
+
+        // Redirect based on role
+        if (response.user && response.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          // Check if we also returned the user object in the response or if needs to be fetched
+          // For now, assume 'login' returns the user if we modify it or check context. 
+          // Actually, 'login' in useAuth returns { success: true } mostly. 
+          // We need to verify if the response from context.login() includes user data. 
+          // Looking at AuthContext.jsx: 
+          // if (response && response.success === true) { await checkAuth(); return { success: true }; }
+          // So 'response' here IS { success: true }. It DOES NOT contain user data directly.
+          // However, checkAuth() updates the 'user' state. 
+          // We need to access the user state, but updates are async.
+          // Better strategy: Let's fetch the user role immediately or rely on localStorage set by authService/AuthContext.
+
+          const userRole = localStorage.getItem('userRole');
+          if (userRole === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/');
+          }
+        }
       } else {
         // Check if the failure was due to verification
         if (response.status === 403 || response.error?.includes('verified')) {

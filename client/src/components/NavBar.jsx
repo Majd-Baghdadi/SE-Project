@@ -71,7 +71,7 @@ export default function NavBar() {
   const isTransparent = isHome && !isScrolled;
 
   return (
-    <nav className={`border-b z-50 font-sans transition-all duration-300 ${isHome ? 'fixed top-0 w-full' : 'sticky top-0'} ${isTransparent ? 'bg-transparent border-transparent' : 'bg-white border-gray-200 shadow-sm'
+    <nav className={`border-b z-50 font-sans transition-all duration-300 fixed top-0 w-full ${isTransparent ? 'bg-transparent border-transparent' : 'bg-white border-gray-200 shadow-sm'
       }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo */}

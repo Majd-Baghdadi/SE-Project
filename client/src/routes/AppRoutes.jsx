@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import Home from '../pages/Home'
 import DocumentDetails from '../pages/DocumentDetails'
@@ -26,10 +26,13 @@ import ProtectedRoute from '../components/ProtectedRoute'
 import ProposeDocument from '../pages/ProposeDocument'
 
 export default function AppRoutes() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
   return (
     <div className="flex flex-col min-h-screen">
       <NavBar />
-      <main className="flex-1">
+      <main className={`flex-1 ${!isHome ? 'pt-20' : ''}`}>
         <Routes>
           {/* Sprint 1 Routes - Public */}
           <Route path="/" element={<Home />} />

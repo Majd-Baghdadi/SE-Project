@@ -398,22 +398,12 @@ export default function Home() {
       </section>
 
       {/* Floating Action Button (FAB) */}
-      <div className="fixed bottom-10 right-10 z-[100] group flex items-center">
+      <div className="fixed bottom-10 right-10 z-[100]">
         <Link
           to="/propose"
-          className="flex items-center no-underline"
+          className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:bg-green-700 hover:scale-110 transition-all duration-300 border-4 border-white no-underline"
         >
-          {/* Label (Visible on Hover) */}
-          <div className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out">
-            <span className="bg-gray-900 text-white text-sm font-bold py-3 px-6 rounded-l-full shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {isAdmin ? 'Add New Document' : 'Propose New Document'}
-            </span>
-          </div>
-
-          {/* Circle Button */}
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center text-white shadow-2xl shadow-green-200 group-hover:shadow-green-400 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90 border-4 border-white">
-            <span className="text-4xl font-light">+</span>
-          </div>
+          <span className="text-4xl font-light pb-1">+</span>
         </Link>
       </div>
     </div>

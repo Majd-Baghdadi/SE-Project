@@ -19,12 +19,22 @@ export default function ManageProposedFixes() {
     if (!originalDoc || !selectedFix) return null;
     const selections = fixSelections[selectedFix.fixid || selectedFix.id] || {};
 
+    // Use resolved names if available for display, otherwise fall back to raw details
+    // Note: selectedFix.stepsDetails is now already parsed as an array by handleViewDetails
+    const stepsToUse = (selectedFix.stepsProblem && selections.steps)
+      ? (selectedFix.stepsDetails ? selectedFix.stepsDetails : originalDoc.steps)
+      : originalDoc.steps;
+
+    const docsToUse = (selectedFix.relatedDocsProblem && selections.relateddocs)
+      ? (selectedFix.relatedDocsNames ? selectedFix.relatedDocsNames : (selectedFix.relatedDocsDetails ? [selectedFix.relatedDocsDetails] : originalDoc.relateddocs))
+      : originalDoc.relateddocs;
+
     return {
       ...originalDoc,
-      steps: (selectedFix.stepsProblem && selections.steps) ? (selectedFix.stepsDetails ? [selectedFix.stepsDetails] : originalDoc.steps) : originalDoc.steps,
+      steps: stepsToUse,
       docprice: (selectedFix.priceProblem && selections.price) ? selectedFix.priceDetails : originalDoc.docprice,
       duration: (selectedFix.timeProblem && selections.duration) ? selectedFix.timeDetails : originalDoc.duration,
-      relateddocs: (selectedFix.relatedDocsProblem && selections.relateddocs) ? (selectedFix.relatedDocsDetails ? [selectedFix.relatedDocsDetails] : originalDoc.relateddocs) : originalDoc.relateddocs
+      relateddocs: docsToUse
     };
   };
 
@@ -458,6 +468,90 @@ export default function ManageProposedFixes() {
         });
       }
 
+      // -----------------------------------------------------
+      // FIX 1 & 2: Parse Steps & Handle Empty First Step
+      // -----------------------------------------------------
+      if (fixData.stepsDetails) {
+        try {
+          let parsed = fixData.stepsDetails;
+          // If it's a JSON string, parse it
+          if (typeof parsed === 'string' && (parsed.startsWith('[') || parsed.startsWith('{'))) {
+            parsed = JSON.parse(parsed);
+          }
+
+          // Ensure it's an array
+          if (!Array.isArray(parsed)) {
+            // If it's a simple string (legacy), wrap in array
+            parsed = [String(parsed)];
+          }
+
+          // Filter out empty strings if desired, OR keep them if index matters.
+          // User asked: "leaves the first step blank and the second step fills it , it is received as an empty first stepp and a normal 2nd step"
+          // This implies the user wants to *see* that index 0 is empty.
+          // However, typically we want to CLEAN UP for the final doc.
+          // But if the user INTENTIONALLY sent an empty step to say "delete this", we should handle logic.
+          // The current prompt says: "ensure ... it is received as an empty first stepp"
+          // So we should respect the array as sent.
+          fixData.stepsDetails = parsed;
+
+        } catch (e) {
+          console.error("Failed to parse stepsDetails:", e);
+          // If parse fails, treat as single text line
+          fixData.stepsDetails = [String(fixData.stepsDetails)];
+        }
+      }
+
+      // -----------------------------------------------------
+      // FIX 3: Resolve Related Doc Names
+      // -----------------------------------------------------
+      if (fixData.relatedDocsDetails) {
+        try {
+          let parsedDocs = fixData.relatedDocsDetails;
+          if (typeof parsedDocs === 'string' && (parsedDocs.startsWith('[') || parsedDocs.startsWith('{'))) {
+            parsedDocs = JSON.parse(parsedDocs);
+          }
+          if (!Array.isArray(parsedDocs)) parsedDocs = [String(parsedDocs)];
+
+          // Now these are UUIDs. We need to fetch their names to display them nicely.
+          // We can't easily fetch names one by one efficiently here without a "getDocumentsByIds" endpoint,
+          // but we can fetch ALL docs (since we likely have them cached or it's fast) or just display ID for now 
+          // and let the render function handle name lookup if we had a map.
+          // BETTER APPROACH: Fetch the names right here.
+          const resolvedNames = [];
+          for (const relatedId of parsedDocs) {
+            // Skip empty or invalid
+            if (!relatedId || relatedId.length < 5) continue;
+            try {
+              // Try to find it in our known 'fixes' list? No.
+              // Fetch individual doc name?
+              const rDoc = await documentService.getDocumentById(relatedId);
+              if (rDoc && (rDoc.docname || rDoc.data?.docname)) {
+                resolvedNames.push(rDoc.docname || rDoc.data.docname);
+              } else {
+                resolvedNames.push(relatedId); // Fallback to ID
+              }
+            } catch (e) {
+              resolvedNames.push(relatedId);
+            }
+          }
+          // Use the RESOLVED names for display in the "Modified" view
+          // CAUTION: The 'value' we pass to the final approval must be IDs, but for *preview* we want names.
+          // We'll store a separate 'relatedDocsDisplay' property or just overwrite if we don't need IDs after this.
+          // Wait, 'getModifiedDoc' merges this into 'relateddocs'. 
+          // If we overwrite with names, the final 'Apply' logic needs to map names back to IDs? 
+          // 'Apply Fix' uses 'finalData' which comes from 'getModifiedDoc'.
+          // 'sanitizedPayload.relateddocs' expects valid UUIDs (filterUUIDs=true). 
+          // So if we convert to names here, Apply will FAIL to validate UUIDs.
+
+          // SOLUTION: Keep actual IDs in 'fixData.relatedDocsDetails' but add 'fixData.relatedDocsNames' for display.
+          fixData.relatedDocsNames = resolvedNames;
+
+        } catch (e) {
+          console.error("Failed to parse/resolve related docs:", e);
+        }
+      }
+
+
       setSelectedFix(fixData);
 
       const fixIdActual = fixData.fixid || fixData.id;
@@ -480,8 +574,27 @@ export default function ManageProposedFixes() {
         const docData = docRes.data || docRes;
 
         // Merge relateddocs IDs back into the docData if they are in sibling relatedDocuments
+        // And convert original doc IDs to names too? The original doc usually has 'relateddocs' as array of strings (names or IDs?)
+        // In 'ManageProposedFixes', line 174: it just maps 'doc.relateddocs'. 
+        // If the backend sends names, great. If IDs, we have same issue.
+        // Let's assume original doc has names properly populated or we might need to resolve them too.
         if (docRes.relatedDocuments && !docData.relateddocs) {
-          docData.relateddocs = docRes.relatedDocuments.map(rd => rd.docid || rd.id);
+          // If relatedDocuments contains objects with 'docname', map to names!
+          docData.relateddocs = docRes.relatedDocuments.map(rd => rd.docname || rd.docid || rd.id);
+        } else if (docData.relateddocs && Array.isArray(docData.relateddocs)) {
+          // Check if they look like IDs
+          const samples = docData.relateddocs;
+          if (samples.length > 0 && isValidUUID(samples[0])) {
+            // Resolve original doc IDs to names too
+            const originalNames = [];
+            for (const rid of samples) {
+              try {
+                const r = await documentService.getDocumentById(rid);
+                originalNames.push(r.docname || r.data.docname || rid);
+              } catch (e) { originalNames.push(rid); }
+            }
+            docData.relateddocs = originalNames;
+          }
         }
 
         setOriginalDoc(docData);
