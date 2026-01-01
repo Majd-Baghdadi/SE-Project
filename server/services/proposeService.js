@@ -76,14 +76,7 @@ async function deleteProposedDocuemnt(id,user) {
 
 //delete a proposed fix
 async function deleteProposedFix(id,user) {
-    const {data,error}=await supabase.from("fix").select("userid").eq("fixid",id).single()
-    if (!data || error) {
-        throw new NotFoundError("Proposed fix not found")
-    }
-    if (data.userid!==user.userId || user.role!=="admin") {
-        throw new ForbiddenError("Access denied")
-    }
-    return await supabase.from("fix").delete().eq("fixid",id).select()
+    return await supabase.from("fixes").delete().eq("fixid",id).select()
 }
 
 //function to fetch proposed document details
