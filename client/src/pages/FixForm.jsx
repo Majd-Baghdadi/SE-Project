@@ -72,60 +72,59 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-          <LinkIcon className="w-5 h-5 text-green-600" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <LinkIcon className="w-6 h-6 text-emerald-400" />
         </div>
-        <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
+        <h3 className="text-xl font-bold text-white">
           {label}
         </h3>
       </div>
 
       <div
-        className={`w-full px-4 py-3 border-2 ${error ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer bg-white hover:border-green-500 transition-colors min-h-[50px] flex justify-between items-center`}
+        className={`w-full px-4 py-4 border ${error ? 'border-red-500/50' : 'border-white/20'} rounded-xl cursor-pointer bg-white/10 hover:bg-white/15 transition-all duration-300 min-h-[50px] flex justify-between items-center`}
         onClick={() => setOpen(!open)}
       >
         <div className="flex flex-wrap gap-2 flex-1">
           {selected.length === 0 && (
-            <span className="text-gray-400" style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}>
+            <span className="text-white/40">
               Select related documents...
             </span>
           )}
           {selected.map((docId) => (
             <span
               key={docId}
-              className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-medium"
+              className="inline-flex items-center gap-1 bg-primary/20 text-emerald-300 px-3 py-1.5 rounded-full text-sm font-medium border border-primary/30"
             >
               {getDocNameById(docId)}
               <button
                 type="button"
                 onClick={(e) => removeOption(docId, e)}
-                className="text-green-700 hover:text-green-900 ml-1"
+                className="text-emerald-300 hover:text-red-400 ml-1 transition-colors"
               >
                 <X size={14} />
               </button>
             </span>
           ))}
         </div>
-        <ChevronDown className={`w-4 h-4 ${error ? 'text-red-500' : 'text-gray-500'} ml-2 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 ${error ? 'text-red-500' : 'text-white/40'} ml-2 transition-transform ${open ? 'rotate-180' : ''}`} />
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-400 text-xs mt-2 ml-1">{error}</p>}
 
       {open && (
-        <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-auto z-50">
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-60 overflow-auto z-50">
           {options.map((doc) => (
             <div
               key={doc.id}
-              className={`px-4 py-3 cursor-pointer transition-colors flex justify-between items-center ${selected.includes(doc.id)
-                ? 'bg-green-50 text-green-700'
-                : 'hover:bg-gray-50'
+              className={`px-4 py-3 cursor-pointer transition-all duration-200 flex justify-between items-center border-b border-white/10 last:border-b-0 ${selected.includes(doc.id)
+                ? 'bg-primary/20 text-emerald-300'
+                : 'text-white/80 hover:bg-white/10'
                 }`}
               onClick={() => toggleOption(doc.id)}
-              style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
             >
               <span>{doc.name}</span>
               {selected.includes(doc.id) && (
-                <Check className="w-4 h-4 text-green-600" />
+                <Check className="w-4 h-4 text-emerald-400" />
               )}
             </div>
           ))}
@@ -330,7 +329,14 @@ const ReportIssuePage = () => {
 
     // If no changes, alert user
     if (Object.keys(changes).length === 0) {
-      Swal.fire('No Changes', 'You haven\'t made any changes to the document.', 'info');
+Swal.fire({
+          title: 'No Changes',
+          text: "You haven't made any changes to the document.",
+          icon: 'info',
+          background: '#1e293b',
+          color: '#fff',
+          confirmButtonColor: '#10b981'
+        });
       setIsSubmitting(false);
       return;
     }
@@ -346,18 +352,34 @@ const ReportIssuePage = () => {
           title: 'Report Submitted!',
           text: 'Your issue has been reported successfully. Our team will review it shortly.',
           icon: 'success',
-          confirmButtonColor: '#37a331',
+          background: '#1e293b',
+          color: '#fff',
+          confirmButtonColor: '#10b981',
           confirmButtonText: 'Done'
         }).then(() => {
           closeSuccessModal();
         });
       } else {
         console.error('❌ Fix submission failed:', response.message);
-        Swal.fire('Error!', response.message || 'Failed to submit fix. Please try again.', 'error');
+        Swal.fire({
+          title: 'Error!',
+          text: response.message || 'Failed to submit fix. Please try again.',
+          icon: 'error',
+          background: '#1e293b',
+          color: '#fff',
+          confirmButtonColor: '#10b981'
+        });
       }
     } catch (error) {
       console.error('❌ Error submitting fix:', error);
-      Swal.fire('Error!', 'An unexpected error occurred. Please try again.', 'error');
+      Swal.fire({
+        title: 'Error!',
+        text: 'An unexpected error occurred. Please try again.',
+        icon: 'error',
+        background: '#1e293b',
+        color: '#fff',
+        confirmButtonColor: '#10b981'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -370,9 +392,11 @@ const ReportIssuePage = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3085d6',
+      cancelButtonColor: '#64748b',
       confirmButtonText: 'Yes, Cancel',
-      cancelButtonText: 'No, Keep It'
+      cancelButtonText: 'No, Keep It',
+      background: '#1e293b',
+      color: '#fff'
     }).then((result) => {
       if (result.isConfirmed) {
         confirmCancel();
@@ -406,36 +430,53 @@ const ReportIssuePage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Animated background shapes like ContactUs */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-3xl"></div>
+          
+          {/* Geometric shapes */}
+          <div className="absolute top-20 right-20 w-32 h-32 border border-white/10 rounded-2xl rotate-12 animate-float"></div>
+          <div className="absolute bottom-32 left-20 w-24 h-24 border border-emerald-500/20 rounded-full animate-float delay-1000"></div>
+          <div className="absolute top-1/3 right-1/4 w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-lg rotate-45 animate-float delay-500"></div>
+          
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto relative z-10">
           <div className="text-center mb-10">
-            <h1 className="mb-3" style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontFamily: 'Source Serif Pro', fontWeight: 700, lineHeight: 1.2, color: '#37a331' }}>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4 border border-white/20">
+              <FileText className="w-8 h-8 text-emerald-400" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
               Report an Issue
             </h1>
-            <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Lato', fontWeight: 400, lineHeight: 1.5, color: '#61646b' }}>
+            <p className="text-white/60 text-lg max-w-xl mx-auto">
               Help us improve! Report any problems with the document information.
             </p>
-
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 space-y-6">
             {/* Steps Issue */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div>
               <label className="block mb-3">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <List className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <List className="w-6 h-6 text-emerald-400" />
                   </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
+                  <h3 className="text-xl font-bold text-white">
                     Steps
                   </h3>
                 </div>
                 <div className="space-y-3">
                   {Array.isArray(formData.steps) && formData.steps.map((step, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <div className="flex-shrink-0 w-8 h-10 flex items-center justify-center">
-                        <span className="text-sm font-bold text-gray-500">{index + 1}.</span>
-                      </div>
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="w-8 h-8 flex items-center justify-center bg-white/20 rounded-lg text-white text-sm font-bold flex-shrink-0">
+                        {index + 1}
+                      </span>
                       <input
                         type="text"
                         value={step}
@@ -445,9 +486,8 @@ const ReportIssuePage = () => {
                           setFormData({ ...formData, steps: newSteps });
                           setShowEmptyFieldError(false);
                         }}
-                        placeholder={`Corrected Step ${index + 1}`}
-                        className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all"
-                        style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                        placeholder={`Step ${index + 1}`}
+                        className="flex-1 px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 hover:bg-white/15"
                       />
                       {formData.steps.length > 1 && (
                         <button
@@ -456,7 +496,7 @@ const ReportIssuePage = () => {
                             const newSteps = formData.steps.filter((_, i) => i !== index);
                             setFormData({ ...formData, steps: newSteps });
                           }}
-                          className="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-white/60 hover:text-red-400 hover:bg-white/10 rounded-xl transition-all"
                           title="Remove step"
                         >
                           <X className="w-5 h-5" />
@@ -465,8 +505,7 @@ const ReportIssuePage = () => {
                     </div>
                   ))}
                   {!Array.isArray(formData.steps) && (
-                    // Fallback if state somehow isn't an array yet (though we fix init state below)
-                    <div className="text-red-500">Error: Steps should be a list.</div>
+                    <div className="text-red-400">Error: Steps should be a list.</div>
                   )}
                 </div>
 
@@ -476,8 +515,7 @@ const ReportIssuePage = () => {
                     setFormData({ ...formData, steps: [...(Array.isArray(formData.steps) ? formData.steps : []), ''] });
                     setShowEmptyFieldError(false);
                   }}
-                  className="mt-4 w-full px-4 py-3 border-2 border-dashed border-green-300 text-green-600 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 font-medium"
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                  className="mt-4 w-full px-4 py-3 border-2 border-dashed border-white/30 text-white/70 rounded-xl hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-white/5 transition-all flex items-center justify-center gap-2 font-medium"
                 >
                   <span className="text-xl">+</span> Add Step
                 </button>
@@ -485,7 +523,7 @@ const ReportIssuePage = () => {
             </div>
 
             {/* Documents Issue */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div className="border-t border-white/10 pt-6">
               <MultiSelectDropdown
                 label="Documents"
                 options={availableDocuments}
@@ -496,13 +534,13 @@ const ReportIssuePage = () => {
             </div>
 
             {/* Price Issue */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div className="border-t border-white/10 pt-6">
               <label className="block">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-emerald-400" />
                   </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
+                  <h3 className="text-xl font-bold text-white">
                     Price
                   </h3>
                 </div>
@@ -512,24 +550,23 @@ const ReportIssuePage = () => {
                   placeholder="Report incorrect fees or costs (optional)"
                   rows="3"
                   maxLength="1000"
-                  className={`w-full px-4 py-3 border-2 ${errors.price ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                  className={`w-full px-4 py-4 bg-white/10 border ${errors.price ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 hover:bg-white/15 resize-none`}
                 />
-                {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                <p className="text-xs text-gray-500 mt-1">
+                {errors.price && <p className="text-red-400 text-xs mt-2 ml-1">{errors.price}</p>}
+                <p className="text-white/40 text-sm mt-2">
                   {formData.price.length}/1000 characters
                 </p>
               </label>
             </div>
 
             {/* Processing Time Issue */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div className="border-t border-white/10 pt-6">
               <label className="block">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-emerald-400" />
                   </div>
-                  <h3 style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontFamily: 'Source Serif Pro', fontWeight: 600, color: '#273248' }}>
+                  <h3 className="text-xl font-bold text-white">
                     Processing Time
                   </h3>
                 </div>
@@ -539,41 +576,48 @@ const ReportIssuePage = () => {
                   placeholder="Report incorrect duration estimates (optional)"
                   rows="3"
                   maxLength="1000"
-                  className={`w-full px-4 py-3 border-2 ${errors.processingTime ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 outline-none transition-all resize-none`}
-                  style={{ fontFamily: 'Lato', fontSize: 'clamp(14px, 1.5vw, 16px)' }}
+                  className={`w-full px-4 py-4 bg-white/10 border ${errors.processingTime ? 'border-red-500/50' : 'border-white/20'} rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 hover:bg-white/15 resize-none`}
                 />
-                {errors.processingTime && <p className="text-red-500 text-xs mt-1">{errors.processingTime}</p>}
-                <p className="text-xs text-gray-500 mt-1">
+                {errors.processingTime && <p className="text-red-400 text-xs mt-2 ml-1">{errors.processingTime}</p>}
+                <p className="text-white/40 text-sm mt-2">
                   {formData.processingTime.length}/1000 characters
                 </p>
               </label>
             </div>
 
             {showEmptyFieldError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-600 text-sm font-medium">
+              <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm">
+                <p className="text-red-400 text-sm font-medium">
                   Please fill at least one field to submit your report.
                 </p>
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-end border-t border-white/10">
               <button
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="px-8 py-3.5 rounded-full border-2 border-green-600 text-green-600 font-semibold hover:bg-green-50 transition-all hover:border-green-700 hover:text-green-700 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
+                className="px-8 py-4 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-3.5 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                style={{ fontFamily: 'Lato', fontSize: 'clamp(15px, 2vw, 17px)' }}
+                className="group px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-semibold hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Submit Report
+                    <FileText className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
             </div>
           </form>
