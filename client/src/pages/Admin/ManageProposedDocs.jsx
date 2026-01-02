@@ -386,7 +386,7 @@ export default function ManageProposedDocs() {
                               <span className="font-semibold text-emerald-400">{selectedProposal.docprice || '0'} DA</span>
                             </div>
                             <div className="p-4 bg-white/10 rounded-xl border border-white/20">
-                              <span className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-1">Duration</span>
+                              <span className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-1">Processing Time</span>
                               <span className="font-semibold text-blue-400">
                                 {selectedProposal.duration != null && selectedProposal.duration !== ''
                                   ? `${selectedProposal.duration} days`

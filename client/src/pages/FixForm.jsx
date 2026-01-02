@@ -596,7 +596,7 @@ Swal.fire({
             {/* Documents Issue */}
             <div className="border-t border-white/10 pt-6">
               <MultiSelectDropdown
-                label="Documents"
+                label="Required Documents"
                 options={availableDocuments}
                 selected={formData.documents}
                 onChange={handleDocumentsChange}

@@ -824,7 +824,7 @@ const ProposeDocumentPage = () => {
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                     <Clock className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white">Expected Time</h3>
+                  <h3 className="text-lg font-semibold text-white">Expected Processing Time</h3>
                   <span className="text-white/40 text-sm">(Optional)</span>
                 </div>
                 <input

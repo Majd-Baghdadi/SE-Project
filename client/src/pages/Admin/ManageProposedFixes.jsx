@@ -179,7 +179,7 @@ export default function ManageProposedFixes() {
               onClick={() => isSelectable('duration') && toggleSelection('duration')}
             >
               <div className="flex justify-between items-start">
-                <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Duration</p>
+                <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Processing Time</p>
                 {isSelectable('duration') && (
                   <input
                     type="checkbox"

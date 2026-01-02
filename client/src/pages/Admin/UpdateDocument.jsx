@@ -464,7 +464,7 @@ export default function UpdateDocument() {
               
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-2">
-                  Processing Duration
+                  Processing Time
                 </label>
                 <input
                   type="text"
