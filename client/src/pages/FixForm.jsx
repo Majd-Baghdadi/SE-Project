@@ -198,6 +198,7 @@ const ReportIssuePage = () => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const [availableDocuments, setAvailableDocuments] = useState([]);
+  const [loadingDocuments, setLoadingDocuments] = useState(true);
 
   const [errors, setErrors] = useState({});
   const [showEmptyFieldError, setShowEmptyFieldError] = useState(false);
@@ -207,6 +208,8 @@ const ReportIssuePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoadingDocuments(true);
+
         // 1. Fetch list of all documents for the dropdown
         const docsResponse = await fetch('http://localhost:8000/api/documents');
         const docsData = await docsResponse.json();
@@ -234,7 +237,7 @@ const ReportIssuePage = () => {
             } else if (typeof doc.steps === 'string') {
               try {
                 parsedSteps = JSON.parse(doc.steps);
-              } catch {
+              } catch (e) {
                 // If not JSON, maybe just a single string step? split by newline?
                 // For now, treat as single step or try splitting if it looks like a list
                 parsedSteps = [doc.steps];
@@ -256,6 +259,8 @@ const ReportIssuePage = () => {
 
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setLoadingDocuments(false);
       }
     };
 
@@ -303,12 +308,8 @@ const ReportIssuePage = () => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
-  // Using direct onChange in input instead of this handler
 
   const hasAtLeastOneFieldFilled = () => {
-    // Check if image is uploaded
-    if (imageFile) return true;
-    
     // Check if any string field is non-empty OR if arrays have valid items
     return Object.entries(formData).some(([key, value]) => {
       if (key === 'steps') {
@@ -376,8 +377,8 @@ const ReportIssuePage = () => {
       changes.documents = JSON.stringify(formData.documents);
     }
 
-    // If no changes and no image, alert user
-    if (Object.keys(changes).length === 0 && !imageFile) {
+    // If no changes, alert user
+    if (Object.keys(changes).length === 0) {
 Swal.fire({
           title: 'No Changes',
           text: "You haven't made any changes to the document.",
@@ -413,7 +414,6 @@ Swal.fire({
         submitData.append('timeProblem', 'true');
         submitData.append('timeDetails', changes.processingTime);
       }
-      
 
       const response = await fixService.submitFix(docid, submitData);
 

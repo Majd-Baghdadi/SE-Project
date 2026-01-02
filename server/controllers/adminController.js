@@ -141,6 +141,9 @@ const updateDocument = async (req, res) => {
             console.log("uploading the image");
             const url = await storageService.uploadImage(req.file);
             payload.docpicture = url;
+        } else if (bodyWithoutPicture.removeImage === 'true') {
+            console.log("removing the image");
+            payload.docpicture = null;
         }
 
         console.log('📝 Update document payload:', JSON.stringify(payload, null, 2));

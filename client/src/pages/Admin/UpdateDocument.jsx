@@ -168,6 +168,7 @@ export default function UpdateDocument() {
   // Image handling
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   // Fetch document data on mount
   useEffect(() => {
@@ -235,6 +236,7 @@ export default function UpdateDocument() {
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+      setRemoveImage(false);
     }
   };
 
@@ -305,6 +307,8 @@ export default function UpdateDocument() {
       
       if (imageFile) {
         submitData.append('docpicture', imageFile);
+      } else if (removeImage) {
+        submitData.append('removeImage', 'true');
       }
       
       await adminService.editDocument(docId, submitData);
@@ -495,6 +499,7 @@ export default function UpdateDocument() {
                       onClick={() => {
                         setImageFile(null);
                         setImagePreview(null);
+                        setRemoveImage(true);
                       }}
                       className="absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 rounded-full text-white transition-all"
                       title="Remove image"
