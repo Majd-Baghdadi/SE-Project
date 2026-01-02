@@ -20,7 +20,6 @@ import standard from '../assets/images/standard2.png';
 
 export default function Home() {
   const { isAdmin } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
   const [documents, setDocuments] = useState([]);
   const [stats, setStats] = useState({
     totalDocuments: 0,
@@ -169,11 +168,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    console.log('Searching for:', query);
-  };
-
   // Dynamic statistics
   const displayStats = [
     {
@@ -247,7 +241,7 @@ export default function Home() {
         <div className="absolute inset-0 z-[1] bg-gradient-to-b from-slate-900/70 via-emerald-900/50 to-slate-900" />
 
         {/* Content */}
-        <div className="relative z-10 text-center max-w-5xl px-4 md:px-8">
+        <div className="relative z-10 text-center max-w-5xl px-4 md:px-8 mt-24 md:mt-32">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white/80 border border-white/20 mb-8">
             <Sparkles className="w-4 h-4 text-emerald-400" />

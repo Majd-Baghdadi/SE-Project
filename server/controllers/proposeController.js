@@ -84,6 +84,13 @@ async function proposeFix(req, res) {
             docid: docid,
             userid: req.user.userId
         }
+        
+        // Handle image upload if present
+        if (req.file) {
+            const url = await storageService.uploadImage(req.file);
+            payload.docpicture = url;
+        }
+        
         const { data, error } = await propose.proposeFix(payload)
         if (error) {
             return res.status(400).json({

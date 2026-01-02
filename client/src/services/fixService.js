@@ -8,21 +8,35 @@ import api from './api';
 class FixService {
   async submitFix(docId, formData) {
     try {
-      // Map frontend form data to backend database structure
-      const payload = {
-        docid: parseInt(docId), 
-        stepsProblem: !!formData.steps, // Convert to boolean
-        stepsDetails: formData.steps || null,
-        relatedDocsProblem: !!formData.documents, // Convert to boolean
-        relatedDocsDetails: formData.documents || null,
-        priceProblem: !!formData.price, // Convert to boolean
-        priceDetails: formData.price || null,
-        timeProblem: !!formData.processingTime, // Convert to boolean
-        timeDetails: formData.processingTime || null
-      };
+      // Check if formData is FormData (for image uploads) or plain object
+      const isFormData = formData instanceof FormData;
       
-      console.log('📤 Submitting fix to:', `/propose/fix/${docId}`);
-      console.log('📤 Payload:', JSON.stringify(payload, null, 2));
+      let payload;
+      
+      if (isFormData) {
+        // If it's FormData, it already contains all the fields
+        // Just ensure docid is set
+        formData.append('docid', parseInt(docId));
+        payload = formData;
+        
+        console.log('📤 Submitting fix with FormData to:', `/propose/fix/${docId}`);
+      } else {
+        // Map frontend form data to backend database structure (legacy)
+        payload = {
+          docid: parseInt(docId), 
+          stepsProblem: !!formData.steps,
+          stepsDetails: formData.steps || null,
+          relatedDocsProblem: !!formData.documents,
+          relatedDocsDetails: formData.documents || null,
+          priceProblem: !!formData.price,
+          priceDetails: formData.price || null,
+          timeProblem: !!formData.processingTime,
+          timeDetails: formData.processingTime || null
+        };
+        
+        console.log('📤 Submitting fix to:', `/propose/fix/${docId}`);
+        console.log('📤 Payload:', JSON.stringify(payload, null, 2));
+      }
       
       // POST to /api/propose/fix/:docId
       const response = await api.post(`/propose/fix/${docId}`, payload);

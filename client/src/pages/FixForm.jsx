@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, List, DollarSign, Clock, Check, X, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import { FileText, List, DollarSign, Clock, Check, X, Link as LinkIcon, ChevronDown, Upload, Image } from 'lucide-react';
 import fixService from '../services/fixService';
 import Swal from 'sweetalert2';
 
@@ -103,7 +103,7 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
         <div className="flex flex-wrap gap-2 flex-1">
           {selected.length === 0 && (
             <span className="text-white/40">
-              Select related documents...
+              Select required documents...
             </span>
           )}
           {selected.map((docId) => (
@@ -193,8 +193,11 @@ const ReportIssuePage = () => {
     processingTime: ''
   });
 
+  // Image handling
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
   const [availableDocuments, setAvailableDocuments] = useState([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(true);
 
   const [errors, setErrors] = useState({});
   const [showEmptyFieldError, setShowEmptyFieldError] = useState(false);
@@ -204,8 +207,6 @@ const ReportIssuePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoadingDocuments(true);
-
         // 1. Fetch list of all documents for the dropdown
         const docsResponse = await fetch('http://localhost:8000/api/documents');
         const docsData = await docsResponse.json();
@@ -233,7 +234,7 @@ const ReportIssuePage = () => {
             } else if (typeof doc.steps === 'string') {
               try {
                 parsedSteps = JSON.parse(doc.steps);
-              } catch (e) {
+              } catch {
                 // If not JSON, maybe just a single string step? split by newline?
                 // For now, treat as single step or try splitting if it looks like a list
                 parsedSteps = [doc.steps];
@@ -255,8 +256,6 @@ const ReportIssuePage = () => {
 
       } catch (error) {
         console.error('Error fetching data:', error);
-      } finally {
-        setLoadingDocuments(false);
       }
     };
 
@@ -296,7 +295,20 @@ const ReportIssuePage = () => {
     setShowEmptyFieldError(false);
   };
 
+  // Handle image change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+  // Using direct onChange in input instead of this handler
+
   const hasAtLeastOneFieldFilled = () => {
+    // Check if image is uploaded
+    if (imageFile) return true;
+    
     // Check if any string field is non-empty OR if arrays have valid items
     return Object.entries(formData).some(([key, value]) => {
       if (key === 'steps') {
@@ -364,8 +376,8 @@ const ReportIssuePage = () => {
       changes.documents = JSON.stringify(formData.documents);
     }
 
-    // If no changes, alert user
-    if (Object.keys(changes).length === 0) {
+    // If no changes and no image, alert user
+    if (Object.keys(changes).length === 0 && !imageFile) {
 Swal.fire({
           title: 'No Changes',
           text: "You haven't made any changes to the document.",
@@ -381,7 +393,29 @@ Swal.fire({
     console.log('📤 Processed form data (changes only):', changes);
 
     try {
-      const response = await fixService.submitFix(docid, changes);
+      // Create FormData to handle image upload
+      const submitData = new FormData();
+      
+      // Add the changes as individual fields with problem flags
+      if (changes.steps) {
+        submitData.append('stepsProblem', 'true');
+        submitData.append('stepsDetails', changes.steps);
+      }
+      if (changes.documents) {
+        submitData.append('relatedDocsProblem', 'true');
+        submitData.append('relatedDocsDetails', changes.documents);
+      }
+      if (changes.price) {
+        submitData.append('priceProblem', 'true');
+        submitData.append('priceDetails', changes.price);
+      }
+      if (changes.processingTime) {
+        submitData.append('timeProblem', 'true');
+        submitData.append('timeDetails', changes.processingTime);
+      }
+      
+
+      const response = await fixService.submitFix(docid, submitData);
 
       if (response.success) {
         console.log('✅ Fix submitted successfully');

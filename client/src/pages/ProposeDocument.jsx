@@ -210,7 +210,7 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
       >
         <div className="flex flex-wrap gap-2 flex-1">
           {selected.length === 0 && (
-            <span className="text-white/50">Select related documents...</span>
+            <span className="text-white/50">Select required documents...</span>
           )}
           {selected.map((docId) => (
             <span
@@ -704,11 +704,19 @@ const ProposeDocumentPage = () => {
               </label>
               {errors.picture && <p className="text-red-400 text-sm mt-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {errors.picture}</p>}
               {formData.pictureFile && (
-                <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
                   <p className="text-emerald-400 text-sm flex items-center gap-2">
                     <Check className="w-4 h-4" />
                     Selected: {formData.pictureFile.name} ({(formData.pictureFile.size / 1024).toFixed(2)} KB)
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, pictureFile: null })}
+                    className="ml-2 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Remove image"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
@@ -846,10 +854,10 @@ const ProposeDocumentPage = () => {
             />
           </div>
 
-            {/* Related Documents */}
+            {/* Required Documents */}
              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/[0.12] transition-all relative z-10">
             <MultiSelectDropdown
-              label="Related Documents"
+              label="Required Documents"
               options={availableDocuments}
               selected={formData.relatedDocuments}
               onChange={(updated) => setFormData({ ...formData, relatedDocuments: updated })}

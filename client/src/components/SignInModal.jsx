@@ -99,18 +99,18 @@ export default function SignInModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 pt-28"
       onClick={handleOverlayClick}
     >
       <div
-        className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative border border-white/20"
+        className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative border border-white/20"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Decorative Elements */}
         <div className="absolute top-0 left-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
 
-        <div className="relative p-8">
+        <div className="relative p-6">
           {/* Close Button */}
           <button
             onClick={onClose}

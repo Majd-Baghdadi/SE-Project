@@ -30,7 +30,15 @@ async function getDocumentDetails(req,res) {
             })
         }
         const {relateddocs,...documentData}=data
-        const {data:relatedDocs,error:err}=await Document.getRelatedDocuments(relateddocs||[])
+        console.log('📌 Related docs from DB:', relateddocs, 'Type:', typeof relateddocs);
+        
+        // Handle relateddocs whether it's an array or null/undefined
+        const relatedDocsArray = Array.isArray(relateddocs) ? relateddocs : [];
+        console.log('📌 Related docs array:', relatedDocsArray, 'Length:', relatedDocsArray.length);
+        
+        const {data:relatedDocs,error:err}=await Document.getRelatedDocuments(relatedDocsArray)
+        console.log('📌 Related docs fetched:', relatedDocs, 'Length:', relatedDocs?.length);
+        
         if (err) {
             return res.status(400).json({
                 error:err.message,

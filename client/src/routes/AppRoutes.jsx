@@ -53,7 +53,11 @@ export default function AppRoutes() {
           <Route path="/profile" element={<Profile />} />
 
           <Route path="/fixform/:docid" element={<FixFormPage />} />
-          <Route path="/propose" element={<ProposeDocument />} />
+          <Route path="/propose" element={
+            <ProtectedRoute>
+              <ProposeDocument />
+            </ProtectedRoute>
+          } />
 
 
           {/* Admin Routes */}

@@ -7,11 +7,142 @@
  * Protected: Requires admin role
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronLeft, Save, FileText, Upload, Plus, X, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Save, FileText, Upload, Plus, X, AlertCircle, CheckCircle, Link as LinkIcon, ChevronDown, Check } from 'lucide-react';
 import documentService from '../../services/documentService';
 import adminService from '../../services/adminService';
+import Swal from 'sweetalert2';
+
+// Multi-Select Dropdown Component
+const MultiSelectDropdown = ({ label, options, selected, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef();
+  const searchInputRef = useRef();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const toggleOption = (docId) => {
+    let updated = [...selected];
+    if (updated.includes(docId)) {
+      updated = updated.filter((id) => id !== docId);
+    } else {
+      updated.push(docId);
+    }
+    onChange(updated);
+  };
+
+  const removeOption = (docId, e) => {
+    e.stopPropagation();
+    onChange(selected.filter((id) => id !== docId));
+  };
+
+  const getDocNameById = (docId) => {
+    const doc = options.find(opt => opt.id === docId);
+    return doc ? doc.name : docId;
+  };
+
+  const filteredOptions = options.filter(doc => 
+    doc.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (open && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
+  }, [open]);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+          <LinkIcon className="w-5 h-5 text-blue-400" />
+        </div>
+        <h2 className="text-lg font-semibold text-white">{label}</h2>
+      </div>
+
+      <div
+        className="w-full px-4 py-4 border border-white/20 rounded-xl cursor-pointer bg-white/10 hover:bg-white/15 transition-all duration-300 min-h-[50px] flex justify-between items-center"
+        onClick={() => setOpen(!open)}
+      >
+        <div className="flex flex-wrap gap-2 flex-1">
+          {selected.length === 0 && (
+            <span className="text-white/40">
+              Select required documents...
+            </span>
+          )}
+          {selected.map((docId) => (
+            <span
+              key={docId}
+              className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-full text-sm font-medium border border-emerald-500/30"
+            >
+              {getDocNameById(docId)}
+              <button
+                type="button"
+                onClick={(e) => removeOption(docId, e)}
+                className="text-emerald-300 hover:text-red-400 ml-1 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <ChevronDown className={`w-4 h-4 text-white/40 ml-2 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </div>
+
+      {open && (
+        <div className="absolute w-full bg-slate-800/95 backdrop-blur-xl border border-white/20 mt-2 rounded-xl shadow-2xl max-h-80 overflow-hidden z-50">
+          <div className="p-3 border-b border-white/10 sticky top-0 bg-slate-800/95 backdrop-blur-xl">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Search documents..."
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-emerald-500/50 transition-all"
+            />
+          </div>
+          
+          <div className="max-h-60 overflow-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((doc) => (
+                <div
+                  key={doc.id}
+                  className={`px-4 py-3 cursor-pointer transition-all duration-200 flex justify-between items-center border-b border-white/10 last:border-b-0 ${
+                    selected.includes(doc.id)
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : 'text-white/80 hover:bg-white/10'
+                  }`}
+                  onClick={() => toggleOption(doc.id)}
+                >
+                  <span>{doc.name}</span>
+                  {selected.includes(doc.id) && (
+                    <Check className="w-4 h-4 text-emerald-400" />
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center text-white/40">
+                No documents found matching "{searchQuery}"
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function UpdateDocument() {
   const { docId } = useParams();
@@ -28,10 +159,11 @@ export default function UpdateDocument() {
     doctype: '',
     docprice: 0,
     duration: '',
-    requirements: [],
+    relateddocs: [],
     steps: [],
-    tips: []
   });
+  
+  const [availableDocuments, setAvailableDocuments] = useState([]);
   
   // Image handling
   const [imageFile, setImageFile] = useState(null);
@@ -44,19 +176,31 @@ export default function UpdateDocument() {
       setError(null);
       
       try {
+        // Fetch all documents for dropdown
+        const docsResponse = await fetch('http://localhost:8000/api/documents');
+        const docsData = await docsResponse.json();
+        if (docsData.documents && Array.isArray(docsData.documents)) {
+          setAvailableDocuments(docsData.documents.map(doc => ({
+            id: doc.docid,
+            name: doc.docname
+          })));
+        }
+        
+        // Fetch current document
         const response = await documentService.getDocumentById(docId);
         console.log('🟢 Fetched document for editing:', response);
         
         if (response && response.data) {
           const doc = response.data;
+          const relatedDocs = response.relatedDocuments || [];
+          
           setFormData({
             docname: doc.docname || '',
             doctype: doc.doctype || '',
             docprice: doc.docprice || doc.price || 0,
             duration: doc.duration || doc.docduration || '',
-            requirements: doc.requirements || doc.docrequirements || [],
-            steps: doc.steps || doc.docsteps || [],
-            tips: doc.tips || []
+            relateddocs: relatedDocs.map(d => d.docid) || [],
+            steps: doc.steps || doc.docsteps || []
           });
           
           if (doc.docpicture || doc.docimage) {
@@ -94,7 +238,7 @@ export default function UpdateDocument() {
     }
   };
 
-  // Handle array field changes (requirements, steps, tips)
+  // Handle array field changes (requirements, steps)
   const handleArrayFieldChange = (field, index, value) => {
     setFormData(prev => {
       const newArray = [...prev[field]];
@@ -154,12 +298,7 @@ export default function UpdateDocument() {
       if (formData.docprice !== undefined && formData.docprice !== null) {
         submitData.append('docprice', formData.docprice);
       }
-      if (formData.requirements && formData.requirements.length > 0) {
-        submitData.append('requirements', JSON.stringify(formData.requirements));
-      }
-      if (formData.tips && formData.tips.length > 0) {
-        submitData.append('tips', JSON.stringify(formData.tips));
-      }
+      
       if (formData.relateddocs && formData.relateddocs.length > 0) {
         submitData.append('relateddocs', JSON.stringify(formData.relateddocs));
       }
@@ -170,15 +309,27 @@ export default function UpdateDocument() {
       
       await adminService.editDocument(docId, submitData);
       
-      setNotification({ type: 'success', message: 'Document updated successfully!' });
-      
-      setTimeout(() => {
+      Swal.fire({
+        title: 'Updated!',
+        text: 'Document has been updated successfully.',
+        icon: 'success',
+        background: '#1e293b',
+        color: '#fff',
+        confirmButtonColor: '#10b981'
+      }).then(() => {
         navigate(`/admin/document/${docId}`);
-      }, 1500);
+      });
       
     } catch (err) {
       console.error('Error updating document:', err);
-      setError('Failed to update document. Please try again.');
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to update document. Please try again.',
+        icon: 'error',
+        background: '#1e293b',
+        color: '#fff',
+        confirmButtonColor: '#10b981'
+      });
     }
     
     setSaving(false);
@@ -333,11 +484,24 @@ export default function UpdateDocument() {
               </label>
               <div className="flex items-center gap-4">
                 {imagePreview && (
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="w-24 h-24 object-cover rounded-xl border border-white/20"
-                  />
+                  <div className="relative">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-24 h-24 object-cover rounded-xl border border-white/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 rounded-full text-white transition-all"
+                      title="Remove image"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
                 <label className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-center gap-2 px-4 py-3 bg-white/10 border border-white/20 border-dashed rounded-xl text-white/60 hover:bg-white/15 hover:border-emerald-500/50 transition-all">
@@ -355,77 +519,14 @@ export default function UpdateDocument() {
             </div>
           </div>
 
-          {/* Requirements */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-400" />
-                Required Documents
-              </h2>
-              <button
-                type="button"
-                onClick={() => addArrayItem('requirements', { name: '', description: '', copies: 1, type: 'original' })}
-                className="flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Requirement
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {formData.requirements.map((req, index) => (
-                <div key={index} className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-sm font-medium text-white/60">Requirement {index + 1}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('requirements', index)}
-                      className="text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="Document name"
-                      value={req.name || ''}
-                      onChange={(e) => handleArrayFieldChange('requirements', index, { name: e.target.value })}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      value={req.description || ''}
-                      onChange={(e) => handleArrayFieldChange('requirements', index, { description: e.target.value })}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Copies"
-                      value={req.copies || 1}
-                      onChange={(e) => handleArrayFieldChange('requirements', index, { copies: Number(e.target.value) })}
-                      min="1"
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                    <select
-                      value={req.type || 'original'}
-                      onChange={(e) => handleArrayFieldChange('requirements', index, { type: e.target.value })}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="original" className="bg-slate-800">Original</option>
-                      <option value="certified_copy" className="bg-slate-800">Certified Copy</option>
-                      <option value="photocopy" className="bg-slate-800">Photocopy</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
-              
-              {formData.requirements.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-4">No requirements added yet</p>
-              )}
-            </div>
+          {/* Required Documents */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 relative z-10 overflow-visible">
+            <MultiSelectDropdown
+              label="Required Documents"
+              options={availableDocuments}
+              selected={formData.relateddocs}
+              onChange={(selected) => setFormData(prev => ({ ...prev, relateddocs: selected }))}
+            />
           </div>
 
           {/* Steps */}
@@ -470,52 +571,6 @@ export default function UpdateDocument() {
               
               {formData.steps.length === 0 && (
                 <p className="text-white/40 text-sm text-center py-4">No steps added yet</p>
-              )}
-            </div>
-          </div>
-
-          {/* Tips */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-amber-400" />
-                Tips
-              </h2>
-              <button
-                type="button"
-                onClick={() => addArrayItem('tips', '')}
-                className="flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Tip
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              {formData.tips.map((tip, index) => (
-                <div key={index} className="flex gap-3 items-start">
-                  <div className="w-8 h-8 bg-amber-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Lightbulb className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={tip}
-                    onChange={(e) => handleArrayFieldChange('tips', index, e.target.value)}
-                    placeholder="Enter a helpful tip"
-                    className="flex-1 px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeArrayItem('tips', index)}
-                    className="text-red-400 hover:text-red-300 p-2 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              
-              {formData.tips.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-4">No tips added yet</p>
               )}
             </div>
           </div>

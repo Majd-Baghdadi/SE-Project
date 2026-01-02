@@ -9,7 +9,7 @@ const { upload } = require("../middlewares/uploadMiddleware")
 router.use(verifyAuthToken)
 
 router.post("/document", upload.single('docpicture'), proposeController.proposeDocument) //route to propose a document
-router.post("/fix/:docid", VerifyUser, proposeController.proposeFix) //route to propose a fix (user only)
+router.post("/fix/:docid", VerifyUser, upload.single('docpicture'), proposeController.proposeFix) //route to propose a fix (user only)
 router.patch("/document/:id", upload.single('docpicture'), proposeController.editProposedDocument) //route to edit a proposed document
 router.patch("/fix/:id", proposeController.editProposedFix) //route to edit a proposed fix
 router.get("/document", VerifyUser, proposeController.getProposedDocumentsByUser) //route to fetch documents proposed by a user

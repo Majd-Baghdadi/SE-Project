@@ -412,7 +412,7 @@ export default function ManageProposedDocs() {
                                   </span>
                                 ))
                               ) : (
-                                <span className="text-sm text-white/40 italic">No related documents specified</span>
+                                <span className="text-sm text-white/40 italic">No required documents specified</span>
                               )}
                             </div>
                           </div>

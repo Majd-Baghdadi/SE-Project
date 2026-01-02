@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Check, X, Wrench, User, Clock, FileText, AlertTriangle, DollarSign } from 'lucide-react';
+import { Search, Eye, Check, X, Wrench, User, Clock, FileText, AlertTriangle, DollarSign, Image } from 'lucide-react';
 import adminService from '../../services/adminService';
 import proposalService from '../../services/proposalService';
 import documentService from '../../services/documentService';
@@ -28,12 +28,17 @@ export default function ManageProposedFixes() {
       ? (selectedFix.relatedDocsNames ? selectedFix.relatedDocsNames : (selectedFix.relatedDocsDetails ? [selectedFix.relatedDocsDetails] : originalDoc.relateddocs))
       : originalDoc.relateddocs;
 
+    const imageToUse = (selectedFix.docpicture && selections.image)
+      ? selectedFix.docpicture
+      : originalDoc.docpicture;
+
     return {
       ...originalDoc,
       steps: stepsToUse,
       docprice: (selectedFix.priceProblem && selections.price) ? selectedFix.priceDetails : originalDoc.docprice,
       duration: (selectedFix.timeProblem && selections.duration) ? selectedFix.timeDetails : originalDoc.duration,
-      relateddocs: docsToUse
+      relateddocs: docsToUse,
+      docpicture: imageToUse
     };
   };
 
@@ -51,8 +56,7 @@ export default function ManageProposedFixes() {
       return problems[field] ? 'ring-2 ring-amber-400/50 bg-amber-500/10' : '';
     };
 
-    const toggleSelection = (e, field) => {
-      e.stopPropagation();
+    const toggleSelection = (field) => {
       const fixId = selectedFix.fixid || selectedFix.id;
       setFixSelections(prev => ({
         ...prev,
@@ -69,8 +73,15 @@ export default function ManageProposedFixes() {
         docprice: 'priceProblem',
         duration: 'timeProblem',
         steps: 'stepsProblem',
-        relateddocs: 'relatedDocsProblem'
+        relateddocs: 'relatedDocsProblem',
+        image: 'docpicture'
       };
+      
+      // For image, check if the fix has a new docpicture
+      if (field === 'image') {
+        return !!selectedFix.docpicture;
+      }
+      
       return !!selectedFix[mapped[field]];
     };
 
@@ -95,10 +106,60 @@ export default function ManageProposedFixes() {
             </div>
           </div>
 
+          {/* Image Section */}
+          {(originalDoc?.docpicture || selectedFix?.docpicture) && (
+            <div
+              className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('image')} ${isSelectable('image') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
+              onClick={() => isSelectable('image') && toggleSelection('image')}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Image className="w-4 h-4 text-white/60" />
+                  <span className="text-sm font-semibold text-white/80">Document Image</span>
+                </div>
+                {isSelectable('image') && (
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    fixSelections[selectedFix.fixid || selectedFix.id]?.image
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'border-white/30'
+                  }`}>
+                    {fixSelections[selectedFix.fixid || selectedFix.id]?.image && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs text-white/40 uppercase tracking-wide font-semibold">Original</p>
+                  {originalDoc?.docpicture ? (
+                    <img 
+                      src={originalDoc.docpicture} 
+                      alt="Original document" 
+                      className="w-full h-48 object-cover rounded-lg border border-white/10"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center">
+                      <span className="text-white/30 text-sm">No image</span>
+                    </div>
+                  )}
+                </div>
+                {selectedFix?.docpicture && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-emerald-400 uppercase tracking-wide font-semibold">Proposed</p>
+                    <img 
+                      src={selectedFix.docpicture} 
+                      alt="Proposed fix" 
+                      className="w-full h-48 object-cover rounded-lg border border-emerald-400/30"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div
               className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('docprice')} ${isSelectable('docprice') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
-              onClick={(e) => isSelectable('docprice') && toggleSelection(e, 'price')}
+              onClick={() => isSelectable('docprice') && toggleSelection('price')}
             >
               <div className="flex justify-between items-start">
                 <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Price</p>
@@ -115,7 +176,7 @@ export default function ManageProposedFixes() {
             </div>
             <div
               className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('duration')} ${isSelectable('duration') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
-              onClick={(e) => isSelectable('duration') && toggleSelection(e, 'duration')}
+              onClick={() => isSelectable('duration') && toggleSelection('duration')}
             >
               <div className="flex justify-between items-start">
                 <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Duration</p>
@@ -134,7 +195,7 @@ export default function ManageProposedFixes() {
 
           <div
             className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('steps')} ${isSelectable('steps') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
-            onClick={(e) => isSelectable('steps') && toggleSelection(e, 'steps')}
+            onClick={() => isSelectable('steps') && toggleSelection('steps')}
           >
             <div className="flex justify-between items-center mb-3">
               <p className="text-xs font-bold text-white/40 uppercase flex items-center gap-2">
@@ -166,7 +227,7 @@ export default function ManageProposedFixes() {
 
           <div
             className={`p-4 rounded-xl border bg-white/5 border-white/20 transition-all ${highlight('relateddocs')} ${isSelectable('relateddocs') ? 'cursor-pointer hover:border-amber-400/50' : ''}`}
-            onClick={(e) => isSelectable('relateddocs') && toggleSelection(e, 'relateddocs')}
+            onClick={() => isSelectable('relateddocs') && toggleSelection('relateddocs')}
           >
             <div className="flex justify-between items-center mb-2">
               <p className="text-xs font-bold text-white/40 uppercase">Required Documents</p>

@@ -441,10 +441,15 @@ export default function DocumentDetails() {
       try {
         const response = await documentService.getDocumentById(docId);
         console.log('🟢 API Response:', response);
+        console.log('🔵 Related Documents from API:', response?.relatedDocuments);
         
         if (response && response.data) {
           // Normalize API data to match expected field names
           const apiData = response.data;
+          console.log('📋 API Data docrequirements:', apiData.docrequirements);
+          console.log('📋 API Data requirements:', apiData.requirements);
+          console.log('📋 API Data full:', apiData);
+          
           const normalizedData = {
             docid: apiData.docid || apiData.id,
             docname: apiData.docname || apiData.name || apiData.title,
@@ -460,10 +465,14 @@ export default function DocumentDetails() {
             ...apiData
           };
           
+          console.log('📋 Normalized docrequirements:', normalizedData.docrequirements, 'Length:', normalizedData.docrequirements?.length);
+          
           // Accept API data if it has at least a name (show whatever data is available)
           if (normalizedData.docname) {
             setData(normalizedData);
-            setRelatedDocuments(response.relatedDocuments || []);
+            const relatedDocsFromAPI = response.relatedDocuments || [];
+            console.log('🟡 Setting related documents:', relatedDocsFromAPI, 'Length:', relatedDocsFromAPI.length);
+            setRelatedDocuments(relatedDocsFromAPI);
             setUsingMockData(false);
             console.log('✅ Loaded document from API:', normalizedData.docname);
             setLoading(false);
@@ -541,6 +550,103 @@ export default function DocumentDetails() {
   const formatPrice = (price) => {
     if (price === 0 || price === '0' || !price) return 'Free';
     return `${price} DA`;
+  };
+
+  // Helper to format duration - shows weeks/months if applicable, otherwise days
+  const formatDuration = (duration) => {
+    console.log('🕒 formatDuration called with:', duration, 'Type:', typeof duration);
+    
+    if (!duration || duration === 'N/A') return duration;
+    
+    // Convert to string if it's not already
+    const durationStr = String(duration);
+    console.log('🕒 Duration as string:', durationStr);
+    
+    // Check if it's just a plain number (e.g., "30", "7", "14")
+    if (/^\d+$/.test(durationStr)) {
+      const days = parseInt(durationStr);
+      console.log('🕒 Plain number detected:', days);
+      
+      // Check for months first (30 days = 1 month)
+      if (days % 30 === 0) {
+        const months = days / 30;
+        const result = `${months} ${months === 1 ? 'month' : 'months'}`;
+        console.log('🕒 Returning months:', result);
+        return result;
+      }
+      
+      // Check for weeks (7 days = 1 week)
+      if (days % 7 === 0) {
+        const weeks = days / 7;
+        const result = `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+        console.log('🕒 Returning weeks:', result);
+        return result;
+      }
+      
+      // Return with "days" label
+      const result = `${days} ${days === 1 ? 'day' : 'days'}`;
+      console.log('🕒 Returning days:', result);
+      return result;
+    }
+    
+    // Check if duration is in format like "7 days", "14 days", "30 days", etc.
+    const match = durationStr.match(/^(\d+)\s*days?$/i);
+    console.log('🕒 Single day match:', match);
+    
+    if (match) {
+      const days = parseInt(match[1]);
+      console.log('🕒 Parsed days:', days);
+      
+      // Check for months first (30 days = 1 month)
+      if (days % 30 === 0) {
+        const months = days / 30;
+        const result = `${months} ${months === 1 ? 'month' : 'months'}`;
+        console.log('🕒 Returning months:', result);
+        return result;
+      }
+      
+      // Check for weeks (7 days = 1 week)
+      if (days % 7 === 0) {
+        const weeks = days / 7;
+        const result = `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+        console.log('🕒 Returning weeks:', result);
+        return result;
+      }
+      
+      // Return with "days" label
+      const result = `${days} ${days === 1 ? 'day' : 'days'}`;
+      console.log('🕒 Returning days:', result);
+      return result;
+    }
+    
+    // Check for range format like "7-10 days", "14-21 days", "30-60 days"
+    const rangeMatch = durationStr.match(/^(\d+)\s*-\s*(\d+)\s*days?$/i);
+    console.log('🕒 Range match:', rangeMatch);
+    
+    if (rangeMatch) {
+      const start = parseInt(rangeMatch[1]);
+      const end = parseInt(rangeMatch[2]);
+      
+      // Check for months first
+      if (start % 30 === 0 && end % 30 === 0) {
+        const startMonths = start / 30;
+        const endMonths = end / 30;
+        return `${startMonths}-${endMonths} ${endMonths === 1 ? 'month' : 'months'}`;
+      }
+      
+      // Check for weeks
+      if (start % 7 === 0 && end % 7 === 0) {
+        const startWeeks = start / 7;
+        const endWeeks = end / 7;
+        return `${startWeeks}-${endWeeks} ${endWeeks === 1 ? 'week' : 'weeks'}`;
+      }
+      
+      // Return with "days" label
+      return `${start}-${end} days`;
+    }
+    
+    console.log('🕒 No match, returning original:', durationStr);
+    return durationStr;
   };
 
   return (
@@ -632,7 +738,7 @@ export default function DocumentDetails() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-white/50">Processing Time</p>
-                    <p className="font-semibold text-white text-sm md:text-base truncate">{doc.docduration || doc.processingTime}</p>
+                    <p className="font-semibold text-white text-sm md:text-base truncate">{formatDuration(doc.docduration || doc.processingTime)}</p>
                   </div>
                 </div>
 
@@ -652,7 +758,7 @@ export default function DocumentDetails() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-white/50">Documents Needed</p>
-                    <p className="font-semibold text-white text-sm md:text-base">{doc.docrequirements?.length || 0} items</p>
+                    <p className="font-semibold text-white text-sm md:text-base">{(doc.relateddocs?.length || relatedDocuments?.length || 0)} items</p>
                   </div>
                 </div>
               </div>
@@ -782,7 +888,7 @@ export default function DocumentDetails() {
               </div>
               <div className="flex justify-between text-sm py-3 border-b border-white/20">
                 <span className="opacity-80">Processing Time</span>
-                <strong className="font-medium">{doc.docduration || doc.processingTime}</strong>
+                <strong className="font-medium">{formatDuration(doc.docduration || doc.processingTime)}</strong>
               </div>
               <div className="flex justify-between text-sm py-3">
                 <span className="opacity-80">Application Cost</span>
@@ -821,10 +927,10 @@ export default function DocumentDetails() {
               )}
             </div>
 
-            {/* Related Documents */}
+            {/* Required Documents */}
             {relatedDocuments.length > 0 && (
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-5 border border-white/20">
-                <h4 className="text-base font-semibold text-white mb-3">Related Documents</h4>
+                <h4 className="text-base font-semibold text-white mb-3">Required Documents</h4>
                 <ul className="space-y-2">
                   {relatedDocuments.map((relDoc) => (
                     <li key={relDoc.docid}>

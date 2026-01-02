@@ -73,7 +73,7 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, error = false
       >
         <div className="flex flex-wrap gap-2 flex-1">
           {selected.length === 0 && (
-            <span className="text-white/40 text-sm">Select related documents...</span>
+            <span className="text-white/40 text-sm">Select required documents...</span>
           )}
           {selected.map((docId) => (
             <span
@@ -874,7 +874,7 @@ export default function ProfileForm() {
                       )}
                       {viewModal.data.relateddocs && (
                         <div>
-                          <span className="text-xs text-white/50 block uppercase font-bold tracking-wider mb-3">Related Documents</span>
+                          <span className="text-xs text-white/50 block uppercase font-bold tracking-wider mb-3">Required Documents</span>
                           <div className="flex flex-wrap gap-2">
                             {Array.isArray(viewModal.data.relateddocs) ? viewModal.data.relateddocs.map((rd, i) => (
                               <span key={i} className="text-xs px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">
@@ -1024,7 +1024,7 @@ export default function ProfileForm() {
                         </button>
                       </div>
                       <MultiSelectDropdown
-                        label="Related Documents"
+                        label="Required Documents"
                         options={allDocuments.map(d => ({ id: d.docid || d.id, name: d.docname }))}
                         selected={Array.isArray(editData.relateddocs) ? editData.relateddocs : []}
                         onChange={(updated) => setEditData({ ...editData, relateddocs: updated })}
