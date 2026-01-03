@@ -9,6 +9,8 @@ const adminRoutes=require("./routes/adminRoutes")
 const userRoutes=require("./routes/userRoutes")
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { userLimiter,authLimiter, publicLimiter } = require('./middlewares/rateLimiter');
+const { verifyAuthToken } = require('./middlewares/authMiddleware');
 
 
 app.use(cors({
@@ -20,11 +22,12 @@ app.use(cookieParser());
 
 const port=process.env.PORT || 4000 ;
 
-app.use('/api/auth',authRoutes) ;
-app.use("/api/documents",documentRoutes);
+app.use("/api/auth",authLimiter,authRoutes) ;
+app.use("/api/documents",publicLimiter,documentRoutes);
 app.use("/api/propose",proposeRoutes)
 app.use("/api/admin",adminRoutes)
 app.use("/api/user",userRoutes)
+
 
 
 app.get('/',(req,res)=>{
