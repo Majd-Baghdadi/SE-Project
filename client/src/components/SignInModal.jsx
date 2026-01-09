@@ -30,7 +30,7 @@ export default function SignInModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      // Mock data for testing
+      // Mock data for testing - REMOVE THIS IN PRODUCTION
       const mockUsers = {
         'test@example.com': { password: 'password123', name: 'Test User' },
         'user@test.com': { password: 'test123', name: 'Demo User' },
@@ -39,9 +39,8 @@ export default function SignInModal({ isOpen, onClose, onSuccess }) {
 
       // Check mock data first (for testing without backend)
       if (mockUsers[formData.email] && mockUsers[formData.email].password === formData.password) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData.email);
-        localStorage.setItem('userName', mockUsers[formData.email].name);
+        // SECURITY: Mock auth should NOT use localStorage
+        // For testing only - relies on AuthContext state update via event
         window.dispatchEvent(new Event('authStateChanged'));
         
         if (onSuccess) {
@@ -73,9 +72,7 @@ export default function SignInModal({ isOpen, onClose, onSuccess }) {
       };
       
       if (mockUsers[formData.email] && mockUsers[formData.email].password === formData.password) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData.email);
-        localStorage.setItem('userName', mockUsers[formData.email].name);
+        // SECURITY: Mock auth should NOT use localStorage
         window.dispatchEvent(new Event('authStateChanged'));
         
         if (onSuccess) {

@@ -1,12 +1,9 @@
 // Service for handling document proposal API calls
 import api from './api';
-import authService from './authService'; // Import authService
 
 class ProposalService {
-  // Check if user is authenticated using authService
-  isAuthenticated() {
-    return authService.isAuthenticated();
-  }
+  // Removed isAuthenticated() - authentication is handled by AuthContext
+  // API calls automatically include HttpOnly cookie for authentication
 
   // Propose a new document
   async proposeDocument(documentData) {

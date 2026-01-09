@@ -99,7 +99,7 @@ export default function AuthPage() {
 }
 
 function SignInCard({ onFlip, isFlipping }) {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
@@ -155,12 +155,9 @@ function SignInCard({ onFlip, isFlipping }) {
 
         Toast.fire({ icon: 'success', title: 'Signed in successfully' });
 
-        const userRole = localStorage.getItem('userRole');
-        if (userRole === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+        // After login, user state is updated in AuthContext via checkAuth()
+        // Navigate to home - routing will redirect admins to /admin if needed
+        navigate('/');
       } else {
         if (response.status === 403 || response.error?.includes('verified')) {
           setNeedsVerification(true);

@@ -6,17 +6,8 @@ const authService = {
       const response = await api.post('/auth/login', { email, password });
 
       if (response.success) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', email);
-        if (response.user && response.user.role) {
-          localStorage.setItem('userRole', response.user.role);
-        } else {
-          // Fallback or explicit check to see if we can decode it, 
-          // but usually backend sends it. 
-          // If missing, default to 'user'
-          localStorage.setItem('userRole', 'user');
-        }
-        if (response.user && response.user.name) localStorage.setItem('userName', response.user.name);
+        // Auth token is stored in HttpOnly cookie by the backend
+        // No need to store anything in localStorage
         window.dispatchEvent(new Event('authStateChanged'));
       }
 
@@ -52,10 +43,7 @@ const authService = {
       console.log('response');
       if (response.success && response.user) {
         console.log('hello')
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userName', response.user.userName || response.user.name);
-        localStorage.setItem('userEmail', response.user.email);
-        localStorage.setItem('userRole', response.user.role);
+        // Auth token is stored in HttpOnly cookie by the backend
         window.dispatchEvent(new Event('authStateChanged'));
       }
 
@@ -102,10 +90,7 @@ const authService = {
     } catch (error) {
       console.error('Logout API error:', error);
     }
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
+    // Cookie is cleared by the backend
     window.dispatchEvent(new Event('authStateChanged'));
 
     return { success: true, message: 'Logged out successfully' };
@@ -115,46 +100,22 @@ const authService = {
     try {
       const response = await api.get('/auth/me');
       if (response && response.user) {
-        // Update local storage to keep it in sync
-        localStorage.setItem('isAuthenticated', 'true');
-        if (response.user.email) localStorage.setItem('userEmail', response.user.email);
-        if (response.user.userName || response.user.name) {
-          localStorage.setItem('userName', response.user.userName || response.user.name);
-        }
-        if (response.user.role) localStorage.setItem('userRole', response.user.role);
+        // User data stored in React Context (memory), not localStorage
         return response.user;
       }
       return null;
     } catch (error) {
-      // If 401, clear storage
+      // If 401, authentication failed - cookie is invalid/expired
       if (error.response && error.response.status === 401) {
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userRole');
+        // No need to clear anything - cookie is already invalid
       }
       throw error;
     }
   },
 
-  getCurrentUser: () => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (isAuthenticated === 'true') {
-      return {
-        email: localStorage.getItem('userEmail'),
-        userName: localStorage.getItem('userName'),
-      };
-    }
-    return null;
-  },
-
-  isAuthenticated: () => {
-    return localStorage.getItem('isAuthenticated') === 'true';
-  },
-
-  getUserRole: () => {
-    return localStorage.getItem('userRole') || 'user';
-  },
+  // Removed: getCurrentUser, isAuthenticated, getUserRole
+  // These relied on localStorage which is insecure
+  // Use AuthContext (React state) or call fetchCurrentUser() instead
 };
 
 export default authService;

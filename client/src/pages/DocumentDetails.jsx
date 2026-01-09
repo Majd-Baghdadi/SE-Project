@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Home, Clock, DollarSign, FileText, CheckCircle, AlertCircle, HelpCircle, ChevronRight, Sparkles } from 'lucide-react';
 import SignInModal from '../components/SignInModal';
-import authService from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 import documentService from '../services/documentService';
 
 // Import document images
@@ -422,6 +422,7 @@ export default function DocumentDetails() {
   const { docId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
   const [data, setData] = useState(null);
   const [relatedDocuments, setRelatedDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -430,7 +431,7 @@ export default function DocumentDetails() {
   const [showSignInModal, setShowSignInModal] = useState(false);
 
   // Check if user is admin (by role, not by route)
-  const isAdmin = authService.isAuthenticated() && authService.getUserRole() === 'admin';
+  const isAdmin = isAuthenticated && user?.role === 'admin';
 
   useEffect(() => {
     async function fetchDocument() {
@@ -503,7 +504,7 @@ export default function DocumentDetails() {
   }, [docId]);
   // Handle "Report Issue" button click
   const handleReportIssue = () => {
-    if (authService.isAuthenticated()) {
+    if (isAuthenticated) {
       // Navigate to FixForm page with docid in URL
       navigate(`/fixform/${docId}`);
     } else {

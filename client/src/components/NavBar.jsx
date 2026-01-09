@@ -1,12 +1,14 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Menu, X, Sparkles } from 'lucide-react'
+import { Menu, X, Sparkles, LogOut } from 'lucide-react'
+import Swal from 'sweetalert2'
 import authService from '../services/authService'
 import { useAuth } from '../context/AuthContext'
 
 export default function NavBar() {
-  const { user, isAuthenticated, isAdmin, checkAuth } = useAuth()
+  const { user, isAuthenticated, isAdmin, checkAuth, logout } = useAuth()
+  const navigate = useNavigate()
   const location = useLocation()
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -78,7 +80,38 @@ export default function NavBar() {
     }
   }, [location.pathname, isAdmin, isAuthenticated]);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMobileMenuOpen(false);
+      
+      // Show success toast
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
 
+      Toast.fire({
+        icon: 'success',
+        title: 'Logged out successfully'
+      });
+
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Show error toast
+      Swal.fire({
+        icon: 'error',
+        title: 'Logout Failed',
+        text: 'Something went wrong. Please try again.',
+        confirmButtonColor: '#10b981',
+      });
+    }
+  };
 
   const isHome = location.pathname === '/';
   const isTransparent = isHome && !isScrolled;
@@ -225,15 +258,24 @@ export default function NavBar() {
                 </Link>
               )}
               {isAuthenticated ? (
-                <Link
-                  to="/profile"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl font-bold border-2 transition-colors no-underline ${isActive('/profile') ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-white/5 border-white/20 text-white hover:border-white/30'
-                    }`}
-                >
-                  <span>My Profile</span>
-                  <span>👤</span>
-                </Link>
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl font-bold border-2 transition-colors no-underline ${isActive('/profile') ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-white/5 border-white/20 text-white hover:border-white/30'
+                      }`}
+                  >
+                    <span>My Profile</span>
+                    <span>👤</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl font-bold border-2 border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout</span>
+                  </button>
+                </>
               ) : (
                 <Link
                   to="/signin"

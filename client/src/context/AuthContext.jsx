@@ -39,30 +39,18 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       setLoading(true);
-      // Try to get current user from backend (validates session cookie)
+      // Validate session by fetching user from backend (uses HttpOnly cookie)
       const user = await authService.fetchCurrentUser();
       if (user) {
         setUser(user);
         setIsAuthenticated(true);
       } else {
-        // Fallback: check localStorage if backend call returns null but no error
-        // (This part might be redundant if fetchCurrentUser handles everything, but keeps robust)
-        const userEmail = localStorage.getItem('userEmail');
-        if (userEmail) {
-          setUser({
-            email: userEmail,
-            name: localStorage.getItem('userName') || 'User',
-            role: localStorage.getItem('userRole') || 'user'
-          });
-          setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      // If error (401), clear everything
+      // If error (401), authentication failed
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -114,16 +102,9 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register(name, email, password);
 
       if (response.success) {
-        // Auto-login after registration if token is provided
-        if (response.token && response.user) {
-          localStorage.setItem('userEmail', response.user.email);
-          localStorage.setItem('userName', response.user.name || name);
-          localStorage.setItem('userRole', response.user.role || 'user');
-
-          setUser(response.user);
-          setIsAuthenticated(true);
-          window.dispatchEvent(new Event('authStateChanged'));
-        }
+        // Fetch user data from backend after registration
+        // Auth token is stored in HttpOnly cookie by backend
+        await checkAuth();
         return { success: true };
       } else {
         throw new Error(response.error || 'Registration failed');

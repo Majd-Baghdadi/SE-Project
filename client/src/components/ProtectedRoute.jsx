@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import authService from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * ProtectedRoute component
@@ -9,8 +9,7 @@ import authService from '../services/authService';
  * @param {string} requiredRole - Optional role required (e.g., 'admin')
  */
 export default function ProtectedRoute({ children, requiredRole }) {
-  const isAuthenticated = authService.isAuthenticated();
-  const currentUser = authService.getCurrentUser();
+  const { isAuthenticated, user } = useAuth();
 
   // Check if user is authenticated
   if (!isAuthenticated) {
@@ -19,9 +18,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
 
   // Check if specific role is required
   if (requiredRole) {
-    // TODO: Get user role from backend/localStorage
-    // For now, hardcode check - replace with actual role check
-    const userRole = localStorage.getItem('userRole') || 'user';
+    const userRole = user?.role || 'user';
     
     if (userRole !== requiredRole) {
       // Redirect to home if user doesn't have required role

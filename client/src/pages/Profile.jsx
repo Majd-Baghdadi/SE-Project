@@ -157,7 +157,7 @@ export default function ProfileForm() {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        if (!authService.isAuthenticated()) {
+        if (!isAuthenticated) {
           navigate('/signin');
           return;
         }

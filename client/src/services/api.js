@@ -62,10 +62,8 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           console.error('Unauthorized access');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('userEmail');
-          localStorage.removeItem('userName');
+          // Auth is handled via HttpOnly cookies - no localStorage to clean
+          // AuthContext will automatically redirect on 401
           break;
 
         case 403:
