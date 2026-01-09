@@ -3,9 +3,10 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { verifyAuthToken } = require('../middlewares/authMiddleware');
+const { userLimiter } = require('../middlewares/rateLimiter');
 
-router.get('/profile', verifyAuthToken, userController.getProfile);
-router.patch('/updateProfile',verifyAuthToken,userController.updateProfile) ;
+router.get('/profile', verifyAuthToken,userLimiter,userController.getProfile);
+router.patch('/updateProfile',verifyAuthToken,userLimiter,userController.updateProfile) ;
 router.get("/",userController.getUsersCount)
 
 
