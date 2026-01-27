@@ -1,0 +1,113 @@
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+
+ @layer base {
+     :root {
+         /* Primary Colors */
+         --primary-background: #37a331;
+         --primary-foreground: #ffffff;
+         --primary-light: #4db843;
+         --primary-dark: #2d8527;
+
+         /* Secondary Colors */
+         --secondary-background: #ffffff;
+         --secondary-foreground: #273248;
+         --secondary-light: #fafafa;
+         --secondary-dark: #000000;
+
+         /* Text Colors */
+         --text-primary: #273248;
+         --text-secondary: #61646b;
+         --text-muted: #313131;
+         --text-accent: #000000;
+         --text-light: #ffffff;
+
+         /* Background Colors */
+         --bg-main: #fafafa;
+         --bg-card: #ffffff;
+         --bg-accent: #37a331;
+
+         /* Border Colors */
+         --border-primary: #e0e0e0;
+         --border-secondary: #273248;
+         --border-light: #ffffff;
+
+         /* Component Colors */
+         --header-bg: #ffffff;
+         --header-text: #000000;
+         --footer-bg: #37a331;
+         --footer-text: #ffffff;
+         --link-text: #ffffff;
+
+         /* Typography Variables */
+         --font-size-base: 16px;
+         --font-size-lg: 18px;
+         --font-size-xl: 24px;
+         --font-size-2xl: 40px;
+         --font-size-3xl: 45px;
+         --font-size-hero: 96px;
+
+         /* Font Weight Variables */
+         --font-weight-normal: 400;
+         --font-weight-medium: 500;
+         --font-weight-semibold: 600;
+         --font-weight-bold: 700;
+
+         /* Line Height Variables */
+         --line-height-tight: 19px;
+         --line-height-normal: 22px;
+         --line-height-relaxed: 24px;
+         --line-height-loose: 27px;
+         --line-height-extra: 28px;
+         --line-height-hero: 121px;
+
+         /* Spacing Variables */
+         --spacing-xs: 4px;
+         --spacing-sm: 8px;
+         --spacing-md: 10px;
+         --spacing-lg: 12px;
+         --spacing-xl: 14px;
+         --spacing-2xl: 16px;
+         --spacing-3xl: 18px;
+         --spacing-4xl: 20px;
+         --spacing-5xl: 22px;
+         --spacing-6xl: 24px;
+         --spacing-7xl: 26px;
+         --spacing-8xl: 30px;
+         --spacing-9xl: 36px;
+         --spacing-10xl: 38px;
+         --spacing-11xl: 40px;
+         --spacing-12xl: 46px;
+         --spacing-13xl: 48px;
+         --spacing-14xl: 52px;
+         --spacing-15xl: 56px;
+         --spacing-16xl: 60px;
+         --spacing-17xl: 66px;
+         --spacing-18xl: 78px;
+         --spacing-19xl: 82px;
+         --spacing-20xl: 86px;
+         --spacing-21xl: 94px;
+         --spacing-22xl: 98px;
+         --spacing-23xl: 102px;
+         --spacing-24xl: 104px;
+         --spacing-25xl: 110px;
+         --spacing-26xl: 112px;
+         --spacing-27xl: 116px;
+         --spacing-28xl: 178px;
+         --spacing-29xl: 190px;
+         --spacing-30xl: 338px;
+
+         /* Border Radius Variables */
+         --radius-none: 0px;
+         --radius-md: 10px;
+
+         /* Border Width Variables */
+         --border-width-thin: 1px;
+
+         /* Layout Variables */
+         --width-auto: auto;
+         --width-full: 100%;
+         --height-auto: auto;
+     }
+ }
