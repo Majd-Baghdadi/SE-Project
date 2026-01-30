@@ -498,7 +498,7 @@ lsof -ti:8000 | xargs kill -9
 If you encounter issues not listed here:
 - Check [existing issues](https://github.com/Majd-Baghdadi/SE-Project/issues)
 - Open a new issue with detailed information
-- Contact: 
+- Contact: madjd.baghdadi@ensia.edu.dz
 
 ---
 
