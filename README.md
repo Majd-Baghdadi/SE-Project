@@ -36,7 +36,6 @@ A community-powered web platform that provides step-by-step guides for obtaining
 - 👨‍💼 **Admin Dashboard**: Review, approve, or reject user submissions
 - 🔐 **Secure Authentication**: Email verification and JWT-based auth
 - 📱 **Responsive Design**: Optimized for desktop and mobile devices
-- 📥 **PDF Export**: Download guides for offline use
 
 ---
 
